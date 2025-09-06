@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathBridgeSystem.Application", "MathBridgeSystem.Application\MathBridgeSystem.Application.csproj", "{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathBridgeSystem.Domain", "MathBridgeSystem.Domain\MathBridgeSystem.Domain.csproj", "{4183023D-0C58-4324-BA9E-1757BEFAA3FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathBridgeSystem.Infrastructure", "MathBridgeSystem.Infrastructure\MathBridgeSystem.Infrastructure.csproj", "{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathBridgeSystem.Api", "MathBridgeSystem.Api\MathBridgeSystem.Api.csproj", "{92634ABD-3266-4E4A-81E0-B1942A925B58}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4183023D-0C58-4324-BA9E-1757BEFAA3FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4183023D-0C58-4324-BA9E-1757BEFAA3FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4183023D-0C58-4324-BA9E-1757BEFAA3FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4183023D-0C58-4324-BA9E-1757BEFAA3FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92634ABD-3266-4E4A-81E0-B1942A925B58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92634ABD-3266-4E4A-81E0-B1942A925B58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92634ABD-3266-4E4A-81E0-B1942A925B58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92634ABD-3266-4E4A-81E0-B1942A925B58}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
