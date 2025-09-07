@@ -21,7 +21,7 @@ namespace MathBridge.Application.Interfaces
         /// </summary>
         /// <param name="webhookData">Webhook payload from SePay</param>
         /// <returns>Processing result</returns>
-        Task<SePayWebhookResultDto> ProcessWebhookAsync(SePayWebhookDto webhookData);
+        Task<SePayWebhookResultDto> ProcessWebhookAsync(SePayWebhookRequestDto webhookData);
 
         /// <summary>
         /// Check payment status for a wallet transaction

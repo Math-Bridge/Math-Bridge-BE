@@ -140,7 +140,7 @@ public class SePayService : ISePayService
         }
     }
 
-    public async Task<SePayWebhookResultDto> ProcessWebhookAsync(SePayWebhookDto webhookData)
+    public async Task<SePayWebhookResultDto> ProcessWebhookAsync(SePayWebhookRequestDto webhookData)
     {
         try
         {
@@ -160,6 +160,9 @@ public class SePayService : ISePayService
 
             // Extract order reference from content
             var orderReference = ExtractOrderReference(webhookData.Content);
+            _logger.LogInformation("Extracted order reference: '{OrderReference}' from content: '{Content}'", 
+                orderReference ?? "NULL", webhookData.Content);
+            
             if (string.IsNullOrEmpty(orderReference))
             {
                 _logger.LogWarning("Could not extract order reference from content: {Content}", webhookData.Content);
@@ -171,16 +174,24 @@ public class SePayService : ISePayService
             }
 
             // Find the corresponding wallet transaction
+            _logger.LogInformation("Looking up transaction for order reference: {OrderReference}", orderReference);
             var sePayTransaction = await _sePayRepository.GetByOrderReferenceAsync(orderReference);
+            
             if (sePayTransaction?.WalletTransaction == null)
             {
-                _logger.LogWarning("Wallet transaction not found for order reference: {OrderReference}", orderReference);
+                _logger.LogWarning("Wallet transaction not found for order reference: {OrderReference}. " +
+                    "This means either: 1) No payment was created with this reference, or " +
+                    "2) The reference format doesn't match the expected pattern", orderReference);
                 return new SePayWebhookResultDto
                 {
                     Success = false,
                     Message = "Wallet transaction not found for order reference"
                 };
             }
+            
+            _logger.LogInformation("Found transaction for order reference: {OrderReference}, " +
+                "WalletTransactionId: {WalletTransactionId}, Status: {Status}", 
+                orderReference, sePayTransaction.WalletTransactionId, sePayTransaction.WalletTransaction.Status);
 
             var walletTransaction = sePayTransaction.WalletTransaction;
 
