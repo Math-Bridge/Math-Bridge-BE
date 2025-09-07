@@ -187,7 +187,6 @@ public class SePayController : ControllerBase
     /// <param name="description">Transfer description</param>
     /// <returns>QR code URL</returns>
     [HttpGet("generate-qr")]
-    [Authorize]
     public ActionResult<object> GenerateQrCode([FromQuery] decimal amount, [FromQuery] string description)
     {
         try
