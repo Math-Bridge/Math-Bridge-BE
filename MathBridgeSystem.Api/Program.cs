@@ -68,7 +68,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-            ClockSkew = TimeSpan.Zero // Disable clock skew to enforce exact token expiration
+            ClockSkew = TimeSpan.Zero, // Disable clock skew to enforce exact token expiration
+            // Map JWT claims to ClaimTypes
+            NameClaimType = "sub", // Maps "sub" to ClaimTypes.NameIdentifier
+            RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         };
     });
 
@@ -82,12 +85,11 @@ builder.Services.AddSwaggerGen(c =>
     // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter your JWT token in the format: Bearer {your token here}"
+        Description = "Enter your JWT token (without 'Bearer ' prefix)"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement

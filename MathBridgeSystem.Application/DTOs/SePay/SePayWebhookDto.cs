@@ -1,17 +1,45 @@
 using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Globalization;
 
 namespace MathBridge.Application.DTOs.SePay;
+
+/// <summary>
+/// Custom DateTime converter for SePay date format: "yyyy-MM-dd HH:mm:ss"
+/// </summary>
+public class CustomDateTimeConverter : JsonConverter<DateTime>
+{
+    private const string DateFormat = "yyyy-MM-dd HH:mm:ss";
+
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var dateString = reader.GetString();
+        if (DateTime.TryParseExact(dateString, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            return date;
+        }
+        
+        // Fallback to default parsing
+        return DateTime.Parse(dateString ?? string.Empty);
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString(DateFormat));
+    }
+}
 
 /// <summary>
 /// SePay webhook payload structure
 /// Based on SePay documentation: https://docs.sepay.vn/tich-hop-webhooks.html#du-lieu
 /// </summary>
-public class SePayWebhookDto
+public class SePayWebhookRequestDto
 {
     [JsonPropertyName("gateway")]
     public string Gateway { get; set; } = string.Empty;
 
     [JsonPropertyName("transactionDate")]
+    [JsonConverter(typeof(CustomDateTimeConverter))]
     public DateTime TransactionDate { get; set; }
 
     [JsonPropertyName("accountNumber")]
@@ -51,9 +79,7 @@ public class SePayPaymentRequestDto
     public string Description { get; set; } = string.Empty;
     public string OrderReference { get; set; } = string.Empty;
     public Guid UserId { get; set; }
-    public string BankCode { get; set; } = "MBBank"; // Default bank
-    public string AccountNumber { get; set; } = string.Empty;
-    public string AccountName { get; set; } = string.Empty;
+    public string BankCode { get; set; } =string.Empty;
 }
 
 /// <summary>

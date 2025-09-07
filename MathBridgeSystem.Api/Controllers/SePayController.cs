@@ -80,21 +80,13 @@ public class SePayController : ControllerBase
     /// <returns>Processing result</returns>
     [HttpPost("webhook")]
     [AllowAnonymous]
-    public async Task<ActionResult<SePayWebhookResultDto>> ReceiveWebhook([FromBody] SePayWebhookDto webhookData)
+    public async Task<ActionResult<SePayWebhookResultDto>> ReceiveWebhook([FromBody] SePayWebhookRequestDto request)
     {
         try
         {
+            var webhookData = request;
             _logger.LogInformation("Received SePay webhook for transaction {Code}", webhookData.Code);
-
-            // Optional: Validate webhook signature
-            var signature = Request.Headers["X-SePay-Signature"].FirstOrDefault();
-            var rawPayload = await new StreamReader(Request.Body).ReadToEndAsync();
             
-            if (!_sePayService.ValidateWebhookSignature(rawPayload, signature))
-            {
-                _logger.LogWarning("Invalid webhook signature for transaction {Code}", webhookData.Code);
-                return Unauthorized(new { message = "Invalid webhook signature" });
-            }
 
             var result = await _sePayService.ProcessWebhookAsync(webhookData);
 
