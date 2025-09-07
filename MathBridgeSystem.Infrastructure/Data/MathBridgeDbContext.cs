@@ -10,6 +10,7 @@ namespace MathBridge.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<SePayTransaction> SePayTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -193,6 +194,119 @@ namespace MathBridge.Infrastructure.Data
             modelBuilder.Entity<WalletTransaction>()
                 .HasIndex(wt => wt.Status)
                 .HasDatabaseName("ix_wallet_transactions_status");
+
+            // SePayTransaction configuration
+            modelBuilder.Entity<SePayTransaction>()
+                .HasKey(st => st.SePayTransactionId);
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.SePayTransactionId)
+                .HasColumnName("sepay_transaction_id")
+                .HasDefaultValueSql("newid()");
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.WalletTransactionId)
+                .HasColumnName("wallet_transaction_id")
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.Gateway)
+                .HasColumnName("gateway")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.TransactionDate)
+                .HasColumnName("transaction_date")
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.AccountNumber)
+                .HasColumnName("account_number")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.SubAccount)
+                .HasColumnName("sub_account")
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.TransferType)
+                .HasColumnName("transfer_type")
+                .HasMaxLength(10)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.TransferAmount)
+                .HasColumnName("transfer_amount")
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.Accumulated)
+                .HasColumnName("accumulated")
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.Code)
+                .HasColumnName("code")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.Content)
+                .HasColumnName("content")
+                .HasMaxLength(500)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.ReferenceNumber)
+                .HasColumnName("reference_number")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.Description)
+                .HasColumnName("description")
+                .HasMaxLength(1000);
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.OrderReference)
+                .HasColumnName("order_reference")
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<SePayTransaction>()
+                .Property(st => st.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("getutcdate()");
+
+            // SePayTransaction relationships
+            modelBuilder.Entity<SePayTransaction>()
+                .HasOne(st => st.WalletTransaction)
+                .WithMany()
+                .HasForeignKey(st => st.WalletTransactionId)
+                .HasConstraintName("fk_sepay_transactions_wallet_transaction")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SePayTransaction indexes
+            modelBuilder.Entity<SePayTransaction>()
+                .HasIndex(st => st.WalletTransactionId)
+                .HasDatabaseName("ix_sepay_transactions_wallet_transaction_id");
+
+            modelBuilder.Entity<SePayTransaction>()
+                .HasIndex(st => st.Code)
+                .IsUnique()
+                .HasDatabaseName("ix_sepay_transactions_code");
+
+            modelBuilder.Entity<SePayTransaction>()
+                .HasIndex(st => st.OrderReference)
+                .HasDatabaseName("ix_sepay_transactions_order_reference");
+
+            modelBuilder.Entity<SePayTransaction>()
+                .HasIndex(st => st.TransactionDate)
+                .HasDatabaseName("ix_sepay_transactions_date");
         }
     }
 }

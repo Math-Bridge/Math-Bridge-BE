@@ -44,12 +44,17 @@ builder.Services.AddDbContext<MathBridgeDbContext>(options =>
                                    maxRetryDelay: TimeSpan.FromSeconds(10),
                                    errorNumbersToAdd: new List<int> { 10054, 10053, 1205 })));
 
+// Repository registrations
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
+builder.Services.AddScoped<ISePayRepository, SePayRepository>();
+
+// Service registrations
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<ISePayService, SePayService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
