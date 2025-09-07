@@ -13,3 +13,8 @@ Mathbridge.sql
 /MathBridgeSystem.Domain/bin
 /MathBridgeSystem.Application/obj
 /MathBridgeSystem.Api/obj
+/MathBridgeSystem.Api/bin
+/MathBridgeSystem.Application/bin
+/MathBridgeSystem.Infrastructure/obj
+/MathBridgeSystem.Domain/obj
+/MathBridgeSystem.Application/obj
