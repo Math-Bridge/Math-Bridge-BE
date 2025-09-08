@@ -44,7 +44,7 @@ namespace MathBridge.Application.Interfaces
         /// <param name="description">Transfer description/reference</param>
         /// <param name="bankCode">Bank code (default: MBBank)</param>
         /// <returns>QR code URL</returns>
-        string GenerateQrCodeUrl(decimal amount, string description, string bankCode = "MBBank");
+        string GenerateQrCodeUrl(decimal amount, string description);
 
         /// <summary>
         /// Extract order reference from SePay transaction content

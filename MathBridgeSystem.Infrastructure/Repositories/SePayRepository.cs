@@ -48,10 +48,10 @@ public class SePayRepository : ISePayRepository
             .FirstOrDefaultAsync(s => s.OrderReference == orderReference);
     }
 
-    public async Task<bool> ExistsByCodeAsync(string code)
+    public async Task<SePayTransaction?> ExistsByCodeAsync(string code)
     {
-        return await _context.SePayTransactions
-            .AnyAsync(s => s.Code == code);
+        return await _context.SePayTransactions.Include(s => s.WalletTransaction)
+            .FirstOrDefaultAsync(s => s.Code == code);
     }
 
     public async Task<IEnumerable<SePayTransaction>> GetByUserIdAsync(Guid userId, int pageNumber = 1, int pageSize = 10)
