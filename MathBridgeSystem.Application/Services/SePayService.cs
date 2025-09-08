@@ -41,7 +41,7 @@ public class SePayService : ISePayService
         _logger = logger;
 
         // Load configuration
-        _bankCode = _configuration["SePay:BankCode"] ?? "MBBank";
+        _bankCode = _configuration["SePay:BankCode"]?? "";
         _accountNumber = _configuration["SePay:AccountNumber"] ?? "";
         _accountName = _configuration["SePay:AccountName"] ?? "";
         _qrBaseUrl = _configuration["SePay:QrBaseUrl"] ?? "https://qr.sepay.vn/img";
@@ -96,7 +96,7 @@ public class SePayService : ISePayService
             var orderReference = $"{_orderReferencePrefix}{createdWalletTransaction.TransactionId.ToString("N")[..8].ToUpper()}";
 
             // Generate QR code URL
-            var qrCodeUrl = GenerateQrCodeUrl(request.Amount, orderReference, request.BankCode);
+            var qrCodeUrl = GenerateQrCodeUrl(request.Amount, orderReference);
 
             // Create SePay transaction record
             var sePayTransaction = new SePayTransaction
@@ -106,7 +106,8 @@ public class SePayService : ISePayService
                 OrderReference = orderReference,
                 TransferAmount = request.Amount,
                 TransferType = "in",
-                Content = orderReference,
+                Code = orderReference,
+                Content = orderReference + "-" + request.Description,
                 Description = request.Description,
                 CreatedAt = DateTime.UtcNow
             };
@@ -148,7 +149,16 @@ public class SePayService : ISePayService
 
             // Check if we've already processed this transaction
             var existingTransaction = await _sePayRepository.ExistsByCodeAsync(webhookData.Code);
-            if (existingTransaction)
+            if (existingTransaction == null)
+            {
+                _logger.LogWarning("No Sepay transaction with {Code} found", webhookData.Code);
+                return new SePayWebhookResultDto
+                {
+                    Success = false,
+                    Message = "No transaction found"
+                };
+            }
+            if (existingTransaction.WalletTransaction.Status != "Pending")
             {
                 _logger.LogWarning("SePay transaction {Code} already processed", webhookData.Code);
                 return new SePayWebhookResultDto
@@ -157,6 +167,7 @@ public class SePayService : ISePayService
                     Message = "Transaction already processed"
                 };
             }
+
 
             // Extract order reference from content
             var orderReference = ExtractOrderReference(webhookData.Content);
@@ -337,10 +348,10 @@ public class SePayService : ISePayService
         }
     }
 
-    public string GenerateQrCodeUrl(decimal amount, string description, string bankCode = "MBBank")
+    public string GenerateQrCodeUrl(decimal amount, string description)
     {
         var encodedDescription = HttpUtility.UrlEncode(description);
-        return $"{_qrBaseUrl}?bank={bankCode}&acc={_accountNumber}&template=compact&amount={amount:F0}&des={encodedDescription}";
+        return $"{_qrBaseUrl}?bank={_bankCode}&acc={_accountNumber}&template=compact&amount={amount:F0}&des={encodedDescription}";
     }
 
     public string? ExtractOrderReference(string content)

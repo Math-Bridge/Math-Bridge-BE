@@ -40,7 +40,7 @@ namespace MathBridge.Application.Interfaces
         /// </summary>
         /// <param name="code">SePay transaction code</param>
         /// <returns>True if transaction exists</returns>
-        Task<bool> ExistsByCodeAsync(string code);
+        Task<SePayTransaction?> ExistsByCodeAsync(string code);
 
         /// <summary>
         /// Get SePay transactions by user ID through wallet transactions
