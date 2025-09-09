@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {}
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {}
   },
   "projects": {
-    "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
         "projectName": "MathBridgeSystem.Domain",
-        "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
-        "packagesPath": "C:\\Users\\huyh6\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\obj\\",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\huyh6\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -45,7 +45,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -66,24 +66,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
         "projectName": "MathBridgeSystem.Infrastructure",
-        "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\huyh6\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\obj\\",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\huyh6\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -99,8 +99,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
-                "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj"
+              "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
+                "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj"
               }
             }
           }
@@ -115,7 +115,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -192,7 +192,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

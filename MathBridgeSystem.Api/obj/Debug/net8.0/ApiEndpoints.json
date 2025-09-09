@@ -85,6 +85,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "MathBridge.Presentation.Controllers.AuthController",
+    "Method": "Verify",
+    "RelativePath": "api/auth/verify",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "MathBridge.Application.DTOs.VerifyRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "MathBridge.Presentation.Controllers.UsersController",
     "Method": "GetUser",
     "RelativePath": "api/users/{id}",

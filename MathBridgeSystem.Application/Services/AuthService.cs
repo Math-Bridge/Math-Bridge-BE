@@ -1,8 +1,9 @@
-﻿using MathBridge.Application.DTOs;
+﻿using BCrypt.Net;
+using MathBridge.Application.DTOs;
 using MathBridge.Application.Interfaces;
 using MathBridge.Domain.Entities;
 using MathBridge.Domain.Interfaces;
-using BCrypt.Net;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Threading.Tasks;
 
@@ -13,15 +14,26 @@ namespace MathBridge.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly ITokenService _tokenService;
         private readonly IGoogleAuthService _googleAuthService;
+        private readonly IEmailService _emailService;
+        private readonly IMemoryCache _cache;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService, IGoogleAuthService googleAuthService)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IGoogleAuthService googleAuthService, IEmailService emailService, IMemoryCache cache)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        }
+        private string GenerateVerificationCode()
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 6)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public async Task<Guid> RegisterAsync(RegisterRequest request)
+        public async Task<string> RegisterAsync(RegisterRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -34,6 +46,33 @@ namespace MathBridge.Application.Services
             var roleExists = await _userRepository.RoleExistsAsync(parentRoleId);
             if (!roleExists)
                 throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
+
+            var verificationCode = GenerateVerificationCode();
+            var cacheEntryOptions = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            };
+            _cache.Set(request.Email + "_code", verificationCode, cacheEntryOptions);
+            _cache.Set(request.Email + "_request", request, cacheEntryOptions); // save request
+            await _emailService.SendVerificationCodeAsync(request.Email, verificationCode);
+
+            return "Verification code sent to your email. Please verify to complete registration.";
+            
+        }
+        public async Task<Guid> VerifyRegistrationAsync(string email, string code)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
+                throw new ArgumentException("Email and code are required");
+
+            if (!_cache.TryGetValue(email + "_code", out string cachedCode) || cachedCode != code)
+                throw new Exception("Invalid or expired verification code");
+
+            var request = _cache.Get<RegisterRequest>(email + "_request");
+            if (request == null)
+                throw new Exception("Registration data not found");
+
+            _cache.Remove(email + "_code");
+            _cache.Remove(email + "_request");
 
             var user = new User
             {

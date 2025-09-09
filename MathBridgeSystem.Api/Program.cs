@@ -51,6 +51,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
