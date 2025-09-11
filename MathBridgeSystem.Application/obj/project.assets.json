@@ -60,6 +60,19 @@
           }
         }
       },
+      "BouncyCastle.Cryptography/2.5.1": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Castle.Core/5.1.1": {
         "type": "package",
         "dependencies": {
@@ -239,6 +252,23 @@
         "runtime": {
           "lib/netstandard2.0/LiteDB.dll": {
             "related": ".xml"
+          }
+        }
+      },
+      "MailKit/4.13.0": {
+        "type": "package",
+        "dependencies": {
+          "MimeKit": "4.13.0",
+          "System.Formats.Asn1": "8.0.1"
+        },
+        "compile": {
+          "lib/net8.0/MailKit.dll": {
+            "related": ".dll.config;.pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/MailKit.dll": {
+            "related": ".dll.config;.pdb;.xml"
           }
         }
       },
@@ -1932,6 +1962,23 @@
           }
         }
       },
+      "MimeKit/4.13.0": {
+        "type": "package",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.5.1",
+          "System.Security.Cryptography.Pkcs": "8.0.1"
+        },
+        "compile": {
+          "lib/net8.0/MimeKit.dll": {
+            "related": ".dll.config;.pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/MimeKit.dll": {
+            "related": ".dll.config;.pdb;.xml"
+          }
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -2654,7 +2701,7 @@
       "System.Formats.Asn1/9.0.3": {
         "type": "package",
         "compile": {
-          "lib/net8.0/_._": {
+          "lib/net8.0/System.Formats.Asn1.dll": {
             "related": ".xml"
           }
         },
@@ -4051,6 +4098,26 @@
         "readme.md"
       ]
     },
+    "BouncyCastle.Cryptography/2.5.1": {
+      "sha512": "zy8TMeTP+1FH2NrLaNZtdRbBdq7u5MI+NFZQOBSM69u5RFkciinwzV2eveY6Kjf5MzgsYvvl6kTStsj3JrXqkg==",
+      "type": "package",
+      "path": "bouncycastle.cryptography/2.5.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "README.md",
+        "bouncycastle.cryptography.2.5.1.nupkg.sha512",
+        "bouncycastle.cryptography.nuspec",
+        "lib/net461/BouncyCastle.Cryptography.dll",
+        "lib/net461/BouncyCastle.Cryptography.xml",
+        "lib/net6.0/BouncyCastle.Cryptography.dll",
+        "lib/net6.0/BouncyCastle.Cryptography.xml",
+        "lib/netstandard2.0/BouncyCastle.Cryptography.dll",
+        "lib/netstandard2.0/BouncyCastle.Cryptography.xml",
+        "packageIcon.png"
+      ]
+    },
     "Castle.Core/5.1.1": {
       "sha512": "rpYtIczkzGpf+EkZgDr9CClTdemhsrwA/W5hMoPjLkRFnXzH44zDLoovXeKtmxb1ykXK9aJVODSpiJml8CTw2g==",
       "type": "package",
@@ -4311,6 +4378,46 @@
         "lib/netstandard2.0/LiteDB.xml",
         "litedb.5.0.17.nupkg.sha512",
         "litedb.nuspec"
+      ]
+    },
+    "MailKit/4.13.0": {
+      "sha512": "GsepEHKkaQvbAuBizlhz93yc0ihJWzVCfoerfnpCeqiKLeS6gsTKInYy3/U2wqgkGE62TKs5OKS1a90pyc+j4g==",
+      "type": "package",
+      "path": "mailkit/4.13.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "docs/ExchangeOAuth2.md",
+        "docs/FAQ.md",
+        "docs/GMailOAuth2.md",
+        "docs/README.md",
+        "icons/mailkit-50.png",
+        "lib/net462/MailKit.dll",
+        "lib/net462/MailKit.dll.config",
+        "lib/net462/MailKit.pdb",
+        "lib/net462/MailKit.xml",
+        "lib/net47/MailKit.dll",
+        "lib/net47/MailKit.dll.config",
+        "lib/net47/MailKit.pdb",
+        "lib/net47/MailKit.xml",
+        "lib/net48/MailKit.dll",
+        "lib/net48/MailKit.dll.config",
+        "lib/net48/MailKit.pdb",
+        "lib/net48/MailKit.xml",
+        "lib/net8.0/MailKit.dll",
+        "lib/net8.0/MailKit.dll.config",
+        "lib/net8.0/MailKit.pdb",
+        "lib/net8.0/MailKit.xml",
+        "lib/netstandard2.0/MailKit.dll",
+        "lib/netstandard2.0/MailKit.dll.config",
+        "lib/netstandard2.0/MailKit.pdb",
+        "lib/netstandard2.0/MailKit.xml",
+        "lib/netstandard2.1/MailKit.dll",
+        "lib/netstandard2.1/MailKit.dll.config",
+        "lib/netstandard2.1/MailKit.pdb",
+        "lib/netstandard2.1/MailKit.xml",
+        "mailkit.4.13.0.nupkg.sha512",
+        "mailkit.nuspec"
       ]
     },
     "Microsoft.AspNetCore.Authentication/2.3.0": {
@@ -6835,6 +6942,41 @@
         "runtimes/win/lib/netcoreapp3.1/Microsoft.Win32.SystemEvents.dll",
         "runtimes/win/lib/netcoreapp3.1/Microsoft.Win32.SystemEvents.xml",
         "useSharedDesignerContext.txt"
+      ]
+    },
+    "MimeKit/4.13.0": {
+      "sha512": "oa4JuhAzJydHnPCc/XWeyBUGd3uiVyWW0NXqOVgkXEHjbHlPVBssklK3mpw9sokjzAaBGdj0bceFsr+NXvAukA==",
+      "type": "package",
+      "path": "mimekit/4.13.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "docs/FAQ.md",
+        "docs/README.md",
+        "icons/mimekit-50.png",
+        "lib/net462/MimeKit.dll",
+        "lib/net462/MimeKit.pdb",
+        "lib/net462/MimeKit.xml",
+        "lib/net47/MimeKit.dll",
+        "lib/net47/MimeKit.pdb",
+        "lib/net47/MimeKit.xml",
+        "lib/net48/MimeKit.dll",
+        "lib/net48/MimeKit.pdb",
+        "lib/net48/MimeKit.xml",
+        "lib/net8.0/MimeKit.dll",
+        "lib/net8.0/MimeKit.dll.config",
+        "lib/net8.0/MimeKit.pdb",
+        "lib/net8.0/MimeKit.xml",
+        "lib/netstandard2.0/MimeKit.dll",
+        "lib/netstandard2.0/MimeKit.dll.config",
+        "lib/netstandard2.0/MimeKit.pdb",
+        "lib/netstandard2.0/MimeKit.xml",
+        "lib/netstandard2.1/MimeKit.dll",
+        "lib/netstandard2.1/MimeKit.dll.config",
+        "lib/netstandard2.1/MimeKit.pdb",
+        "lib/netstandard2.1/MimeKit.xml",
+        "mimekit.4.13.0.nupkg.sha512",
+        "mimekit.nuspec"
       ]
     },
     "Mono.TextTemplating/3.0.0": {
@@ -11585,34 +11727,36 @@
       "FirebaseDatabase.net >= 5.0.0",
       "FirebaseStorage.net >= 1.0.3",
       "Google.Apis.Auth >= 1.68.0",
+      "MailKit >= 4.13.0",
       "MathBridgeSystem.Infrastructure >= 1.0.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 8.0.14",
       "Microsoft.AspNetCore.Identity >= 2.3.1",
       "Microsoft.AspNetCore.OpenApi >= 8.0.14",
       "Microsoft.EntityFrameworkCore.Design >= 9.0.3",
       "Microsoft.EntityFrameworkCore.SqlServer >= 9.0.3",
+      "MimeKit >= 4.13.0",
       "System.IdentityModel.Tokens.Jwt >= 8.8.0",
       "System.Reactive >= 6.0.1"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\huyh6\\.nuget\\packages\\": {},
+    "C:\\Users\\nguye\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
+      "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
       "projectName": "MathBridgeSystem.Application",
-      "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
-      "packagesPath": "C:\\Users\\huyh6\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Application\\obj\\",
+      "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
+      "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+      "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\huyh6\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -11628,8 +11772,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
-              "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\MathBridgeSystem\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj"
+            "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
+              "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj"
             }
           }
         }
@@ -11644,7 +11788,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -11665,6 +11809,10 @@
           "Google.Apis.Auth": {
             "target": "Package",
             "version": "[1.68.0, )"
+          },
+          "MailKit": {
+            "target": "Package",
+            "version": "[4.13.0, )"
           },
           "Microsoft.AspNetCore.Authentication.JwtBearer": {
             "target": "Package",
@@ -11687,6 +11835,10 @@
           "Microsoft.EntityFrameworkCore.SqlServer": {
             "target": "Package",
             "version": "[9.0.3, )"
+          },
+          "MimeKit": {
+            "target": "Package",
+            "version": "[4.13.0, )"
           },
           "System.IdentityModel.Tokens.Jwt": {
             "target": "Package",
@@ -11713,7 +11865,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

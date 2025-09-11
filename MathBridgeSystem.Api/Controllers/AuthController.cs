@@ -32,6 +32,22 @@ namespace MathBridge.Presentation.Controllers
                 return StatusCode(400, new { error = ex.Message });
             }
         }
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify([FromBody] VerifyRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var userId = await _authService.VerifyRegistrationAsync(request.Email, request.Code);
+                return Ok(new { userId, message = "Registration completed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, new { error = ex.Message });
+            }
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)

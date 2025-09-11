@@ -1,0 +1,12 @@
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\bin\Debug\net8.0\MathBridgeSystem.Domain.deps.json
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\bin\Debug\net8.0\MathBridgeSystem.Domain.dll
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\bin\Debug\net8.0\MathBridgeSystem.Domain.pdb
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.AssemblyInfoInputs.cache
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.AssemblyInfo.cs
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.csproj.CoreCompileInputs.cache
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.sourcelink.json
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.dll
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\refint\MathBridgeSystem.Domain.dll
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\MathBridgeSystem.Domain.pdb
+D:\DoAn\Math-Bridge-BE\MathBridgeSystem.Domain\obj\Debug\net8.0\ref\MathBridgeSystem.Domain.dll
