@@ -23,3 +23,6 @@ Mathbridge.sql
 /MathBridgeSystem.Api/bin/Debug
 /MathBridgeSystem.Api/bin/Debug
 /MathBridgeSystem.Infrastructure/obj
+*.cache
+*.dll
+*.editorconfig
