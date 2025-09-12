@@ -78,7 +78,6 @@ public class SePayPaymentRequestDto
     public decimal Amount { get; set; }
     public string Description { get; set; } = string.Empty;
     public Guid UserId { get; set; }
-    public string BankCode { get; set; } =string.Empty;
 }
 
 /// <summary>
