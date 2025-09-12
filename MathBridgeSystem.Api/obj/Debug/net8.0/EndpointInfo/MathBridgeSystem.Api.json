@@ -109,6 +109,37 @@
         }
       }
     },
+    "/api/auth/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -376,6 +407,26 @@
           "Gender": {
             "minLength": 1,
             "pattern": "^(male|female|other)$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyRequest": {
+        "required": [
+          "Code",
+          "Email"
+        ],
+        "type": "object",
+        "properties": {
+          "Email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "Code": {
+            "maxLength": 6,
+            "minLength": 6,
             "type": "string"
           }
         },

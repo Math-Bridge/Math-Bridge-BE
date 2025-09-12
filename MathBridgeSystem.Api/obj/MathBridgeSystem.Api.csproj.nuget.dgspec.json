@@ -1,36 +1,43 @@
 {
   "format": 1,
   "restore": {
-    "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Api/MathBridgeSystem.Api.csproj": {}
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj": {}
   },
   "projects": {
-    "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Api/MathBridgeSystem.Api.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Api/MathBridgeSystem.Api.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj",
         "projectName": "MathBridgeSystem.Api",
-        "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Api/MathBridgeSystem.Api.csproj",
-        "packagesPath": "/home/pak/.nuget/packages/",
-        "outputPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Api/obj/",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/pak/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/MathBridgeSystem.Application.csproj": {
-                "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/MathBridgeSystem.Application.csproj"
+              "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj": {
+                "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj"
               },
-              "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj": {
-                "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj"
+              "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
+                "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj"
               }
             }
           }
@@ -39,7 +46,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -99,34 +112,41 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/MathBridgeSystem.Application.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/MathBridgeSystem.Application.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
         "projectName": "MathBridgeSystem.Application",
-        "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/MathBridgeSystem.Application.csproj",
-        "packagesPath": "/home/pak/.nuget/packages/",
-        "outputPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Application/obj/",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/pak/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/MathBridgeSystem.Infrastructure.csproj": {
-                "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/MathBridgeSystem.Infrastructure.csproj"
+              "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
+                "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj"
               }
             }
           }
@@ -135,7 +155,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -156,6 +182,10 @@
             "Google.Apis.Auth": {
               "target": "Package",
               "version": "[1.68.0, )"
+            },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.13.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
@@ -178,6 +208,10 @@
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[9.0.3, )"
+            },
+            "MimeKit": {
+              "target": "Package",
+              "version": "[4.13.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
@@ -204,26 +238,33 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
         "projectName": "MathBridgeSystem.Domain",
-        "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj",
-        "packagesPath": "/home/pak/.nuget/packages/",
-        "outputPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/obj/",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/pak/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -236,7 +277,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -257,34 +304,41 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/MathBridgeSystem.Infrastructure.csproj": {
+    "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/MathBridgeSystem.Infrastructure.csproj",
+        "projectUniqueName": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
         "projectName": "MathBridgeSystem.Infrastructure",
-        "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/MathBridgeSystem.Infrastructure.csproj",
-        "packagesPath": "/home/pak/.nuget/packages/",
-        "outputPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Infrastructure/obj/",
+        "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
+        "outputPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/pak/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj": {
-                "projectPath": "/home/pak/Documents/GitHub/Math-Bridge-BE/MathBridgeSystem.Domain/MathBridgeSystem.Domain.csproj"
+              "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj": {
+                "projectPath": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj"
               }
             }
           }
@@ -293,7 +347,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -370,7 +430,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
