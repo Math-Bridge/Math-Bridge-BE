@@ -26,3 +26,6 @@ Mathbridge.sql
 *.cache
 *.dll
 *.editorconfig
+*.dll
+*.pdb
+*.cache
