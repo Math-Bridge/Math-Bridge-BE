@@ -29,3 +29,4 @@ Mathbridge.sql
 *.dll
 *.pdb
 *.cache
+MathBridgeSystem.Api/mathbridge_firebase.json
