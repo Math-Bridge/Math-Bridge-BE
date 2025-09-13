@@ -1,8 +1,8 @@
 when:
   - event: pull_request
-    branch: main
+    branch: paymentSepay
   - event: push
-    branch: main
+    branch: paymentSepay
     
 steps:
   - name: Building BE
