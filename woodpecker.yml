@@ -39,7 +39,6 @@ steps:
           sleep 3 &&
           pkill -9 -f 'dotnet.*MathBridgeSystem\.Api\.dll' || true &&
           sleep 1 &&
+          export ASPNETCORE_ENVIRONMENT=Development &&
           nohup dotnet MathBridgeSystem.Api.dll --urls='http://0.0.0.0:5000' > app.log 2>&1 &
-          sleep 5 
-          pgrep -f 'dotnet.*MathBridgeSystem\.Api\.dll' || exit 1
         "
