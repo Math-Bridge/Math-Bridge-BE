@@ -6,11 +6,11 @@ when:
     
 steps:
   - name: Building BE
-    image: bash
+    image: mcr.microsoft.com/dotnet/sdk:8.0
     commands:
       - wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh | bash
       - chmod +x ./dotnet-install.sh
       - ./dotnet-install.sh --version latest
       - export PATH=$PATH:$HOME/.dotnet
-      - ls
       - dotnet build
+      - ls
