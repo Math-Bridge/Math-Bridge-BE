@@ -1,4 +1,5 @@
 ﻿using BCrypt.Net;
+using FirebaseAdmin.Auth;
 using MathBridge.Application.DTOs;
 using MathBridge.Application.Interfaces;
 using MathBridge.Domain.Entities;
@@ -25,13 +26,6 @@ namespace MathBridge.Application.Services
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
-        private string GenerateVerificationCode()
-        {
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 6)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
 
         public async Task<string> RegisterAsync(RegisterRequest request)
         {
@@ -47,32 +41,56 @@ namespace MathBridge.Application.Services
             if (!roleExists)
                 throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
 
-            var verificationCode = GenerateVerificationCode();
+            // Create and save a temporary token in cache with user data
+            var tempToken = Guid.NewGuid().ToString();
             var cacheEntryOptions = new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) 
             };
-            _cache.Set(request.Email + "_code", verificationCode, cacheEntryOptions);
-            _cache.Set(request.Email + "_request", request, cacheEntryOptions); // save request
-            await _emailService.SendVerificationCodeAsync(request.Email, verificationCode);
+            var cachedRequest = new
+            {
+                request.FullName,
+                request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                request.PhoneNumber,
+                request.Gender,
+                RoleId = parentRoleId
+            };
+            _cache.Set(tempToken, cachedRequest, cacheEntryOptions);
 
-            return "Verification code sent to your email. Please verify to complete registration.";
-            
+            // Generate custom token 
+            var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("temp_" + request.Email);  
+
+            // Link verify with custom token 
+            var link = $"https://api.vibe88.tech/api/auth/verify-link?token={tempToken}&idToken={customToken}"; 
+
+            await _emailService.SendVerificationLinkAsync(request.Email, link);
+
+            return "Verification link sent to your email. Please check and click to complete registration.";
         }
-        public async Task<Guid> VerifyRegistrationAsync(string email, string code)
+
+        public async Task<Guid> VerifyEmailLinkAsync(string idToken, string token)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
-                throw new ArgumentException("Email and code are required");
+            if (string.IsNullOrEmpty(idToken) || string.IsNullOrEmpty(token))
+                throw new ArgumentException("Invalid verification token");
 
-            if (!_cache.TryGetValue(email + "_code", out string cachedCode) || cachedCode != code)
-                throw new Exception("Invalid or expired verification code");
+            // Verify custom token form Firebase 
+            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            var email = decodedToken.Uid;  
 
-            var request = _cache.Get<RegisterRequest>(email + "_request");
-            if (request == null)
-                throw new Exception("Registration data not found");
+            if (!decodedToken.Uid.StartsWith("temp_") || decodedToken.Uid != "temp_" + email)
+                throw new Exception("Invalid verification token");
 
-            _cache.Remove(email + "_code");
-            _cache.Remove(email + "_request");
+            if (!_cache.TryGetValue(token, out var cachedRequest) || cachedRequest == null)
+                throw new Exception("Invalid or expired registration request");
+
+            var request = (dynamic)cachedRequest;
+            if (request.Email != email)
+                throw new Exception("Email mismatch in verification");
+
+            // Check duplicate email
+            if (await _userRepository.EmailExistsAsync(email))
+                throw new Exception("Email already registered");
 
             var user = new User
             {
@@ -90,6 +108,8 @@ namespace MathBridge.Application.Services
             };
 
             await _userRepository.AddAsync(user);
+            _cache.Remove(token); 
+
             return user.UserId;
         }
 

@@ -1,16 +1,17 @@
-﻿using MathBridge.Infrastructure.Data;
-using MathBridge.Infrastructure.Repositories;
-using MathBridge.Application.Services;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using System.Collections.Generic;
+using MathBridge.Application.Interfaces;
+using MathBridge.Application.Services;
+using MathBridge.Domain.Interfaces;
+using MathBridge.Infrastructure.Data;
+using MathBridge.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +34,18 @@ catch (Exception ex)
 {
     throw new Exception("Failed to initialize Firebase: " + ex.Message, ex);
 }
+// Load SMTP configuration from external JSON file with error handling
+var smtpConfigPath = builder.Configuration["SmtpConfigPath"];
+if (!string.IsNullOrEmpty(smtpConfigPath) && File.Exists(smtpConfigPath))
+{
+    builder.Configuration.AddJsonFile(smtpConfigPath, optional: false, reloadOnChange: true);
+}
+else
+{
+    Console.WriteLine($"Warning: SMTP config file not found at {smtpConfigPath}. Email functionality will be unavailable.");
+}
 
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 // Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null); // Disable camelCase by default

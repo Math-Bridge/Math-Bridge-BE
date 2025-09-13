@@ -29,23 +29,26 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Register: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during registration" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
-        [HttpPost("verify")]
-        public async Task<IActionResult> Verify([FromBody] VerifyRequest request)
+        [HttpGet("verify-link")]
+        public async Task<IActionResult> VerifyLink(string oobCode, string token)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
-                var userId = await _authService.VerifyRegistrationAsync(request.Email, request.Code);
-                return Ok(new { userId, message = "Registration completed successfully" });
+                var verifiedUserId = await _authService.VerifyEmailLinkAsync(oobCode, token);
+                return Ok(new { userId = verifiedUserId, message = "Email verified and registration completed successfully" });
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Verify: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during verification" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -62,7 +65,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Login: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during login" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -82,7 +88,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in GoogleLogin: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during Google login" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
     }
