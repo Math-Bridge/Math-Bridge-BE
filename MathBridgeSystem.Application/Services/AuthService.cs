@@ -62,7 +62,7 @@ namespace MathBridge.Application.Services
             var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("temp_" + request.Email);  
 
             // Link verify with custom token 
-            var link = $"https://localhost:7046/api/auth/verify-link?token={tempToken}&idToken={customToken}"; 
+            var link = $"https://api.vibe88.tech/api/auth/verify-link?token={tempToken}&idToken={customToken}"; 
 
             await _emailService.SendVerificationLinkAsync(request.Email, link);
 

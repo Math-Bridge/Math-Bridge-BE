@@ -29,7 +29,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Register: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during registration" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
         [HttpGet("verify-link")]
@@ -42,7 +45,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Verify: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during verification" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -59,7 +65,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in Login: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during login" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -79,7 +88,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in GoogleLogin: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during Google login" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
     }

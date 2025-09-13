@@ -37,7 +37,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in AdminCreateUser: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while creating user" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -58,7 +61,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in UpdateUserStatus: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while updating status" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
     }

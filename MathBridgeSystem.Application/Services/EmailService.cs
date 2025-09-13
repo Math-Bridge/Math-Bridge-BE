@@ -26,15 +26,9 @@ namespace MathBridge.Application.Services
         public async Task SendVerificationLinkAsync(string email, string link)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("MathBridge", _fromEmail));
+            message.From.Add(new MailboxAddress("MathBridge Support", _fromEmail));
             message.To.Add(new MailboxAddress("", email));
-<<<<<<< Updated upstream
-            message.Subject = "Xác thực đăng ký MathBridge";
-            message.Body = new TextPart("plain")
-            {
-                Text = $"Mã xác thực của bạn là: {code}. Mã hết hạn sau 10 phút."
-=======
-            message.Subject = "Verify Your MathBridge Account";
+            message.Subject = "Your MathBridge Verification Code";
 
             var htmlBody = new TextPart("html")
             {
@@ -71,8 +65,8 @@ namespace MathBridge.Application.Services
     </div>
 </body>
 </html>"
->>>>>>> Stashed changes
             };
+            message.Body = htmlBody;
 
             using var client = new SmtpClient();
             await client.ConnectAsync(_host, _port, MailKit.Security.SecureSocketOptions.StartTls);
