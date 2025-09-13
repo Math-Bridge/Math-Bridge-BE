@@ -1,0 +1,14 @@
+
+/.idea/.idea.MathBridgeSystem/.idea
+/MathBridgeSystem.Api/obj/Debug
+/MathBridgeSystem.Api/obj
+/MathBridgeSystem.Application/obj
+/MathBridgeSystem.Infrastructure/obj
+/MathBridgeSystem.Infrastructure/obj
+/MathBridgeSystem.Infrastructure/obj/Debug
+/MathBridgeSystem.Infrastructure/bin
+/MathBridgeSystem.Api/bin
+/MathBridgeSystem.Application/bin
+/MathBridgeSystem.Domain/obj
+MathBridgeSystem.Api/mathbridge_firebase.json
+MathBridgeSystem.Api/appsettings.json
