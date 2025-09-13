@@ -35,10 +35,6 @@ steps:
       - |
         sudo ssh -i $WOODPECKER_WORKSPACE/.ssh/id_rsa_deploy -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST "
           cd $REMOTE_TARGET_PATH/MathBridge_BE &&
-          pkill -f 'dotnet.*MathBridgeSystem\.Api\.dll' || true &&
-          sleep 3 &&
-          pkill -9 -f 'dotnet.*MathBridgeSystem\.Api\.dll' || true &&
-          sleep 1 &&
-          export ASPNETCORE_ENVIRONMENT=Development &&
-          nohup dotnet MathBridgeSystem.Api.dll --urls='http://0.0.0.0:5000' > app.log 2>&1 &
+          systemctl stop mathbridge-api &&
+          systemctl start mathbridge-api
         "
