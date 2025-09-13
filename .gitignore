@@ -30,3 +30,4 @@ Mathbridge.sql
 *.pdb
 *.cache
 MathBridgeSystem.Api/mathbridge_firebase.json
+/publish
