@@ -6,7 +6,7 @@ when:
     
 steps:
   - name: Building BE
-    image: mcr.microsoft.com/dotnet/sdk:8.0
+    image: bash
     commands:
       - wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh | bash
       - chmod +x ./dotnet-install.sh
