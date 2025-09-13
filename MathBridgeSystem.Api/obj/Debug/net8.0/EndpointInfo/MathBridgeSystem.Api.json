@@ -109,30 +109,27 @@
         }
       }
     },
-    "/api/auth/verify": {
-      "post": {
+    "/api/auth/verify-link": {
+      "get": {
         "tags": [
           "Auth"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyRequest"
-              }
+        "parameters": [
+          {
+            "name": "oobCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -407,26 +404,6 @@
           "Gender": {
             "minLength": 1,
             "pattern": "^(male|female|other)$",
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "VerifyRequest": {
-        "required": [
-          "Code",
-          "Email"
-        ],
-        "type": "object",
-        "properties": {
-          "Email": {
-            "minLength": 1,
-            "type": "string",
-            "format": "email"
-          },
-          "Code": {
-            "maxLength": 6,
-            "minLength": 6,
             "type": "string"
           }
         },
