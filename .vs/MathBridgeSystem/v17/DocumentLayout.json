@@ -3,131 +3,24 @@
   "WorkspaceRootPath": "D:\\DoAn\\Math-Bridge-BE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/NGUYEN_NGUYEN/mathbridge/sa/SqlTable/dbo.users.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\iemailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\iemailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\verifyrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\verifyrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.domain\\entities\\wallettransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|solutionrelative:mathbridgesystem.domain\\entities\\wallettransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|solutionrelative:mathbridgesystem.domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{92634ABD-3266-4E4A-81E0-B1942A925B58}|MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj|solutionrelative:mathbridgesystem.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.infrastructure\\repositories\\wallettransactionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|solutionrelative:mathbridgesystem.infrastructure\\repositories\\wallettransactionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|solutionrelative:mathbridgesystem.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.infrastructure\\data\\mathbridgedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4CC6A860-F7B7-4D97-8D5B-4D4919011D53}|MathBridgeSystem.Infrastructure\\MathBridgeSystem.Infrastructure.csproj|solutionrelative:mathbridgesystem.infrastructure\\data\\mathbridgedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\services\\googleauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\services\\googleauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\itokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\itokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\igoogleauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\igoogleauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\walletresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\walletresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\updateuserrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\updateuserrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\updatestatusrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\updatestatusrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\dtos\\googleloginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\dtos\\googleloginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.domain\\interfaces\\iwallettransactionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|solutionrelative:mathbridgesystem.domain\\interfaces\\iwallettransactionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.domain\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|solutionrelative:mathbridgesystem.domain\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.domain\\entities\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4183023D-0C58-4324-BA9E-1757BEFAA3FD}|MathBridgeSystem.Domain\\MathBridgeSystem.Domain.csproj|solutionrelative:mathbridgesystem.domain\\entities\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|d:\\doan\\math-bridge-be\\mathbridgesystem.application\\interfaces\\iemailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{147C1B9A-ED06-4FB1-B2FE-AB94365F4681}|MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj|solutionrelative:mathbridgesystem.application\\interfaces\\iemailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -137,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -153,395 +46,68 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "dbo.users [Data]",
-              "DocumentMoniker": "ViewDataWindow_MSSQL__/NGUYEN_NGUYEN/mathbridge/sa/SqlTable/dbo.users.sql",
-              "ToolTip": "dbo.users [Data]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-09-09T14:44:23.697Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "VerifyRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\VerifyRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\VerifyRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\VerifyRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\VerifyRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T14:29:52.46Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "EmailService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\EmailService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\EmailService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\EmailService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\EmailService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T14:21:32.924Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "IEmailService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T14:21:00.004Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
               "Title": "AuthController.cs",
               "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "MathBridgeSystem.Api\\Controllers\\AuthController.cs",
               "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\AuthController.cs",
               "RelativeToolTip": "MathBridgeSystem.Api\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAAUwCMAAAA4AAAAAAAAAA==",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAYwCwAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:37.074Z",
+              "WhenOpened": "2025-09-13T03:48:58.641Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\AuthService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\AuthService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\AuthService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\AuthService.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAsAAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:43.616Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Program.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Api\\Program.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Program.cs",
-              "RelativeToolTip": "MathBridgeSystem.Api\\Program.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAcwC4AAAAzAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:47.624Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "IAuthService.cs",
               "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IAuthService.cs",
               "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\IAuthService.cs",
               "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IAuthService.cs",
               "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\IAuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:25.906Z",
+              "WhenOpened": "2025-09-13T03:47:00.663Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "AdminController.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\AdminController.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Api\\Controllers\\AdminController.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\AdminController.cs",
-              "RelativeToolTip": "MathBridgeSystem.Api\\Controllers\\AdminController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEAAAAABAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "IEmailService.cs",
+              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
+              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
+              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
+              "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\IEmailService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:31.999Z",
+              "WhenOpened": "2025-09-13T03:46:42.783Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "User.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\User.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Domain\\Entities\\User.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\User.cs",
-              "RelativeToolTip": "MathBridgeSystem.Domain\\Entities\\User.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "EmailService.cs",
+              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\EmailService.cs",
+              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\EmailService.cs",
+              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\EmailService.cs",
+              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\EmailService.cs",
+              "ViewState": "AgIAACMAAAAAAAAAAAAcwCoAAAB4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:25.123Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "WalletTransactionRepository.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Repositories\\WalletTransactionRepository.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Infrastructure\\Repositories\\WalletTransactionRepository.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Repositories\\WalletTransactionRepository.cs",
-              "RelativeToolTip": "MathBridgeSystem.Infrastructure\\Repositories\\WalletTransactionRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:19.075Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\appsettings.json",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Api\\appsettings.json",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\appsettings.json",
-              "RelativeToolTip": "MathBridgeSystem.Api\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-09-06T15:27:52.433Z",
+              "WhenOpened": "2025-09-13T03:46:16.151Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "WalletTransaction.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\WalletTransaction.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Domain\\Entities\\WalletTransaction.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\WalletTransaction.cs",
-              "RelativeToolTip": "MathBridgeSystem.Domain\\Entities\\WalletTransaction.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAqAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\AuthService.cs",
+              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\AuthService.cs",
+              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\AuthService.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAYwC8AAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:30.764Z",
+              "WhenOpened": "2025-09-13T03:42:04.478Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "UsersController.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\UsersController.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Api\\Controllers\\UsersController.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\Controllers\\UsersController.cs",
-              "RelativeToolTip": "MathBridgeSystem.Api\\Controllers\\UsersController.cs",
-              "ViewState": "AgIAADQAAAAAAAAAAAAUwFIAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:41.858Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "UserRepository.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Repositories\\UserRepository.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Infrastructure\\Repositories\\UserRepository.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Repositories\\UserRepository.cs",
-              "RelativeToolTip": "MathBridgeSystem.Infrastructure\\Repositories\\UserRepository.cs",
-              "ViewState": "AgIAABgAAAAAAAAAAAAswDYAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:14.179Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "MathBridgeDbContext.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Data\\MathBridgeDbContext.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Infrastructure\\Data\\MathBridgeDbContext.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Infrastructure\\Data\\MathBridgeDbContext.cs",
-              "RelativeToolTip": "MathBridgeSystem.Infrastructure\\Data\\MathBridgeDbContext.cs",
-              "ViewState": "AgIAAKMAAAAAAAAAAAAcwMUAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:09.551Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "UserService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\UserService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\UserService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\UserService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\UserService.cs",
-              "ViewState": "AgIAAGwAAAAAAAAAAAAUwIwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:27:04.216Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "TokenService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\TokenService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\TokenService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\TokenService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\TokenService.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAIwCwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:59.209Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "GoogleAuthService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\GoogleAuthService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Services\\GoogleAuthService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Services\\GoogleAuthService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Services\\GoogleAuthService.cs",
-              "ViewState": "AgIAAAQAAAAAAAAAAADwvyMAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:54.21Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "IUserService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IUserService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\IUserService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IUserService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\IUserService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:39.042Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "ITokenService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\ITokenService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\ITokenService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\ITokenService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\ITokenService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:34.453Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "IGoogleAuthService.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IGoogleAuthService.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\Interfaces\\IGoogleAuthService.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\Interfaces\\IGoogleAuthService.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\Interfaces\\IGoogleAuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:30.157Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "WalletResponse.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\WalletResponse.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\WalletResponse.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\WalletResponse.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\WalletResponse.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:21.276Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "UserResponse.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UserResponse.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\UserResponse.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UserResponse.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\UserResponse.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:16.778Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "UpdateUserRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UpdateUserRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\UpdateUserRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UpdateUserRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\UpdateUserRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:11.613Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "UpdateStatusRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UpdateStatusRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\UpdateStatusRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\UpdateStatusRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\UpdateStatusRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:06.556Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 26,
-              "Title": "RegisterRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\RegisterRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\RegisterRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\RegisterRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\RegisterRequest.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAowCAAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:26:01.445Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 27,
-              "Title": "LoginRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\LoginRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\LoginRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\LoginRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\LoginRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:56.458Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "GoogleLoginRequest.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\GoogleLoginRequest.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Application\\DTOs\\GoogleLoginRequest.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\DTOs\\GoogleLoginRequest.cs",
-              "RelativeToolTip": "MathBridgeSystem.Application\\DTOs\\GoogleLoginRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:51.196Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "IWalletTransactionRepository.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Interfaces\\IWalletTransactionRepository.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Domain\\Interfaces\\IWalletTransactionRepository.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Interfaces\\IWalletTransactionRepository.cs",
-              "RelativeToolTip": "MathBridgeSystem.Domain\\Interfaces\\IWalletTransactionRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:40.921Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
-              "Title": "IUserRepository.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Interfaces\\IUserRepository.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Domain\\Interfaces\\IUserRepository.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Interfaces\\IUserRepository.cs",
-              "RelativeToolTip": "MathBridgeSystem.Domain\\Interfaces\\IUserRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:35.839Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 31,
-              "Title": "Role.cs",
-              "DocumentMoniker": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\Role.cs",
-              "RelativeDocumentMoniker": "MathBridgeSystem.Domain\\Entities\\Role.cs",
-              "ToolTip": "D:\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Domain\\Entities\\Role.cs",
-              "RelativeToolTip": "MathBridgeSystem.Domain\\Entities\\Role.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T15:25:13.782Z"
             }
           ]
         }

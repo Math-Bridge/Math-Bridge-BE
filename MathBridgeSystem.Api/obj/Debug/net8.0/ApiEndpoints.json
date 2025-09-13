@@ -86,16 +86,21 @@
   },
   {
     "ContainingType": "MathBridge.Presentation.Controllers.AuthController",
-    "Method": "Verify",
-    "RelativePath": "api/auth/verify",
-    "HttpMethod": "POST",
+    "Method": "VerifyLink",
+    "RelativePath": "api/auth/verify-link",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "request",
-        "Type": "MathBridge.Application.DTOs.VerifyRequest",
-        "IsRequired": true
+        "Name": "oobCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "token",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
