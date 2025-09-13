@@ -11,5 +11,6 @@ steps:
       - wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh | bash
       - chmod +x ./dotnet-install.sh
       - ./dotnet-install.sh --version latest
+      - export PATH=$PATH:$HOME/.dotnet
       - ls
       - dotnet build
