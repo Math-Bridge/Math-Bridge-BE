@@ -35,7 +35,13 @@ steps:
       - |
         sudo ssh -i $WOODPECKER_WORKSPACE/.ssh/id_rsa_deploy -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST "
           cd $REMOTE_TARGET_PATH/MathBridge_BE &&
-          nohup dotnet MathBridgeSystem.Api.dll > app.log 2>&1 &
+          # Stop existing process gracefully
+          pkill -f 'dotnet.*MathBridgeSystem\.Api\.dll' || true &&
+          sleep 3 &&
+          # Force kill if still running
+          pkill -9 -f 'dotnet.*MathBridgeSystem\.Api\.dll' || true &&
+          sleep 1 &&
+          nohup dotnet MathBridgeSystem.Api.dll --urls='http://0.0.0.0:5000' > app.log 2>&1 &
           sleep 5 &&
           pgrep -f 'dotnet.*MathBridgeSystem\.Api\.dll' || exit 1
         "
