@@ -35,7 +35,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in GetUser: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while getting user" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -57,7 +60,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in UpdateUser: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while updating user" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
 
@@ -76,7 +82,10 @@ namespace MathBridge.Presentation.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, new { error = ex.Message });
+                Console.WriteLine($"Error in GetWallet: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while getting wallet" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
             }
         }
     }
