@@ -12,3 +12,5 @@
 /MathBridgeSystem.Domain/obj
 MathBridgeSystem.Api/mathbridge_firebase.json
 MathBridgeSystem.Api/appsettings.json
+/publish
+/MathBridgeSystem.Domain/bin
