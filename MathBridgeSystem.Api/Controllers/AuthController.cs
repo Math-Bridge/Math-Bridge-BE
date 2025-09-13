@@ -1,5 +1,6 @@
 ﻿using MathBridge.Application.DTOs;
 using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -20,35 +21,70 @@ namespace MathBridge.Presentation.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in Register: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
-                var userId = await _authService.RegisterAsync(request);
-                return Ok(new { userId });
+                var message = await _authService.RegisterAsync(request);
+                return Ok(new { message });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in Register: {ex.ToString()}");
-
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during registration" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
         }
-        [HttpGet("verify-link")]
-        public async Task<IActionResult> VerifyLink(string oobCode, string token)
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in VerifyEmail: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                var verifiedUserId = await _authService.VerifyEmailLinkAsync(oobCode, token);
+                if (string.IsNullOrEmpty(request.OobCode))
+                {
+                    Console.WriteLine("OobCode is null or empty");
+                    return BadRequest(new { error = "OobCode is required" });
+                }
+
+                var verifiedUserId = await _authService.VerifyEmailAsync(request.OobCode);
                 return Ok(new { userId = verifiedUserId, message = "Email verified and registration completed successfully" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in Verify: {ex.ToString()}");
-
+                Console.WriteLine($"Error in VerifyEmail: {ex.ToString()}");
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during verification" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
+            }
+        }
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmailGet(string oobCode)
+        {
+            if (string.IsNullOrEmpty(oobCode))
+            {
+                Console.WriteLine("OobCode is null or empty in GET");
+                return BadRequest(new { error = "OobCode is required" });
+            }
+
+            try
+            {
+                var verifiedUserId = await _authService.VerifyEmailAsync(oobCode);
+                return Ok("Email verified successfully! You can now login.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in VerifyEmailGet: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during verification" : ex.Message;
+                return BadRequest(new { error = errorMessage });
             }
         }
 
@@ -56,7 +92,10 @@ namespace MathBridge.Presentation.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in Login: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
@@ -66,7 +105,6 @@ namespace MathBridge.Presentation.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in Login: {ex.ToString()}");
-
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during login" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
@@ -76,7 +114,10 @@ namespace MathBridge.Presentation.Controllers
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in GoogleLogin: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
@@ -89,7 +130,6 @@ namespace MathBridge.Presentation.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GoogleLogin: {ex.ToString()}");
-
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during Google login" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
