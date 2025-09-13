@@ -4,6 +4,6 @@ namespace MathBridge.Application.Interfaces
 {
     public interface IEmailService
     {
-        Task SendVerificationCodeAsync(string email, string code);
+        Task SendVerificationLinkAsync(string email, string link);
     }
 }

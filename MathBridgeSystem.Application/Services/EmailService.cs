@@ -23,14 +23,13 @@ namespace MathBridge.Application.Services
             _fromEmail = configuration["Smtp:FromEmail"] ?? throw new System.ArgumentNullException("Smtp:FromEmail");
         }
 
-        public async Task SendVerificationCodeAsync(string email, string code)
+        public async Task SendVerificationLinkAsync(string email, string link)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("MathBridge Support", _fromEmail));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = "Your MathBridge Verification Code";
 
-            // Sử dụng HTML body để thiết kế đẹp và lịch sự
             var htmlBody = new TextPart("html")
             {
                 Text = $@"
@@ -43,7 +42,7 @@ namespace MathBridge.Application.Services
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
         .header {{ background-color: #f8f9fa; padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0; }}
-        .code {{ font-size: 24px; color: #2c3e50; font-weight: bold; text-align: center; padding: 10px; background-color: #ecf0f1; border-radius: 5px; }}
+        .button {{ display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; }}
         .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
     </style>
 </head>
@@ -53,12 +52,11 @@ namespace MathBridge.Application.Services
             <h2>MathBridge</h2>
             <p>Welcome to Your Learning Journey!</p>
         </div>
-        <div style='padding: 20px;'>
+        <div style='padding: 20px; text-align: center;'>
             <p>Dear User,</p>
-            <p>Thank you for registering with MathBridge. To complete your account setup, please use the verification code below:</p>
-            <div class='code'>{code}</div>
-            <p>This code will expire in <strong>10 minutes</strong>. Please enter it on the verification page to proceed.</p>
-            <p>If you did not request this code, please ignore this email or contact our support team immediately.</p>
+            <p>Thank you for registering with MathBridge. To complete your account setup, please click the button below to verify your email:</p>
+            <a href='{link}' class='button'>Verify Email</a>
+            <p>This link will expire in 5 minutes. If you did not request this, please ignore this email or contact our support team.</p>
         </div>
         <div class='footer'>
             <p>&copy; 2025 MathBridge. All rights reserved.</p>

@@ -35,16 +35,13 @@ namespace MathBridge.Presentation.Controllers
                 return StatusCode(500, new { error = errorMessage });
             }
         }
-        [HttpPost("verify")]
-        public async Task<IActionResult> Verify([FromBody] VerifyRequest request)
+        [HttpGet("verify-link")]
+        public async Task<IActionResult> VerifyLink(string oobCode, string token)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
-                var userId = await _authService.VerifyRegistrationAsync(request.Email, request.Code);
-                return Ok(new { userId, message = "Registration completed successfully" });
+                var verifiedUserId = await _authService.VerifyEmailLinkAsync(oobCode, token);
+                return Ok(new { userId = verifiedUserId, message = "Email verified and registration completed successfully" });
             }
             catch (Exception ex)
             {
