@@ -1,0 +1,15 @@
+when:
+  - event: pull_request
+    branch: main
+  - event: push
+    branch: main
+    
+steps:
+  - name: Building BE
+    image: bash
+    commands:
+      - wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh | bash
+      - chmod +x ./dotnet-install.sh
+      - ./dotnet-install.sh --version latest
+      - ls
+      - dotnet build
