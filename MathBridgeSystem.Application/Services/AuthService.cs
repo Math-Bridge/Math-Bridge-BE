@@ -35,18 +35,19 @@ namespace MathBridge.Application.Services
             if (await _userRepository.EmailExistsAsync(request.Email))
                 throw new Exception("Email already exists");
 
-            // Hardcode RoleId to 3 (parent role) for all registrations
+            // Hardcode RoleId to 3 (parent role) for regular registrations
             const int parentRoleId = 3;
             var roleExists = await _userRepository.RoleExistsAsync(parentRoleId);
             if (!roleExists)
                 throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
 
-            // Create and save a temporary token in cache with user data
-            var tempToken = Guid.NewGuid().ToString();
+            // Generate OOB code
+            var oobCode = Guid.NewGuid().ToString();
             var cacheEntryOptions = new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) 
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15) // Increase expiration time to 15 minutes
             };
+
             var cachedRequest = new
             {
                 request.FullName,
@@ -56,48 +57,55 @@ namespace MathBridge.Application.Services
                 request.Gender,
                 RoleId = parentRoleId
             };
-            _cache.Set(tempToken, cachedRequest, cacheEntryOptions);
+            _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
 
-            // Generate custom token 
-            var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("temp_" + request.Email);  
+            // Generate verification link with oobCode (sửa để đúng route API)
+            var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
 
-            // Link verify with custom token 
-            var link = $"https://api.vibe88.tech/api/auth/verify-link?token={tempToken}&idToken={customToken}"; 
-
-            await _emailService.SendVerificationLinkAsync(request.Email, link);
+            try
+            {
+                await _emailService.SendVerificationLinkAsync(request.Email, verificationLink);
+                Console.WriteLine($"Verification link sent to {request.Email}: {verificationLink}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send verification email: {ex.ToString()}");
+                throw new Exception("Failed to send verification email", ex);
+            }
 
             return "Verification link sent to your email. Please check and click to complete registration.";
         }
 
-        public async Task<Guid> VerifyEmailLinkAsync(string idToken, string token)
+        public async Task<Guid> VerifyEmailAsync(string oobCode)
         {
-            if (string.IsNullOrEmpty(idToken) || string.IsNullOrEmpty(token))
-                throw new ArgumentException("Invalid verification token");
+            if (string.IsNullOrEmpty(oobCode))
+            {
+                Console.WriteLine("VerifyEmailAsync: OobCode is null or empty");
+                throw new ArgumentException("Invalid verification code");
+            }
 
-            // Verify custom token form Firebase 
-            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
-            var email = decodedToken.Uid;  
-
-            if (!decodedToken.Uid.StartsWith("temp_") || decodedToken.Uid != "temp_" + email)
-                throw new Exception("Invalid verification token");
-
-            if (!_cache.TryGetValue(token, out var cachedRequest) || cachedRequest == null)
-                throw new Exception("Invalid or expired registration request");
+            if (!_cache.TryGetValue(oobCode, out var cachedRequest) || cachedRequest == null)
+            {
+                Console.WriteLine($"VerifyEmailAsync: Invalid or expired oobCode: {oobCode}");
+                throw new Exception("Invalid or expired verification code");
+            }
 
             var request = (dynamic)cachedRequest;
-            if (request.Email != email)
-                throw new Exception("Email mismatch in verification");
+            var email = request.Email;
 
             // Check duplicate email
             if (await _userRepository.EmailExistsAsync(email))
+            {
+                Console.WriteLine($"VerifyEmailAsync: Email already registered: {email}");
                 throw new Exception("Email already registered");
+            }
 
             var user = new User
             {
                 UserId = Guid.NewGuid(),
                 FullName = request.FullName,
                 Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                PasswordHash = request.PasswordHash,
                 PhoneNumber = request.PhoneNumber,
                 Gender = request.Gender,
                 RoleId = request.RoleId,
@@ -107,8 +115,19 @@ namespace MathBridge.Application.Services
                 Status = "active"
             };
 
-            await _userRepository.AddAsync(user);
-            _cache.Remove(token); 
+            try
+            {
+                await _userRepository.AddAsync(user);
+                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"VerifyEmailAsync: Failed to create user: {ex.ToString()}");
+                throw new Exception("Failed to create user", ex);
+            }
+
+            _cache.Remove(oobCode);
+            Console.WriteLine($"VerifyEmailAsync: Cache removed for oobCode: {oobCode}");
 
             return user.UserId;
         }
@@ -120,21 +139,32 @@ namespace MathBridge.Application.Services
 
             var user = await _userRepository.GetByEmailAsync(request.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                Console.WriteLine($"LoginAsync: Invalid credentials for email: {request.Email}");
                 throw new Exception("Invalid credentials");
+            }
 
             if (user.Status == "banned")
+            {
+                Console.WriteLine($"LoginAsync: Account banned for email: {request.Email}");
                 throw new Exception("Account is banned");
+            }
 
             user.LastActive = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
 
-            return _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
+            var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
+            Console.WriteLine($"LoginAsync: JWT token generated for user: {user.UserId}");
+            return token;
         }
 
         public async Task<string> GoogleLoginAsync(string googleToken)
         {
             if (string.IsNullOrEmpty(googleToken))
+            {
+                Console.WriteLine("GoogleLoginAsync: Google token is null or empty");
                 throw new ArgumentException("Google token is required", nameof(googleToken));
+            }
 
             var (email, name) = await _googleAuthService.ValidateGoogleTokenAsync(googleToken);
             var user = await _userRepository.GetByEmailAsync(email);
@@ -145,7 +175,10 @@ namespace MathBridge.Application.Services
                 const int parentRoleId = 3;
                 var roleExists = await _userRepository.RoleExistsAsync(parentRoleId);
                 if (!roleExists)
+                {
+                    Console.WriteLine($"GoogleLoginAsync: Parent role (ID: {parentRoleId}) not found");
                     throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
+                }
 
                 user = new User
                 {
@@ -162,17 +195,24 @@ namespace MathBridge.Application.Services
                     Status = "active"
                 };
                 await _userRepository.AddAsync(user);
+                Console.WriteLine($"GoogleLoginAsync: New user created: {user.UserId}");
             }
             else
             {
                 if (user.Status == "banned")
+                {
+                    Console.WriteLine($"GoogleLoginAsync: Account banned for email: {email}");
                     throw new Exception("Account is banned");
+                }
 
                 user.LastActive = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
+                Console.WriteLine($"GoogleLoginAsync: User updated: {user.UserId}");
             }
 
-            return _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
+            var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
+            Console.WriteLine($"GoogleLoginAsync: JWT token generated for user: {user.UserId}");
+            return token;
         }
     }
 }

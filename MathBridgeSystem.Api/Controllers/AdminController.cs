@@ -24,21 +24,26 @@ namespace MathBridge.Presentation.Controllers
         public async Task<IActionResult> CreateUser([FromBody] RegisterRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in CreateUser: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
                 var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 if (string.IsNullOrEmpty(currentUserRole))
+                {
+                    Console.WriteLine("CreateUser: Role not found in token");
                     return Unauthorized(new { error = "Role not found in token" });
+                }
 
                 var userId = await _userService.AdminCreateUserAsync(request, currentUserRole);
                 return Ok(new { userId });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in AdminCreateUser: {ex.ToString()}");
-
+                Console.WriteLine($"Error in CreateUser: {ex.ToString()}");
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while creating user" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
@@ -48,13 +53,19 @@ namespace MathBridge.Presentation.Controllers
         public async Task<IActionResult> UpdateUserStatus(Guid id, [FromBody] UpdateStatusRequest request)
         {
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in UpdateUserStatus: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
                 var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 if (string.IsNullOrEmpty(currentUserRole))
+                {
+                    Console.WriteLine("UpdateUserStatus: Role not found in token");
                     return Unauthorized(new { error = "Role not found in token" });
+                }
 
                 var userId = await _userService.UpdateUserStatusAsync(id, request, currentUserRole);
                 return Ok(new { userId });
@@ -62,7 +73,6 @@ namespace MathBridge.Presentation.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in UpdateUserStatus: {ex.ToString()}");
-
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while updating status" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }

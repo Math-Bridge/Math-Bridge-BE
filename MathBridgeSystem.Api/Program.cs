@@ -91,7 +91,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // React dev server
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 // Add Swagger services with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
@@ -136,7 +144,7 @@ if (app.Environment.IsDevelopment())
         c.EnableDeepLinking();
     });
 }
-
+app.UseCors();
 app.UseHttpsRedirection(); // Enforce HTTPS
 app.UseAuthentication();
 app.UseAuthorization();
