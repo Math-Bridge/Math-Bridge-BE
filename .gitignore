@@ -1,38 +1,29 @@
-/.serena
+# Build artifacts
 /MathBridgeSystem.Domain/obj
-/MathBridgeSystem.Application/obj
-/MathBridgeSystem.Api/obj
-/MathBridgeSystem.Infrastructure/obj
-/SePayExample
-/.idea
-Mathbridge.sql
-/MathBridgeSystem.Infrastructure/bin
-/MathBridgeSystem.Infrastructure/obj
-/MathBridgeSystem.Infrastructure/obj
 /MathBridgeSystem.Domain/bin
 /MathBridgeSystem.Application/obj
+/MathBridgeSystem.Application/bin
 /MathBridgeSystem.Api/obj
 /MathBridgeSystem.Api/bin
-/MathBridgeSystem.Application/bin
 /MathBridgeSystem.Infrastructure/obj
-/MathBridgeSystem.Domain/obj
-/MathBridgeSystem.Application/obj
-/MathBridgeSystem.Api/bin
-/MathBridgeSystem.Api/bin/Debug
-/MathBridgeSystem.Api/bin/Debug
-/MathBridgeSystem.Api/bin/Debug
-/MathBridgeSystem.Infrastructure/obj
+/MathBridgeSystem.Infrastructure/bin
 /publish
 *.cache
 *.dll
-*.editorconfig
-*.dll
 *.pdb
-*.cache
-MathBridgeSystem.Api/mathbridge_firebase.json
 
-# Ignore sensitive config files
+# IDE files
+/.serena
+/.idea
+*.editorconfig
+
+# Project files
+/SePayExample
+Mathbridge.sql
+
+# Sensitive config files
 mathbridge-2874f-firebase-adminsdk-fbsvc-b0590ad464.json
 smtpconfig.json
 MathBridgeSystem.Api/appsettings.json
 /database_scripts
+MathBridgeSystem.Api/mathbridge_firebase.json
