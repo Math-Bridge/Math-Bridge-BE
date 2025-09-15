@@ -2,6 +2,7 @@
 using MathBridge.Application.Interfaces;
 using MathBridgeSystem.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Threading.Tasks;
 
 namespace MathBridge.Presentation.Controllers
@@ -11,10 +12,12 @@ namespace MathBridge.Presentation.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IMemoryCache _cache;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IMemoryCache cache)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
         [HttpPost("register")]
@@ -131,6 +134,77 @@ namespace MathBridge.Presentation.Controllers
             {
                 Console.WriteLine($"Error in GoogleLogin: {ex.ToString()}");
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during Google login" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in ForgotPassword: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var message = await _authService.ForgotPasswordAsync(request);
+                return Ok(new { message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ForgotPassword: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during forgot password request" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
+
+        [HttpGet("verify-reset")]
+        public IActionResult VerifyResetGet(string oobCode)
+        {
+            if (string.IsNullOrEmpty(oobCode))
+            {
+                Console.WriteLine("OobCode is null or empty in VerifyResetGet");
+                return BadRequest(new { error = "OobCode is required" });
+            }
+
+            try
+            {
+                if (!_cache.TryGetValue(oobCode, out _))
+                {
+                    Console.WriteLine($"VerifyResetGet: Invalid or expired oobCode: {oobCode}");
+                    throw new Exception("Invalid or expired reset code");
+                }
+                // In a real app, this would redirect to a frontend page to input new password.
+                // For testing, return a message to proceed with POST /reset-password.
+                return Ok(new { message = "Reset link is valid. Use POST /api/auth/reset-password with oobCode and newPassword." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in VerifyResetGet: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during reset verification" : ex.Message;
+                return BadRequest(new { error = errorMessage });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in ResetPassword: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var message = await _authService.ResetPasswordAsync(request);
+                return Ok(new { message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ResetPassword: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during password reset" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
         }
