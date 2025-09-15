@@ -56,12 +56,17 @@ builder.Services.AddDbContext<MathBridgeDbContext>(options =>
                                    maxRetryDelay: TimeSpan.FromSeconds(10),
                                    errorNumbersToAdd: new List<int> { 10054, 10053, 1205 })));
 
+// Repository registrations
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
+builder.Services.AddScoped<ISePayRepository, SePayRepository>();
+
+// Service registrations
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<ISePayService, SePayService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -78,12 +83,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-            ClockSkew = TimeSpan.Zero // Disable clock skew to enforce exact token expiration
+            ClockSkew = TimeSpan.Zero, // Disable clock skew to enforce exact token expiration
+            // Map JWT claims to ClaimTypes
+            NameClaimType = "sub", // Maps "sub" to ClaimTypes.NameIdentifier
+            RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         };
     });
 
 builder.Services.AddAuthorization();
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // React dev server
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 // Add Swagger services with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
@@ -92,12 +108,11 @@ builder.Services.AddSwaggerGen(c =>
     // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter your JWT token in the format: Bearer {your token here}"
+        Description = "Enter your JWT token (without 'Bearer ' prefix)"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -129,7 +144,7 @@ if (app.Environment.IsDevelopment())
         c.EnableDeepLinking();
     });
 }
-
+app.UseCors();
 app.UseHttpsRedirection(); // Enforce HTTPS
 app.UseAuthentication();
 app.UseAuthorization();
