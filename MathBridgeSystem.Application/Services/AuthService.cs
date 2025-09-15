@@ -17,6 +17,7 @@ namespace MathBridge.Application.Services
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IEmailService _emailService;
         private readonly IMemoryCache _cache;
+        private readonly FirebaseAuth _firebaseAuth;
 
         public AuthService(IUserRepository userRepository, ITokenService tokenService, IGoogleAuthService googleAuthService, IEmailService emailService, IMemoryCache cache)
         {
@@ -25,6 +26,7 @@ namespace MathBridge.Application.Services
             _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _firebaseAuth = FirebaseAuth.DefaultInstance;
         }
 
         public async Task<string> RegisterAsync(RegisterRequest request)
@@ -119,6 +121,11 @@ namespace MathBridge.Application.Services
             {
                 await _userRepository.AddAsync(user);
                 Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
+                var firebaseUser = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
+                {
+                    Email = request.Email,
+                    Disabled = false
+                });
             }
             catch (Exception ex)
             {
@@ -213,6 +220,82 @@ namespace MathBridge.Application.Services
             var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
             Console.WriteLine($"GoogleLoginAsync: JWT token generated for user: {user.UserId}");
             return token;
+        }
+        public async Task<string> ForgotPasswordAsync(ForgotPasswordRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            try
+            {
+                await _firebaseAuth.GetUserByEmailAsync(request.Email);
+            }
+            catch (FirebaseAuthException ex)
+            {
+                Console.WriteLine($"ForgotPasswordAsync: Email not found in Firebase: {request.Email}, Error: {ex.Message}");
+                throw new Exception("Email not registered in the system");
+            }
+            var user = await _userRepository.GetByEmailAsync(request.Email);
+            if (user == null)
+                throw new Exception("Email not found");
+
+            var oobCode = Guid.NewGuid().ToString();
+            var cacheEntryOptions = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            };
+
+            var cachedRequest = new
+            {
+                Email = request.Email
+            };
+            _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
+
+            var resetLink = $"https://api.vibe88.tech/api/auth/verify-reset?oobCode={oobCode}";
+
+            try
+            {
+                await _emailService.SendResetPasswordLinkAsync(request.Email, resetLink);
+                Console.WriteLine($"Reset password link sent to {request.Email}: {resetLink}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send reset password email: {ex.ToString()}");
+                throw new Exception("Failed to send reset password email", ex);
+            }
+
+            return "Reset password link sent to your email. Please check and click to proceed.";
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrEmpty(request.OobCode))
+                throw new ArgumentException("Invalid reset code");
+
+            if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < 6)
+                throw new ArgumentException("Password must be at least 6 characters");
+
+            if (!_cache.TryGetValue(request.OobCode, out var cachedRequest) || cachedRequest == null)
+                throw new Exception("Invalid or expired reset code");
+
+            var cached = (dynamic)cachedRequest;
+            var email = cached.Email;
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+                throw new Exception("User not found");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.LastActive = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            _cache.Remove(request.OobCode);
+            Console.WriteLine($"ResetPasswordAsync: Password reset successfully for user: {user.UserId}");
+
+            return "Password reset successfully. You can now login with your new password.";
         }
     }
 }

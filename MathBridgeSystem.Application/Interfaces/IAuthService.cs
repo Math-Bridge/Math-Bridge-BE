@@ -8,5 +8,7 @@ namespace MathBridge.Application.Interfaces
         Task<string> LoginAsync(LoginRequest request);
         Task<string> GoogleLoginAsync(string googleToken);
         Task<Guid> VerifyEmailAsync(string oobCode);
+        Task<string> ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<string> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }
