@@ -27,3 +27,4 @@ smtpconfig.json
 MathBridgeSystem.Api/appsettings.json
 /database_scripts
 MathBridgeSystem.Api/mathbridge_firebase.json
+MathBridgeSystem.Api/appsettings.json

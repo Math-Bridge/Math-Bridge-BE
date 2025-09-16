@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using MathBridge.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,7 @@ builder.Services.AddDbContext<MathBridgeDbContext>(options =>
                                    maxRetryDelay: TimeSpan.FromSeconds(10),
                                    errorNumbersToAdd: new List<int> { 10054, 10053, 1205 })));
 
+builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 // Repository registrations
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
@@ -68,6 +70,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
 
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IEmailService, EmailService>();
 

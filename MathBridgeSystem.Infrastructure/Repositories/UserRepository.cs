@@ -1,4 +1,4 @@
-﻿using MathBridge.Domain.Entities;
+using MathBridge.Domain.Entities;
 using MathBridge.Domain.Interfaces;
 using MathBridge.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +40,13 @@ namespace MathBridge.Infrastructure.Repositories
         {
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<User>> GetUsersWithLocationAsync()
+        {
+            return await _context.Users
+                .Where(u => u.Latitude.HasValue && u.Longitude.HasValue && u.Status == "active")
+                .ToListAsync();
         }
 
         public async Task<bool> EmailExistsAsync(string email)
