@@ -297,5 +297,32 @@ namespace MathBridge.Application.Services
 
             return "Password reset successfully. You can now login with your new password.";
         }
+        public async Task<string> ChangePasswordAsync(ChangePasswordRequest request, Guid userId)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new Exception("User not found");
+
+            // Verify current password
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                Console.WriteLine($"ChangePasswordAsync: Invalid current password for user: {user.UserId}");
+                throw new Exception("Current password is incorrect");
+            }
+
+            // Validate new password format (already handled by DataAnnotations, but explicit check for consistency)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"))
+                throw new ArgumentException("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.LastActive = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            Console.WriteLine($"ChangePasswordAsync: Password changed successfully for user: {user.UserId}");
+            return "Password changed successfully.";
+        }
     }
 }
