@@ -13,6 +13,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using MathBridge.Infrastructure.Services;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Application.Services;
+using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +66,7 @@ builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
 builder.Services.AddScoped<ISePayRepository, SePayRepository>();
+builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 
 // Service registrations
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -69,6 +74,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
+builder.Services.AddScoped<ISchoolService, SchoolService>();
 
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddMemoryCache();
