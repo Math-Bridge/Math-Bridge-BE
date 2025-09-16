@@ -18,6 +18,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Role> Roles { get; set; }
 
+    public virtual DbSet<School> Schools { get; set; }
+
     public virtual DbSet<SePayTransaction> SePayTransactions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -49,6 +51,57 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.RoleName)
                 .HasMaxLength(50)
                 .HasColumnName("role_name");
+        });
+
+        modelBuilder.Entity<School>(entity =>
+        {
+            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF476FA07F4");
+
+            entity.ToTable("schools");
+
+            entity.HasIndex(e => e.City, "IX_Schools_City");
+
+            entity.HasIndex(e => new { e.Latitude, e.Longitude }, "IX_Schools_Location");
+
+            entity.HasIndex(e => e.Name, "ix_schools_name");
+
+            entity.Property(e => e.SchoolId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("school_id");
+            entity.Property(e => e.City)
+                .HasMaxLength(100)
+                .HasColumnName("city");
+            entity.Property(e => e.CountryCode)
+                .HasMaxLength(2)
+                .HasDefaultValue("VN")
+                .HasColumnName("country_code");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.District)
+                .HasMaxLength(100)
+                .HasColumnName("district");
+            entity.Property(e => e.FormattedAddress)
+                .HasMaxLength(500)
+                .HasColumnName("formatted_address");
+            entity.Property(e => e.GooglePlaceId)
+                .HasMaxLength(255)
+                .HasColumnName("google_place_id");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
+            entity.Property(e => e.LocationUpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("location_updated_date");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.PlaceName)
+                .HasMaxLength(255)
+                .HasColumnName("place_name");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
         });
 
         modelBuilder.Entity<SePayTransaction>(entity =>
@@ -117,7 +170,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasIndex(e => new { e.City, e.District }, "IX_users_city_district").HasFilter("([city] IS NOT NULL)");
 
-            entity.HasIndex(e => new { e.Latitude, e.Longitude }, "IX_users_location_coordinates").HasFilter("([latitude] IS NOT NULL AND [longitude] IS NOT NULL)");
+            entity.HasIndex(e => new { e.Latitude, e.Longitude }, "IX_users_location_coordinates");
 
             entity.HasIndex(e => e.Email, "UQ__users__AB6E616455322907").IsUnique();
 
@@ -167,14 +220,12 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("last_active");
             entity.Property(e => e.Latitude)
                 .HasComment("GPS latitude coordinate for distance calculations")
-                .HasColumnType("decimal(10, 8)")
                 .HasColumnName("latitude");
             entity.Property(e => e.LocationUpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("location_updated_date");
             entity.Property(e => e.Longitude)
                 .HasComment("GPS longitude coordinate for distance calculations")
-                .HasColumnType("decimal(11, 8)")
                 .HasColumnName("longitude");
             entity.Property(e => e.PasswordHash)
                 .HasMaxLength(255)
