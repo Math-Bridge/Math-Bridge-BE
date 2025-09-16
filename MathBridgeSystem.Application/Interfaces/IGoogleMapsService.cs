@@ -23,7 +23,6 @@ public class PlaceDetails
     public double Longitude { get; set; }
     public string? City { get; set; }
     public string? District { get; set; }
-    public string? Ward { get; set; }
     public string? PlaceName { get; set; }
     public string? CountryCode { get; set; }
     public List<AddressComponent> AddressComponents { get; set; } = new();

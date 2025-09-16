@@ -89,7 +89,6 @@ public class LocationService : ILocationService
             user.Longitude = placeDetails.Place.Longitude;
             user.City = placeDetails.Place.City;
             user.District = placeDetails.Place.District;
-            user.Ward = placeDetails.Place.Ward;
             user.PlaceName = placeDetails.Place.PlaceName;
             user.CountryCode = placeDetails.Place.CountryCode;
             user.LocationUpdatedDate = DateTime.UtcNow;
@@ -170,7 +169,6 @@ public class LocationService : ILocationService
                             DistanceKm = Math.Round(distance, 2),
                             City = user.City,
                             District = user.District,
-                            Ward = user.Ward
                         });
                     }
                 }

@@ -101,7 +101,7 @@ public class SePayService : ISePayService
             // Create SePay transaction record
             var sePayTransaction = new SePayTransaction
             {
-                SePayTransactionId = Guid.NewGuid(),
+                SepayTransactionId = Guid.NewGuid(),
                 WalletTransactionId = createdWalletTransaction.TransactionId,
                 OrderReference = orderReference,
                 TransferAmount = request.Amount,

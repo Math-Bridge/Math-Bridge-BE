@@ -183,7 +183,6 @@ public class GoogleMapsService : IGoogleMapsService
                 PlaceName = result.Name,
                 City = addressComponents.City,
                 District = addressComponents.District,
-                Ward = addressComponents.Ward,
                 CountryCode = addressComponents.CountryCode,
                 AddressComponents = result.AddressComponents?.Select(ac => new AddressComponent
                 {
@@ -212,25 +211,23 @@ public class GoogleMapsService : IGoogleMapsService
         }
     }
 
-    private static (string? City, string? District, string? Ward, string? CountryCode) ParseAddressComponents(List<GoogleAddressComponent> components)
+    private static (string? City, string? District, string? CountryCode) ParseAddressComponents(List<GoogleAddressComponent> components)
     {
-        string? city = null, district = null, ward = null, countryCode = null;
+        string? city = null, district = null, countryCode = null;
 
         foreach (var component in components)
         {
             var types = component.Types ?? new List<string>();
 
-            if (types.Contains("locality") || types.Contains("administrative_area_level_2"))
+            if (types.Contains("administrative_area_level_1"))
                 city = component.LongName;
-            else if (types.Contains("administrative_area_level_3"))
+            else if (types.Contains("administrative_area_level_2"))
                 district = component.LongName;
-            else if (types.Contains("sublocality") || types.Contains("sublocality_level_1"))
-                ward = component.LongName;
             else if (types.Contains("country"))
                 countryCode = component.ShortName;
         }
 
-        return (city, district, ward, countryCode);
+        return (city, district, countryCode);
     }
 }
 
