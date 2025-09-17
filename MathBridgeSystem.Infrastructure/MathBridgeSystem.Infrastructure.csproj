@@ -28,4 +28,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\MathBridgeSystem.Domain\MathBridgeSystem.Domain.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Services\" />
+	</ItemGroup>
 </Project>

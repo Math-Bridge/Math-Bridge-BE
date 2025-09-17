@@ -29,7 +29,7 @@ public class SePayRepository : ISePayRepository
         return await _context.SePayTransactions
             .Include(s => s.WalletTransaction)
                 .ThenInclude(w => w.Parent)
-            .FirstOrDefaultAsync(s => s.SePayTransactionId == id);
+            .FirstOrDefaultAsync(s => s.SepayTransactionId  == id);
     }
 
     public async Task<SePayTransaction?> GetByWalletTransactionIdAsync(Guid walletTransactionId)

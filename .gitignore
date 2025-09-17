@@ -25,4 +25,6 @@ Mathbridge.sql
 mathbridge-2874f-firebase-adminsdk-fbsvc-b0590ad464.json
 smtpconfig.json
 MathBridgeSystem.Api/appsettings.json
+/database_scripts
 MathBridgeSystem.Api/mathbridge_firebase.json
+MathBridgeSystem.Api/appsettings.json
