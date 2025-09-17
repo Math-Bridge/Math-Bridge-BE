@@ -13,8 +13,10 @@ namespace MathBridge.Application.DTOs
         [StringLength(255, ErrorMessage = "Email must be up to 255 characters")]
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
+        [Required(ErrorMessage = "New password is required")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$",
+    ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")]
         public string Password { get; set; }
 
         [Required(ErrorMessage = "PhoneNumber is required")]

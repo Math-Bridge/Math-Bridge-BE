@@ -1,8 +1,10 @@
 ﻿using MathBridge.Application.DTOs;
 using MathBridge.Application.Interfaces;
 using MathBridgeSystem.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MathBridge.Presentation.Controllers
@@ -205,6 +207,29 @@ namespace MathBridge.Presentation.Controllers
             {
                 Console.WriteLine($"Error in ResetPassword: {ex.ToString()}");
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during password reset" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in ChangePassword: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+                var message = await _authService.ChangePasswordAsync(request, userId);
+                return Ok(new { message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ChangePassword: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during password change" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }
         }
