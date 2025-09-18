@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace MathBridgeSystem.Api.Controllers
 {
@@ -53,6 +54,38 @@ namespace MathBridgeSystem.Api.Controllers
         {
             var schools = await _schoolService.GetAllSchoolsAsync();
             return Ok(schools);
+        }
+
+/// <summary>
+        /// Searches for schools within a specified radius (in km) from the current user's location.
+        /// Requires authentication to retrieve the user's ID and location.
+        /// </summary>
+        /// <param name="radiusKm">The search radius in kilometers.</param>
+        /// <returns>A list of schools within the radius.</returns>
+        [HttpGet("search")]
+        [Authorize]
+        public async Task<IActionResult> SearchSchools([FromQuery] double radiusKm)
+        {
+            try
+            {
+                var userClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userClaim == null || !Guid.TryParse(userClaim.Value, out Guid userId))
+                {
+                    return Unauthorized("User ID not found or invalid");
+                }
+
+                if (radiusKm <= 0)
+                {
+                    return BadRequest("Radius must be greater than 0");
+                }
+
+                var schools = await _schoolService.SearchByRadiusAsync(userId, radiusKm);
+                return Ok(schools);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }        
         }
 
         [HttpPut("{id}")]

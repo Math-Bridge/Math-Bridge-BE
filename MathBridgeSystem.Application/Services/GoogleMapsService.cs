@@ -211,7 +211,7 @@ public class GoogleMapsService : IGoogleMapsService
         }
     }
 
-    private static (string? City, string? District, string? CountryCode) ParseAddressComponents(List<GoogleAddressComponent> components)
+    public static (string? City, string? District, string? CountryCode) ParseAddressComponents(List<GoogleAddressComponent> components)
     {
         string? city = null, district = null, countryCode = null;
 
