@@ -16,7 +16,6 @@ using MathBridge.Infrastructure.Services;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Interfaces;
-using MathBridgeSystem.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +38,7 @@ catch (Exception ex)
 {
     throw new Exception("Failed to initialize Firebase: " + ex.Message, ex);
 }
+
 // Load SMTP configuration from external JSON file with error handling
 var smtpConfigPath = builder.Configuration["SmtpConfigPath"];
 if (!string.IsNullOrEmpty(smtpConfigPath) && File.Exists(smtpConfigPath))
@@ -50,36 +50,54 @@ else
     Console.WriteLine($"Warning: SMTP config file not found at {smtpConfigPath}. Email functionality will be unavailable.");
 }
 
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 // Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null); // Disable camelCase by default
 
+// Database configuration with retry policy
 builder.Services.AddDbContext<MathBridgeDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.EnableRetryOnFailure(maxRetryCount: 5,
-                                   maxRetryDelay: TimeSpan.FromSeconds(10),
-                                   errorNumbersToAdd: new List<int> { 10054, 10053, 1205 })));
+        b => b.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: new List<int> { 10054, 10053, 1205 }
+        )));
 
+// HTTP Client for external services
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
-// Repository registrations
+
+// === REPOSITORY REGISTRATIONS ===
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
 builder.Services.AddScoped<ISePayRepository, SePayRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
+builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IChildRepository, ChildRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IMathProgramRepository, MathProgramRepository>();
+builder.Services.AddScoped<ICenterRepository, CenterRepository>();
+builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 
-// Service registrations
+// === SERVICE REGISTRATIONS ===
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
-
 builder.Services.AddScoped<ILocationService, LocationService>();
-builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// === CORE BUSINESS SERVICES ===
+builder.Services.AddScoped<IChildService, ChildService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<ICenterService, CenterService>();
+
+// === INFRASTRUCTURE SERVICES ===
+builder.Services.AddMemoryCache();
+
+// === AUTHENTICATION ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -100,16 +118,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// === CORS ===
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // React dev server
+        policy.WithOrigins("http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
 });
-// Add Swagger services with JWT support
+
+// === SWAGGER ===
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "MathBridge API", Version = "v1" });
@@ -145,18 +167,20 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Show detailed errors in Development
-    app.UseSwagger(); // Enable Swagger middleware
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "MathBridge API v1");
         c.EnableDeepLinking();
     });
 }
+
 app.UseCors();
-app.UseHttpsRedirection(); // Enforce HTTPS
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
