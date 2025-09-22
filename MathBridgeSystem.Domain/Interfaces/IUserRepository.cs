@@ -1,5 +1,6 @@
 using MathBridge.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathBridge.Domain.Interfaces
@@ -13,5 +14,10 @@ namespace MathBridge.Domain.Interfaces
         Task<List<User>> GetUsersWithLocationAsync();
         Task<bool> EmailExistsAsync(string email);
         Task<bool> RoleExistsAsync(int roleId);
+        Task<List<User>> GetAllAsync();
+        Task<bool> ExistsAsync(Guid id);
+        Task<List<User>> GetTutorsAsync();
+        Task<List<User>> GetTutorsByCenterAsync(Guid centerId);
+        Task<User> GetTutorWithVerificationAsync(Guid tutorId);
     }
 }

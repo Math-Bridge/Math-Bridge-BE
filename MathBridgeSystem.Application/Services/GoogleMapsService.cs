@@ -23,7 +23,7 @@ public class GoogleMapsService : IGoogleMapsService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _apiKey = _configuration["GoogleMaps:ApiKey"] ?? throw new InvalidOperationException("Google Maps API key not configured");
-        
+
         _httpClient.BaseAddress = new Uri("https://maps.googleapis.com/maps/api/");
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
@@ -33,7 +33,7 @@ public class GoogleMapsService : IGoogleMapsService
         try
         {
             var queryParams = $"place/autocomplete/json?input={Uri.EscapeDataString(input)}&key={_apiKey}&types=address";
-            
+
             if (!string.IsNullOrEmpty(country))
             {
                 queryParams += $"&components=country:{country}";
@@ -42,7 +42,7 @@ public class GoogleMapsService : IGoogleMapsService
             _logger.LogInformation("Calling Google Maps Autocomplete API with input: {Input}", input);
 
             var response = await _httpClient.GetAsync(queryParams);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Google Maps API returned status code: {StatusCode}", response.StatusCode);
@@ -70,9 +70,9 @@ public class GoogleMapsService : IGoogleMapsService
 
             if (googleResponse.Status != "OK" && googleResponse.Status != "ZERO_RESULTS")
             {
-                _logger.LogError("Google Maps API returned error status: {Status}, Message: {ErrorMessage}", 
+                _logger.LogError("Google Maps API returned error status: {Status}, Message: {ErrorMessage}",
                     googleResponse.Status, googleResponse.ErrorMessage);
-                
+
                 return new AddressAutocompleteResponse
                 {
                     Success = false,
@@ -135,7 +135,7 @@ public class GoogleMapsService : IGoogleMapsService
             _logger.LogInformation("Calling Google Maps Place Details API for place: {PlaceId}", placeId);
 
             var response = await _httpClient.GetAsync(queryParams);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Google Maps Place Details API returned status code: {StatusCode}", response.StatusCode);
@@ -229,6 +229,72 @@ public class GoogleMapsService : IGoogleMapsService
 
         return (city, district, countryCode);
     }
+    // Trong GoogleMapsService implementation
+    public async Task<GeocodeResponse> GeocodeAddressAsync(string address, string? country = "VN")
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new GeocodeResponse { Success = false, ErrorMessage = "Address is required" };
+            }
+
+            var client = new HttpClient();
+            var apiKey = _configuration["GoogleMaps:ApiKey"];
+            var encodedAddress = Uri.EscapeDataString(address);
+            var countryParam = !string.IsNullOrEmpty(country) ? $"&components=country:{country}" : "";
+            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={encodedAddress}{countryParam}&key={apiKey}";
+
+            var response = await client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Geocoding API error: {StatusCode} - {Content}", response.StatusCode, content);
+                return new GeocodeResponse { Success = false, ErrorMessage = "Geocoding API request failed" };
+            }
+
+            var geocodeResult = JsonSerializer.Deserialize<GeocodeApiResponse>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (geocodeResult?.Results?.Any() == true && geocodeResult.Status == "OK")
+            {
+                var firstResult = geocodeResult.Results.First();
+                var location = firstResult.Geometry.Location;
+                var addressComponents = firstResult.AddressComponents;
+
+                // Extract city and district from address components
+                var city = addressComponents?.FirstOrDefault(c => c.Types.Contains("locality"))?.LongName ??
+                          addressComponents?.FirstOrDefault(c => c.Types.Contains("administrative_area_level_1"))?.LongName;
+
+                var district = addressComponents?.FirstOrDefault(c => c.Types.Contains("administrative_area_level_2"))?.LongName ??
+                              addressComponents?.FirstOrDefault(c => c.Types.Contains("sublocality"))?.LongName;
+
+                return new GeocodeResponse
+                {
+                    Success = true,
+                    Latitude = location.Lat,
+                    Longitude = location.Lng,
+                    FormattedAddress = firstResult.FormattedAddress,
+                    City = city,
+                    District = district
+                };
+            }
+
+            return new GeocodeResponse
+            {
+                Success = false,
+                ErrorMessage = $"Geocoding failed: {geocodeResult?.ErrorMessage ?? geocodeResult?.Status ?? "Unknown error"}"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GeocodeAddressAsync for address: {Address}", address);
+            return new GeocodeResponse { Success = false, ErrorMessage = "Internal geocoding error" };
+        }
+    }
 }
 
 // Google Maps API Response Models
@@ -284,4 +350,35 @@ public class GoogleAddressComponent
     public string? LongName { get; set; }
     public string? ShortName { get; set; }
     public List<string>? Types { get; set; }
+}
+public class GeocodeApiResponse
+{
+    public string Status { get; set; } = "";
+    public string? ErrorMessage { get; set; }
+    public List<GeocodeResult> Results { get; set; } = new List<GeocodeResult>();
+}
+
+public class GeocodeResult
+{
+    public string FormattedAddress { get; set; } = "";
+    public List<GeocodeAddressComponent> AddressComponents { get; set; } = new List<GeocodeAddressComponent>();
+    public GeocodeGeometry Geometry { get; set; } = new GeocodeGeometry();
+}
+
+public class GeocodeGeometry
+{
+    public GeocodeLocation Location { get; set; } = new GeocodeLocation();
+}
+
+public class GeocodeLocation
+{
+    public double Lat { get; set; }
+    public double Lng { get; set; }
+}
+
+public class GeocodeAddressComponent
+{
+    public string LongName { get; set; } = "";
+    public string ShortName { get; set; } = "";
+    public List<string> Types { get; set; } = new List<string>();
 }

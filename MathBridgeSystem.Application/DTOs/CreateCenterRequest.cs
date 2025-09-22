@@ -1,0 +1,10 @@
+﻿using System;
+
+namespace MathBridge.Application.DTOs
+{
+    public class CreateCenterRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string PlaceId { get; set; } = string.Empty;
+    }
+}

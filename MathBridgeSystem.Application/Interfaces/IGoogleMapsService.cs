@@ -6,6 +6,7 @@ public interface IGoogleMapsService
 {
     Task<AddressAutocompleteResponse> GetPlaceAutocompleteAsync(string input, string? country = null);
     Task<PlaceDetailsResponse> GetPlaceDetailsAsync(string placeId);
+    Task<GeocodeResponse> GeocodeAddressAsync(string address, string? country = "VN");
 }
 
 public class PlaceDetailsResponse

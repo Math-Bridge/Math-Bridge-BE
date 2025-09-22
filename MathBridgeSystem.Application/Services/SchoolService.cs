@@ -1,13 +1,14 @@
-using MathBridgeSystem.Application.DTOs;
-using MathBridgeSystem.Application.Interfaces;
+using MathBridge.Application.DTOs;
+using MathBridge.Application.Interfaces;
 using MathBridge.Domain.Entities;
-using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridge.Domain.Interfaces;
+using MathBridgeSystem.Application.DTOs;
 
-namespace MathBridgeSystem.Application.Services
+namespace MathBridge.Application.Services
 {
     public class SchoolService : ISchoolService
     {

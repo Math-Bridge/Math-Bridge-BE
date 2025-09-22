@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MathBridge.Application.DTOs
+{
+    public class CenterDto
+    {
+        public Guid CenterId { get; set; }
+        public string Name { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? FormattedAddress { get; set; }
+        public string? City { get; set; }
+        public string? District { get; set; }
+        public string? PlaceName { get; set; }
+        public string? CountryCode { get; set; }
+        public int TutorCount { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+    }
+}
