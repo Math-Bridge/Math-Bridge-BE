@@ -3,6 +3,8 @@ using MathBridge.Domain.Interfaces;
 using MathBridge.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MathBridge.Infrastructure.Repositories
@@ -46,6 +48,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Users
                 .Where(u => u.Latitude.HasValue && u.Longitude.HasValue && u.Status == "active")
+                .Include(u => u.Role)
                 .ToListAsync();
         }
 
@@ -57,6 +60,55 @@ namespace MathBridge.Infrastructure.Repositories
         public async Task<bool> RoleExistsAsync(int roleId)
         {
             return await _context.Roles.AnyAsync(r => r.RoleId == roleId);
+        }
+
+        // Added implementations for CenterService and other features
+        public async Task<List<User>> GetAllAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
+                .ToListAsync();
+        }
+
+        public async Task<bool> ExistsAsync(Guid id)
+        {
+            return await _context.Users.AnyAsync(u => u.UserId == id);
+        }
+
+        public async Task<List<User>> GetTutorsAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
+                .Include(u => u.TutorCenters)
+                    .ThenInclude(tc => tc.Center)
+                .Where(u => u.RoleId == 2) // Assuming 2 is tutor role
+                .Where(u => u.Status == "active")
+                .ToListAsync();
+        }
+
+        public async Task<List<User>> GetTutorsByCenterAsync(Guid centerId)
+        {
+            return await _context.TutorCenters
+                .Include(tc => tc.Tutor)
+                    .ThenInclude(t => t.Role)
+                .Include(tc => tc.Tutor)
+                    .ThenInclude(t => t.TutorVerification)
+                .Where(tc => tc.CenterId == centerId)
+                .Select(tc => tc.Tutor)
+                .Where(t => t.Status == "active")
+                .ToListAsync();
+        }
+
+        public async Task<User> GetTutorWithVerificationAsync(Guid tutorId)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
+                .Include(u => u.TutorCenters)
+                    .ThenInclude(tc => tc.Center)
+                .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2); // Ensure it's a tutor
         }
     }
 }
