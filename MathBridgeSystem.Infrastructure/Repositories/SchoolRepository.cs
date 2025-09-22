@@ -1,10 +1,9 @@
 using MathBridge.Domain.Entities;
-using MathBridgeSystem.Domain.Interfaces;
+using MathBridge.Domain.Interfaces;
 using MathBridge.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using MathBridge.Infrastructure.Data;
 
-namespace MathBridgeSystem.Infrastructure.Repositories
+namespace MathBridge.Infrastructure.Repositories
 {
     public class SchoolRepository : ISchoolRepository
     {
