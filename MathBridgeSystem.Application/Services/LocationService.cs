@@ -1,4 +1,4 @@
-using MathBridge.Application.DTOs;
+﻿using MathBridge.Application.DTOs;
 using MathBridge.Application.Interfaces;
 using MathBridge.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -10,13 +10,16 @@ public class LocationService : ILocationService
     private readonly IGoogleMapsService _googleMapsService;
     private readonly IUserRepository _userRepository;
     private readonly ILogger<LocationService> _logger;
+    private readonly ICenterService _centerService;
 
     public LocationService(
         IGoogleMapsService googleMapsService,
+        ICenterService centerService,
         IUserRepository userRepository,
         ILogger<LocationService> logger)
     {
         _googleMapsService = googleMapsService ?? throw new ArgumentNullException(nameof(googleMapsService));
+        _centerService = centerService ?? throw new ArgumentNullException(nameof(centerService));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -35,11 +38,11 @@ public class LocationService : ILocationService
             }
 
             _logger.LogInformation("Getting address autocomplete for input: {Input}", input);
-            
+
             var result = await _googleMapsService.GetPlaceAutocompleteAsync(input, country);
-            
+
             _logger.LogInformation("Address autocomplete returned {Count} predictions", result.Predictions.Count);
-            
+
             return result;
         }
         catch (Exception ex)
@@ -61,7 +64,7 @@ public class LocationService : ILocationService
 
             // Get detailed place information from Google Maps
             var placeDetails = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
-            
+
             if (!placeDetails.Success || placeDetails.Place == null)
             {
                 return new SaveAddressResponse
@@ -148,11 +151,11 @@ public class LocationService : ILocationService
             foreach (var user in allUsers)
             {
                 if (user.UserId == currentUserId) continue; // Skip current user
-                
+
                 if (user.Latitude.HasValue && user.Longitude.HasValue)
                 {
                     var distance = CalculateDistance(
-                        currentUser.Latitude.Value, 
+                        currentUser.Latitude.Value,
                         currentUser.Longitude.Value,
                         user.Latitude.Value,
                         user.Longitude.Value);
@@ -177,7 +180,7 @@ public class LocationService : ILocationService
             // Sort by distance
             nearbyUsers = nearbyUsers.OrderBy(u => u.DistanceKm).ToList();
 
-            _logger.LogInformation("Found {Count} nearby users within {RadiusKm}km for user: {UserId}", 
+            _logger.LogInformation("Found {Count} nearby users within {RadiusKm}km for user: {UserId}",
                 nearbyUsers.Count, radiusKm, currentUserId);
 
             return new FindNearbyUsersResponse
@@ -219,5 +222,67 @@ public class LocationService : ILocationService
     private static double ToRadians(double degrees)
     {
         return degrees * (Math.PI / 180);
+    }
+    public async Task<GeocodeResponse> GeocodeAddressAsync(string address, string? country = "VN")
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new GeocodeResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Address is required"
+                };
+            }
+
+            _logger.LogInformation("Geocoding address: {Address}", address);
+
+            var result = await _googleMapsService.GeocodeAddressAsync(address, country);
+
+            _logger.LogInformation("Geocoding result for '{Address}': Success={Success}, Lat={Latitude}, Lng={Longitude}",
+                address, result.Success, result.Latitude, result.Longitude);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error geocoding address: {Address}", address);
+            return new GeocodeResponse
+            {
+                Success = false,
+                ErrorMessage = "Failed to geocode address"
+            };
+        }
+    }
+
+    public async Task<List<CenterDto>> FindCentersNearAddressAsync(string address, double radiusKm = 10.0)
+    {
+        try
+        {
+            _logger.LogInformation("Finding centers near address: {Address} within {RadiusKm}km", address, radiusKm);
+
+            // Step 1: Geocode address
+            var geocodeResult = await GeocodeAddressAsync(address);
+            if (!geocodeResult.Success || !geocodeResult.Latitude.HasValue || !geocodeResult.Longitude.HasValue)
+            {
+                _logger.LogWarning("Geocoding failed for address: {Address}", address);
+                return new List<CenterDto>();
+            }
+
+            // Step 2: Use CenterService to find nearby centers
+            var centers = await _centerService.GetCentersNearLocationAsync(
+                geocodeResult.Latitude.Value,
+                geocodeResult.Longitude.Value,
+                radiusKm);
+
+            _logger.LogInformation("Found {Count} centers near address: {Address}", centers.Count, address);
+            return centers;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding centers near address: {Address}", address);
+            return new List<CenterDto>();
+        }
     }
 }
