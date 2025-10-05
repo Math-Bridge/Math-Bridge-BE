@@ -19,6 +19,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.3" />
 		<PackageReference Include="MimeKit" Version="4.13.0" />
+		<PackageReference Include="payOS" Version="1.0.9" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
 		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
