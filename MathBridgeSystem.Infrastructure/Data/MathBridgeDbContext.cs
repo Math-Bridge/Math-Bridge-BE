@@ -24,6 +24,7 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<School> Schools { get; set; }
     public virtual DbSet<SePayTransaction> SePayTransactions { get; set; }
+public virtual DbSet&lt;PayOSTransaction&gt; PayOSTransactions { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
     public virtual DbSet<Child> Children { get; set; }
@@ -169,6 +170,70 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.WalletTransactionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_sepay_transactions_wallet_transaction");
+        });
+
+        // === PAYOS TRANSACTION ENTITY ===
+        modelBuilder.Entity&lt;PayOSTransaction&gt;(entity =&gt;
+        {
+            entity.HasKey(e =&gt; e.PayosTransactionId);
+
+            entity.HasIndex(e =&gt; e.OrderCode, "ix_payos_transactions_order_code").IsUnique();
+            entity.HasIndex(e =&gt; e.WalletTransactionId, "ix_payos_transactions_wallet_transaction_id");
+            entity.HasIndex(e =&gt; e.PaymentStatus, "ix_payos_transactions_status");
+            entity.HasIndex(e =&gt; e.CreatedDate, "ix_payos_transactions_created_date");
+
+            entity.Property(e =&gt; e.PayosTransactionId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("payos_transaction_id");
+
+            entity.Property(e =&gt; e.WalletTransactionId)
+                .HasColumnName("wallet_transaction_id");
+
+            entity.Property(e =&gt; e.OrderCode)
+                .HasColumnName("order_code");
+
+            entity.Property(e =&gt; e.PaymentLinkId)
+                .HasMaxLength(255)
+                .HasColumnName("payment_link_id");
+
+            entity.Property(e =&gt; e.CheckoutUrl)
+                .HasMaxLength(1000)
+                .HasColumnName("checkout_url");
+
+            entity.Property(e =&gt; e.PaymentStatus)
+                .HasMaxLength(50)
+                .HasColumnName("payment_status");
+
+            entity.Property(e =&gt; e.Amount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("amount");
+
+            entity.Property(e =&gt; e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
+
+            entity.Property(e =&gt; e.ReturnUrl)
+                .HasMaxLength(1000)
+                .HasColumnName("return_url");
+
+            entity.Property(e =&gt; e.CancelUrl)
+                .HasMaxLength(1000)
+                .HasColumnName("cancel_url");
+
+            entity.Property(e =&gt; e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnName("created_date");
+
+            entity.Property(e =&gt; e.UpdatedDate)
+                .HasColumnName("updated_date");
+
+            entity.Property(e =&gt; e.PaidAt)
+                .HasColumnName("paid_at");
+
+            entity.HasOne(d =&gt; d.WalletTransaction).WithMany(p =&gt; p.PayOSTransactions)
+                .HasForeignKey(d =&gt; d.WalletTransactionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_payos_transactions_wallet_transaction");
         });
 
         // === USER ENTITY ===

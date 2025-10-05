@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace MathBridge.Domain.Entities;
@@ -15,9 +15,11 @@ public partial class WalletTransaction
     public string Status { get; set; } = null!;
     public string? PaymentMethod { get; set; }
     public string? PaymentGatewayReference { get; set; }
+    public string? PaymentGateway { get; set; }
 
     // Navigation Properties
     public virtual User Parent { get; set; } = null!;
     public virtual Contract? Contract { get; set; } // Optional relationship
     public virtual ICollection<SePayTransaction> SePayTransactions { get; set; } = new List<SePayTransaction>();
+    public virtual ICollection<PayOSTransaction> PayOSTransactions { get; set; } = new List<PayOSTransaction>();
 }
