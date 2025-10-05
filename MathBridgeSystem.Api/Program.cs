@@ -16,6 +16,7 @@ using MathBridge.Infrastructure.Services;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Interfaces;
+using Net.payOS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,7 @@ builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
 builder.Services.AddScoped<ISePayRepository, SePayRepository>();
+builder.Services.AddScoped<IPayOSRepository, PayOSRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
@@ -84,6 +86,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
+builder.Services.AddScoped<IPayOSService, PayOSService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -96,6 +99,29 @@ builder.Services.AddScoped<ICenterService, CenterService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
+// === PAYOS SDK INITIALIZATION ===
+// First register PayOS SDK instance
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    
+    var clientId = configuration["PayOS:ClientId"];
+    var apiKey = configuration["PayOS:ApiKey"];
+    var checksumKey = configuration["PayOS:ChecksumKey"];
+    
+    if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(checksumKey))
+    {
+        throw new InvalidOperationException("PayOS configuration is missing. Please check appsettings.json");
+    }
+    
+    return new PayOS(clientId, apiKey, checksumKey);
+});
+
+// Then register PayOSGatewayService which depends on PayOS
+builder.Services.AddSingleton<PayOSGatewayService>();
+
+
+
 
 // === AUTHENTICATION ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
