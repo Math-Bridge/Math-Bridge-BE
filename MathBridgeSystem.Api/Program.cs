@@ -124,11 +124,12 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://web.vibe88.tech")
+        policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech","http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
 });
+
 
 // === SWAGGER ===
 builder.Services.AddEndpointsApiExplorer();
