@@ -124,7 +124,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("https://web.vibe88.tech")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
