@@ -1,18 +1,12 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
-using MathBridge.Domain.Interfaces;
-using MathBridgeSystem.Application.DTOs;
-using MathBridge.Infrastructure.Data;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using MathBridgeSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class CenterService : ICenterService
     {

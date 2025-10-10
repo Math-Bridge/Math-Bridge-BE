@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.DTOs
+namespace MathBridgeSystem.Application.DTOs
 {
     public class CreateContractRequest
     {
@@ -15,8 +15,8 @@ namespace MathBridge.Application.DTOs
         public Guid? SubstituteTutor1Id { get; set; }
         public Guid? SubstituteTutor2Id { get; set; }
         public Guid? CenterId { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
         public string TimeSlot { get; set; }
         public bool IsOnline { get; set; }
         public string? OfflineAddress { get; set; }

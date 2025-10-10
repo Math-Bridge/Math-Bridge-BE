@@ -1,10 +1,10 @@
-using MathBridge.Application.DTOs.SePay;
-using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.DTOs.SePay;
+using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace MathBridge.Api.Controllers;
+namespace MathBridgeSystem.Api.Controllers;
 
 /// <summary>
 /// SePay payment gateway controller

@@ -1,4 +1,4 @@
-﻿namespace MathBridge.Application.Interfaces
+﻿namespace MathBridgeSystem.Application.Interfaces
 {
     public interface IGoogleAuthService
     {

@@ -1,9 +1,9 @@
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
-using MathBridge.Infrastructure.Data;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace MathBridge.Infrastructure.Repositories;
+namespace MathBridgeSystem.Infrastructure.Repositories;
 
 /// <summary>
 /// Repository implementation for SePay transaction data access

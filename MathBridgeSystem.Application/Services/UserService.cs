@@ -1,12 +1,12 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class UserService : IUserService
     {

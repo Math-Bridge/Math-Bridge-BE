@@ -1,6 +1,6 @@
-﻿using MathBridge.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 
-namespace MathBridge.Domain.Interfaces
+namespace MathBridgeSystem.Domain.Interfaces
 {
     public interface IWalletTransactionRepository
     {

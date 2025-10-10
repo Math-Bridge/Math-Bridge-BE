@@ -1,9 +1,9 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace MathBridge.Application.Services;
+namespace MathBridgeSystem.Application.Services;
 
 public class LocationService : ILocationService
 {

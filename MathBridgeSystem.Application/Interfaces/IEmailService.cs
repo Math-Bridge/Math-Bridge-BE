@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MathBridge.Application.Interfaces
+namespace MathBridgeSystem.Application.Interfaces
 {
     public interface IEmailService
     {

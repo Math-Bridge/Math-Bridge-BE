@@ -1,11 +1,11 @@
-﻿using MathBridge.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.DTOs
+namespace MathBridgeSystem.Application.DTOs
 {
     public class CenterWithTutorsDto
     {

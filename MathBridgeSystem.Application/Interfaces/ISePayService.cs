@@ -1,6 +1,6 @@
-using MathBridge.Application.DTOs.SePay;
+using MathBridgeSystem.Application.DTOs.SePay;
 
-namespace MathBridge.Application.Interfaces
+namespace MathBridgeSystem.Application.Interfaces
 {
 
 

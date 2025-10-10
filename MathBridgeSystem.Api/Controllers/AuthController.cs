@@ -1,13 +1,12 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace MathBridge.Presentation.Controllers
+namespace MathBridgeSystem.Presentation.Controllers
 {
     [Route("api/auth")]
     [ApiController]

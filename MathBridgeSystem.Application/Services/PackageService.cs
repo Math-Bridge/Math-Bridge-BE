@@ -1,7 +1,7 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

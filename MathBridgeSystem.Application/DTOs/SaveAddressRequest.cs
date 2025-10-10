@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MathBridge.Application.DTOs;
+namespace MathBridgeSystem.Application.DTOs;
 
 public class SaveAddressRequest
 {

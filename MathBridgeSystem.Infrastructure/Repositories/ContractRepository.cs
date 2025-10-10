@@ -1,6 +1,6 @@
-﻿using MathBridge.Infrastructure.Data;
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Infrastructure.Data;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Infrastructure.Repositories
+namespace MathBridgeSystem.Infrastructure.Repositories
 {
     public class ContractRepository : IContractRepository
     {

@@ -1,15 +1,9 @@
-﻿using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
-using MathBridge.Infrastructure.Data;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MathBridge.Infrastructure.Repositories
+namespace MathBridgeSystem.Infrastructure.Repositories
 {
     public class TutorCenterRepository : ITutorCenterRepository
     {

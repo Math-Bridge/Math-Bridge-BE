@@ -1,9 +1,9 @@
-﻿using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
-using MathBridge.Infrastructure.Data;
+﻿using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace MathBridge.Infrastructure.Repositories
+namespace MathBridgeSystem.Infrastructure.Repositories
 {
     public class WalletTransactionRepository : IWalletTransactionRepository
     {

@@ -1,9 +1,9 @@
-﻿using MathBridge.Application.Interfaces;
+﻿using MathBridgeSystem.Application.Interfaces;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class GoogleAuthService : IGoogleAuthService
     {

@@ -1,4 +1,4 @@
-﻿using MathBridge.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

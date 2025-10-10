@@ -1,4 +1,4 @@
-namespace MathBridge.Application.DTOs;
+namespace MathBridgeSystem.Application.DTOs;
 
 public class FindNearbyUsersResponse
 {

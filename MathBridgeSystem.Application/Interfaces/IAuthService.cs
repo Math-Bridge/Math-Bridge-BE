@@ -1,6 +1,6 @@
-﻿using MathBridge.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 
-namespace MathBridge.Application.Interfaces
+namespace MathBridgeSystem.Application.Interfaces
 {
     public interface IAuthService
     {
