@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using MathBridge.Domain.Entities;
+using MathBridgeSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MathBridge.Infrastructure.Data;
+namespace MathBridgeSystem.Infrastructure.Data;
 
 public partial class MathBridgeDbContext : DbContext
 {
@@ -1008,6 +1008,8 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("tutor_verifications");
 
+            entity.HasIndex(e => e.UserId, "idx_tutor_verifications_user_id").IsUnique();
+
             entity.HasIndex(e => e.VerificationStatus, "ix_tutor_verifications_verification_status");
 
             entity.Property(e => e.VerificationId)
@@ -1036,8 +1038,8 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("verification_status");
 
-            entity.HasOne(d => d.User).WithMany(p => p.TutorVerifications)
-                .HasForeignKey(d => d.UserId)
+            entity.HasOne(d => d.User).WithOne(p => p.TutorVerification)
+                .HasForeignKey<TutorVerification>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_tutor_verifications_users");
         });

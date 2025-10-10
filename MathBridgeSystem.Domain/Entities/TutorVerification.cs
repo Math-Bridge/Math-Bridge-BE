@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MathBridge.Domain.Entities;
+namespace MathBridgeSystem.Domain.Entities;
 
 public partial class TutorVerification
 {

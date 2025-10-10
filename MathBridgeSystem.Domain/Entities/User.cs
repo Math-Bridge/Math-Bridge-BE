@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MathBridge.Domain.Entities;
+namespace MathBridgeSystem.Domain.Entities;
 
 public partial class User
 {
@@ -97,7 +97,7 @@ public partial class User
 
     public virtual ICollection<TutorCenter> TutorCenters { get; set; } = new List<TutorCenter>();
 
-    public virtual ICollection<TutorVerification> TutorVerifications { get; set; } = new List<TutorVerification>();
+    public virtual TutorVerification? TutorVerification { get; set; }
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
 }

@@ -1,10 +1,10 @@
 ﻿using MailKit.Net.Smtp;
-using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class EmailService : IEmailService
     {
@@ -54,12 +54,12 @@ namespace MathBridge.Application.Services
         </div>
         <div style='padding: 20px; text-align: center;'>
             <p>Dear User,</p>
-            <p>Thank you for registering with MathBridge. To complete your account setup, please click the button below to verify your email:</p>
+            <p>Thank you for registering with MathBridgeSystem. To complete your account setup, please click the button below to verify your email:</p>
             <a href='{link}' class='button'>Verify Email</a>
             <p>This link will expire in 5 minutes. If you did not request this, please ignore this email or contact our support team.</p>
         </div>
         <div class='footer'>
-            <p>&copy; 2025 MathBridge. All rights reserved.</p>
+            <p>&copy; 2025 MathBridgeSystem. All rights reserved.</p>
             <p>For assistance, email us at <a href='mailto:{_fromEmail}'>{_fromEmail}</a>.</p>
         </div>
     </div>
@@ -110,7 +110,7 @@ namespace MathBridge.Application.Services
             <p>This link will expire in 15 minutes. If you didn't request this, ignore this email.</p>
         </div>
         <div class='footer'>
-            <p>&copy; 2025 MathBridge. All rights reserved.</p>
+            <p>&copy; 2025 MathBridgeSystem. All rights reserved.</p>
             <p>For assistance, email us at <a href='mailto:{_fromEmail}'>{_fromEmail}</a>.</p>
         </div>
     </div>

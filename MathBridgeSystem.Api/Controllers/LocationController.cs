@@ -1,11 +1,11 @@
-using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
-namespace MathBridge.Presentation.Controllers;
+namespace MathBridgeSystem.Presentation.Controllers;
 
 [Route("api/location")]
 [ApiController]

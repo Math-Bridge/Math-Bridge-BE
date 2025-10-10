@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Globalization;
 
-namespace MathBridge.Application.DTOs.SePay;
+namespace MathBridgeSystem.Application.DTOs.SePay;
 
 /// <summary>
 /// Custom DateTime converter for SePay date format: "yyyy-MM-dd HH:mm:ss"

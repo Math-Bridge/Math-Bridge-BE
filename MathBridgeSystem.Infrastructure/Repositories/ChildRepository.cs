@@ -1,6 +1,6 @@
-﻿using MathBridge.Infrastructure.Data;
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Infrastructure.Data;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Infrastructure.Repositories
+namespace MathBridgeSystem.Infrastructure.Repositories
 {
     public class ChildRepository : IChildRepository
     {
@@ -35,8 +35,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Children
                 .Include(c => c.Parent)
-                .Include(c => c.School)
-                .Include(c => c.Center)
+                                .Include(c => c.Center)
                 .Include(c => c.Contracts)
                 .FirstOrDefaultAsync(c => c.ChildId == id);
         }
@@ -45,8 +44,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Children
                 .Include(c => c.Parent)
-                .Include(c => c.School)
-                .Include(c => c.Center)
+                                .Include(c => c.Center)
                 .Include(c => c.Contracts)
                 .Where(c => c.ParentId == parentId)
                 .ToListAsync();
@@ -56,8 +54,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Children
                 .Include(c => c.Parent)
-                .Include(c => c.School)
-                .Include(c => c.Center)
+                                .Include(c => c.Center)
                 .Include(c => c.Contracts)
                 .ToListAsync();
         }

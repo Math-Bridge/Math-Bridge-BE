@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.DTOs
+namespace MathBridgeSystem.Application.DTOs
 {
     public class TutorInCenterDto
     {

@@ -1,10 +1,10 @@
-using MathBridge.Application.Interfaces;
+using MathBridgeSystem.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using MathBridge.Application.DTOs;
+using MathBridgeSystem.Application.DTOs;
 
-namespace MathBridge.Infrastructure.Services;
+namespace MathBridgeSystem.Infrastructure.Services;
 
 public class GoogleMapsService : IGoogleMapsService
 {

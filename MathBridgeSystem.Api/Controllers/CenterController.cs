@@ -1,6 +1,6 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Application.Services;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;

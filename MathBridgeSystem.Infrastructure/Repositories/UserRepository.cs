@@ -1,13 +1,13 @@
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
-using MathBridge.Infrastructure.Data;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MathBridge.Infrastructure.Repositories
+namespace MathBridgeSystem.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
@@ -67,7 +67,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Include(u => u.TutorVerifications)
+                .Include(u => u.TutorVerification)
                 .ToListAsync();
         }
 
@@ -80,7 +80,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Include(u => u.TutorVerifications)
+                .Include(u => u.TutorVerification)
                 .Include(u => u.TutorCenters)
                     .ThenInclude(tc => tc.Center)
                 .Where(u => u.RoleId == 2) // Assuming 2 is tutor role
@@ -94,7 +94,7 @@ namespace MathBridge.Infrastructure.Repositories
                 .Include(tc => tc.Tutor)
                     .ThenInclude(t => t.Role)
                 .Include(tc => tc.Tutor)
-                    .ThenInclude(t => t.TutorVerifications)
+                    .ThenInclude(t => t.TutorVerification)
                 .Where(tc => tc.CenterId == centerId)
                 .Select(tc => tc.Tutor)
                 .Where(t => t.Status == "active")
@@ -105,7 +105,7 @@ namespace MathBridge.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Include(u => u.TutorVerifications)
+                .Include(u => u.TutorVerification)
                 .Include(u => u.TutorCenters)
                     .ThenInclude(tc => tc.Center)
                 .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2); // Ensure it's a tutor

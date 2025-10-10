@@ -1,9 +1,9 @@
-﻿using MathBridge.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.Interfaces
+namespace MathBridgeSystem.Application.Interfaces
 {
     public interface ICenterService
     {

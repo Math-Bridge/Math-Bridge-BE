@@ -1,13 +1,13 @@
-using MathBridge.Application.DTOs.SePay;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
+using MathBridgeSystem.Application.DTOs.SePay;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 using System.Web;
-using MathBridge.Domain.Interfaces;
+using MathBridgeSystem.Domain.Interfaces;
 
-namespace MathBridge.Application.Services;
+namespace MathBridgeSystem.Application.Services;
 
 /// <summary>
 /// Service implementation for SePay payment gateway operations

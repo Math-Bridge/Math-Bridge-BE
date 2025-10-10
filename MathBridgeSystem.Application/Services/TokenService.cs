@@ -1,4 +1,4 @@
-﻿using MathBridge.Application.Interfaces;
+﻿using MathBridgeSystem.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class TokenService : ITokenService
     {

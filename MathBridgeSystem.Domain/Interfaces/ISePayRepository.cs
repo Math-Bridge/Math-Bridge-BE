@@ -1,6 +1,6 @@
-using MathBridge.Domain.Entities;
+using MathBridgeSystem.Domain.Entities;
 
-namespace MathBridge.Application.Interfaces
+namespace MathBridgeSystem.Application.Interfaces
 {
     /// <summary>
     /// Repository interface for SePay transaction data access

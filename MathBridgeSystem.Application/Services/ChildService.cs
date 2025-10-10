@@ -1,31 +1,28 @@
-﻿using MathBridge.Application.DTOs;
-using MathBridge.Application.Interfaces;
-using MathBridge.Domain.Entities;
-using MathBridge.Domain.Interfaces;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathBridge.Application.Services
+namespace MathBridgeSystem.Application.Services
 {
     public class ChildService : IChildService
     {
         private readonly IChildRepository _childRepository;
         private readonly IUserRepository _userRepository;
-        private readonly ISchoolRepository _schoolRepository;
-        private readonly ICenterRepository _centerRepository;
+                private readonly ICenterRepository _centerRepository;
 
         public ChildService(
             IChildRepository childRepository,
             IUserRepository userRepository,
-            ISchoolRepository schoolRepository,
             ICenterRepository centerRepository)
         {
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _schoolRepository = schoolRepository ?? throw new ArgumentNullException(nameof(schoolRepository));
             _centerRepository = centerRepository ?? throw new ArgumentNullException(nameof(centerRepository));
         }
 
@@ -35,11 +32,7 @@ namespace MathBridge.Application.Services
             if (parent == null || parent.RoleId != 3) // Assuming 3 is 'parent'
                 throw new Exception("Invalid parent");
 
-            var school = await _schoolRepository.GetByIdAsync(request.SchoolId);
-            if (school == null)
-                throw new Exception("School not found");
-
-            // Validate center if provided
+                        // Validate center if provided
             if (request.CenterId.HasValue)
             {
                 var center = await _centerRepository.GetByIdAsync(request.CenterId.Value);
@@ -55,7 +48,7 @@ namespace MathBridge.Application.Services
                 ChildId = Guid.NewGuid(),
                 ParentId = parentId,
                 FullName = request.FullName,
-                SchoolId = request.SchoolId,
+                School = request.School,
                 CenterId = request.CenterId, // Có thể NULL
                 Grade = request.Grade,
                 DateOfBirth = request.DateOfBirth,
@@ -73,11 +66,7 @@ namespace MathBridge.Application.Services
             if (child == null || child.Status == "deleted")
                 throw new Exception("Child not found or deleted");
 
-            var school = await _schoolRepository.GetByIdAsync(request.SchoolId);
-            if (school == null)
-                throw new Exception("School not found");
-
-            // Validate center if provided
+                        // Validate center if provided
             if (request.CenterId.HasValue)
             {
                 var center = await _centerRepository.GetByIdAsync(request.CenterId.Value);
@@ -89,7 +78,7 @@ namespace MathBridge.Application.Services
                 throw new Exception("Invalid grade");
 
             child.FullName = request.FullName;
-            child.SchoolId = request.SchoolId;
+            child.School = request.School;
             child.CenterId = request.CenterId; // Added
             child.Grade = request.Grade;
             child.DateOfBirth = request.DateOfBirth;
@@ -129,8 +118,7 @@ namespace MathBridge.Application.Services
             {
                 ChildId = child.ChildId,
                 FullName = child.FullName,
-                SchoolId = child.SchoolId,
-                SchoolName = child.School?.Name,
+                School = child.School,
                 CenterId = child.CenterId,
                 CenterName = centerName,
                 Grade = child.Grade,
@@ -146,8 +134,7 @@ namespace MathBridge.Application.Services
             {
                 ChildId = c.ChildId,
                 FullName = c.FullName,
-                SchoolId = c.SchoolId,
-                SchoolName = c.School?.Name,
+                School = c.School,
                 CenterId = c.CenterId,
                 CenterName = c.Center?.Name,
                 Grade = c.Grade,
@@ -163,8 +150,7 @@ namespace MathBridge.Application.Services
             {
                 ChildId = c.ChildId,
                 FullName = c.FullName,
-                SchoolId = c.SchoolId,
-                SchoolName = c.School?.Name,
+                School = c.School,
                 CenterId = c.CenterId,
                 CenterName = c.Center?.Name,
                 Grade = c.Grade,

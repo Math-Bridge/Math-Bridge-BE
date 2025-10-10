@@ -1,22 +1,16 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using MathBridge.Application.Interfaces;
-using MathBridge.Application.Services;
-using MathBridge.Domain.Interfaces;
-using MathBridge.Infrastructure.Data;
-using MathBridge.Infrastructure.Repositories;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Application.Services;
+using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
+using MathBridgeSystem.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Collections.Generic;
 using System.Text;
-using System.Text.Json;
-using MathBridge.Infrastructure.Services;
-using MathBridgeSystem.Application.Interfaces;
-using MathBridgeSystem.Application.Services;
-using MathBridgeSystem.Domain.Interfaces;
-
+using MathBridgeSystem.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize Firebase with error handling
@@ -70,7 +64,6 @@ builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
 builder.Services.AddScoped<ISePayRepository, SePayRepository>();
-builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
@@ -84,7 +77,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
-builder.Services.AddScoped<ISchoolService, SchoolService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
