@@ -930,43 +930,50 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<TutorAvailability>(entity =>
         {
-            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_av__86E3A801DB66CFD6");
+            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_av__86E3A80189C0EFA9");
 
             entity.ToTable("tutor_availabilities");
 
-            entity.HasIndex(e => e.TutorId, "ix_tutor_availabilities_tutor_id");
+            entity.HasIndex(e => new { e.TutorId, e.DayOfWeek, e.AvailableFrom, e.AvailableUntil }, "IX_tutor_day_time");
 
             entity.Property(e => e.AvailabilityId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("availability_id");
+            entity.Property(e => e.AvailableFrom).HasColumnName("available_from");
+            entity.Property(e => e.AvailableUntil).HasColumnName("available_until");
+            entity.Property(e => e.CanTeachOffline)
+                .HasDefaultValue(true)
+                .HasColumnName("can_teach_offline");
+            entity.Property(e => e.CanTeachOnline)
+                .HasDefaultValue(true)
+                .HasColumnName("can_teach_online");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.IsBooked).HasColumnName("is_booked");
-            entity.Property(e => e.IsOnline).HasColumnName("is_online");
-            entity.Property(e => e.IsRecurring).HasColumnName("is_recurring");
-            entity.Property(e => e.RecurrenceEndDate)
-                .HasColumnType("datetime")
-                .HasColumnName("recurrence_end_date");
-            entity.Property(e => e.TimeSlot)
-                .HasMaxLength(50)
-                .HasColumnName("time_slot");
+            entity.Property(e => e.CurrentBookings).HasColumnName("current_bookings");
+            entity.Property(e => e.DayOfWeek).HasColumnName("day_of_week");
+            entity.Property(e => e.EffectiveFrom).HasColumnName("effective_from");
+            entity.Property(e => e.EffectiveUntil).HasColumnName("effective_until");
+            entity.Property(e => e.MaxConcurrentBookings)
+                .HasDefaultValue(1)
+                .HasColumnName("max_concurrent_bookings");
+            entity.Property(e => e.MaxTravelDistanceKm)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("max_travel_distance_km");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("active")
+                .HasColumnName("status");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
-            entity.Property(e => e.VideoCallLink)
-                .HasMaxLength(255)
-                .HasColumnName("video_call_link");
-            entity.Property(e => e.VideoCallPlatform)
-                .HasMaxLength(50)
-                .HasColumnName("video_call_platform");
 
             entity.HasOne(d => d.Tutor).WithMany(p => p.TutorAvailabilities)
                 .HasForeignKey(d => d.TutorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_tutor_availabilities_users");
+                .HasConstraintName("FK__tutor_ava__tutor__2EA5EC27");
         });
 
         modelBuilder.Entity<TutorCenter>(entity =>
