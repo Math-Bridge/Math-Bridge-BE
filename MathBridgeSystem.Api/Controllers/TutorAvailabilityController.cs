@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MathBridgeSystem.Application.DTOs;
 
 namespace MathBridgeSystem.Api.Controllers
 {
@@ -32,7 +33,6 @@ namespace MathBridgeSystem.Api.Controllers
 
             try
             {
-                // If user is tutor, verify they're creating for themselves
                 var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 if (userRole == "tutor")
                 {
@@ -44,7 +44,8 @@ namespace MathBridgeSystem.Api.Controllers
                 }
 
                 var availabilityId = await _availabilityService.CreateAvailabilityAsync(request);
-                return CreatedAtAction(nameof(GetAvailabilityById), new { id = availabilityId }, new { availabilityId });
+                return CreatedAtAction(nameof(GetAvailabilityById), new { id = availabilityId },
+                    new { availabilityId });
             }
             catch (ArgumentException ex)
             {
@@ -74,7 +75,7 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                     var availability = await _availabilityService.GetAvailabilityByIdAsync(id);
-                    
+
                     if (availability == null)
                         return NotFound(new { error = "Availability not found" });
 
@@ -112,7 +113,7 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                     var availability = await _availabilityService.GetAvailabilityByIdAsync(id);
-                    
+
                     if (availability == null)
                         return NotFound(new { error = "Availability not found" });
 
@@ -141,7 +142,7 @@ namespace MathBridgeSystem.Api.Controllers
             try
             {
                 var availability = await _availabilityService.GetAvailabilityByIdAsync(id);
-                
+
                 if (availability == null)
                     return NotFound(new { error = "Availability not found" });
 
@@ -227,59 +228,6 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         /// <summary>
-        /// Check if availability conflicts with existing slots
-        /// </summary>
-        [HttpGet("check-conflict")]
-        [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> CheckAvailabilityConflict(
-            [FromQuery] Guid tutorId,
-            [FromQuery] int dayOfWeek,
-            [FromQuery] string startTime,
-            [FromQuery] string endTime,
-            [FromQuery] string effectiveFrom,
-            [FromQuery] string effectiveUntil = null,
-            [FromQuery] Guid? excludeAvailabilityId = null)
-        {
-            try
-            {
-                // If user is tutor, verify they're checking their own availability
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (userRole == "tutor")
-                {
-                    var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                    if (tutorId != userId)
-                    {
-                        return Forbid("Tutors can only check their own availability conflicts");
-                    }
-                }
-
-                var startTimeOnly = TimeOnly.Parse(startTime);
-                var endTimeOnly = TimeOnly.Parse(endTime);
-                var effectiveFromDate = DateOnly.Parse(effectiveFrom);
-                DateOnly? effectiveUntilDate = string.IsNullOrEmpty(effectiveUntil) ? null : DateOnly.Parse(effectiveUntil);
-
-                var hasConflict = await _availabilityService.CheckAvailabilityConflictAsync(
-                    tutorId,
-                    dayOfWeek,
-                    startTimeOnly,
-                    endTimeOnly,
-                    effectiveFromDate,
-                    effectiveUntilDate,
-                    excludeAvailabilityId);
-
-                return Ok(new { hasConflict });
-            }
-            catch (FormatException ex)
-            {
-                return BadRequest(new { error = "Invalid date or time format", details = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
-
-        /// <summary>
         /// Update availability status
         /// </summary>
         [HttpPatch("{id}/status")]
@@ -297,7 +245,7 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                     var availability = await _availabilityService.GetAvailabilityByIdAsync(id);
-                    
+
                     if (availability == null)
                         return NotFound(new { error = "Availability not found" });
 
@@ -325,7 +273,8 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpPost("bulk")]
         [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> BulkCreateAvailabilities([FromBody] List<CreateTutorAvailabilityRequest> requests)
+        public async Task<IActionResult> BulkCreateAvailabilities(
+            [FromBody] List<CreateTutorAvailabilityRequest> requests)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -347,7 +296,8 @@ namespace MathBridgeSystem.Api.Controllers
                 }
 
                 var createdIds = await _availabilityService.BulkCreateAvailabilitiesAsync(requests);
-                return CreatedAtAction(nameof(GetMyAvailabilities), new { }, new { createdIds, count = createdIds.Count });
+                return CreatedAtAction(nameof(GetMyAvailabilities), new { },
+                    new { createdIds, count = createdIds.Count });
             }
             catch (ArgumentException ex)
             {
@@ -358,11 +308,5 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-    }
-
-    // Helper DTO for status update
-    public class UpdateStatusRequest
-    {
-        public string Status { get; set; }
     }
 }

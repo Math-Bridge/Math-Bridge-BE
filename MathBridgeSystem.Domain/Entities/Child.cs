@@ -21,13 +21,19 @@ public partial class Child
 
     public string Status { get; set; } = null!;
 
-    public string? School { get; set; }
+    public Guid SchoolId { get; set; }
+
+    public string? CurrentTopic { get; set; }
+
+    public DateTime? LastTopicUpdate { get; set; }
 
     public virtual Center? Center { get; set; }
 
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
     public virtual User Parent { get; set; } = null!;
+
+    public virtual School School { get; set; } = null!;
 
     public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 }

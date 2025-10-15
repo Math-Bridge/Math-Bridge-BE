@@ -50,6 +50,38 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("Available until time must be after available from time");
             }
 
+            // Validate time slot duration (must be between 1.5 and 2 hours)
+            var duration = request.AvailableUntil.ToTimeSpan() - request.AvailableFrom.ToTimeSpan();
+            var durationMinutes = duration.TotalMinutes;
+            if (durationMinutes < 90 || durationMinutes > 120)
+            {
+                throw new ArgumentException("Time slot duration must be between 1.5 hours (90 minutes) and 2 hours (120 minutes)");
+            }
+
+            // Check for minimum 15-minute spacing with existing time slots
+            var existingSlots = await _availabilityRepository.GetByTutorIdAsync(request.TutorId);
+            var slotsOnSameDay = existingSlots
+                .Where(a => a.DayOfWeek == request.DayOfWeek 
+                    && a.Status == "active"
+                    && (!request.EffectiveUntil.HasValue || !a.EffectiveUntil.HasValue || 
+                        a.EffectiveFrom <= request.EffectiveUntil.Value)
+                    && (a.EffectiveUntil == null || a.EffectiveUntil.Value >= request.EffectiveFrom))
+                .ToList();
+
+            foreach (var existingSlot in slotsOnSameDay)
+            {
+                // Only check if new slot starts after existing slot ends
+                if (request.AvailableFrom.ToTimeSpan() >= existingSlot.AvailableUntil.ToTimeSpan())
+                {
+                    var gapAfterExisting = request.AvailableFrom.ToTimeSpan() - existingSlot.AvailableUntil.ToTimeSpan();
+                    if (gapAfterExisting.TotalMinutes < 15)
+                    {
+                        throw new ArgumentException($"Time slot start must be at least 15 minutes after the previous slot ends. Conflict with slot {existingSlot.AvailableFrom:HH:mm}-{existingSlot.AvailableUntil:HH:mm}");
+                    }
+                }
+                // If there's any overlap, it will be caught by the conflict check below
+            }
+
             // Validate effective date ranges
             if (request.EffectiveUntil.HasValue && request.EffectiveUntil.Value <= request.EffectiveFrom)
             {
@@ -264,7 +296,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
             }
 
-            if (request.EndTime <= request.StartTime)
+            if (request.EndTime <= request.StartTime && request.EndTime != request.StartTime)
             {
                 throw new ArgumentException("End time must be after start time");
             }

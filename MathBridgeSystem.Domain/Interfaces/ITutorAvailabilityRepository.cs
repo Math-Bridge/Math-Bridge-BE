@@ -11,7 +11,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<TutorAvailability>> GetByTutorIdAsync(Guid tutorId);
         Task<List<TutorAvailability>> GetActiveTutorAvailabilitiesAsync(Guid tutorId);
         Task<List<TutorAvailability>> GetByDayOfWeekAsync(int dayOfWeek, DateTime? effectiveDate = null);
-        Task<List<TutorAvailability>> SearchAvailableTutorsAsync(int dayOfWeek, TimeOnly startTime, TimeOnly endTime, bool? canTeachOnline, bool? canTeachOffline, DateTime effectiveDate);
+        Task<List<TutorAvailability>> SearchAvailableTutorsAsync(int? dayOfWeek, TimeOnly? startTime, TimeOnly? endTime, bool? canTeachOnline, bool? canTeachOffline, DateTime? effectiveDate);
         Task<TutorAvailability> CreateAsync(TutorAvailability availability);
         Task UpdateAsync(TutorAvailability availability);
         Task DeleteAsync(Guid availabilityId);

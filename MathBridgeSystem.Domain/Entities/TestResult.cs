@@ -11,8 +11,6 @@ public partial class TestResult
 
     public Guid ChildId { get; set; }
 
-    public Guid MathProgramId { get; set; }
-
     public string TestName { get; set; } = null!;
 
     public string TestType { get; set; } = null!;
@@ -39,9 +37,11 @@ public partial class TestResult
 
     public DateTime UpdatedDate { get; set; }
 
+    public Guid CurriculumId { get; set; }
+
     public virtual Child Child { get; set; } = null!;
 
-    public virtual MathProgram MathProgram { get; set; } = null!;
+    public virtual Curriculum Curriculum { get; set; } = null!;
 
     public virtual User Tutor { get; set; } = null!;
 }

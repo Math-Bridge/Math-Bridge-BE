@@ -27,8 +27,6 @@ public partial class TutorAvailability
 
     public bool CanTeachOffline { get; set; }
 
-    public decimal? MaxTravelDistanceKm { get; set; }
-
     public string Status { get; set; } = null!;
 
     public DateTime CreatedDate { get; set; }

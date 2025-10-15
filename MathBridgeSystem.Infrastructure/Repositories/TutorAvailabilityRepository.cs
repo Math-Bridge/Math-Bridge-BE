@@ -74,29 +74,45 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         }
 
         public async Task<List<TutorAvailability>> SearchAvailableTutorsAsync(
-            int dayOfWeek, 
-            TimeOnly startTime, 
-            TimeOnly endTime, 
+            int? dayOfWeek, 
+            TimeOnly? startTime, 
+            TimeOnly? endTime, 
             bool? canTeachOnline, 
             bool? canTeachOffline, 
-            DateTime effectiveDate)
+            DateTime? effectiveDate)
         {
-            var date = DateOnly.FromDateTime(effectiveDate);
-
+            // Start with base query - only required filters
             var query = _context.TutorAvailabilities
                 .Include(ta => ta.Tutor)
-                    .ThenInclude(t => t.Role)
+                .ThenInclude(t => t.Role)
                 .Include(ta => ta.Tutor)
-                    .ThenInclude(t => t.TutorVerification)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .ThenInclude(t => t.TutorVerification)
                 .Where(ta => ta.Status == "active")
-                .Where(ta => ta.EffectiveFrom <= date)
-                .Where(ta => ta.EffectiveUntil == null || ta.EffectiveUntil >= date)
-                .Where(ta => ta.CurrentBookings < ta.MaxConcurrentBookings)
-                // Check time overlap: requested time must fall within available time
-                .Where(ta => ta.AvailableFrom <= startTime && ta.AvailableUntil >= endTime);
+                .Where(ta => ta.CurrentBookings < ta.MaxConcurrentBookings);
+            
+            if (dayOfWeek.HasValue)
+            {
+                query = query.Where(ta => ta.DayOfWeek == dayOfWeek.Value);
+            }
 
-            // Filter by teaching mode preferences
+            // Apply date filter only if provided
+            if (effectiveDate.HasValue)
+            {
+                var date = DateOnly.FromDateTime(effectiveDate.Value);
+                query = query
+                    .Where(ta => ta.EffectiveFrom <= date)
+                    .Where(ta => ta.EffectiveUntil == null || ta.EffectiveUntil >= date);
+            }
+
+            // Apply time filter only if both start and end times are provided
+            if (startTime.HasValue && endTime.HasValue)
+            {
+                query = query.Where(ta => 
+                    ta.AvailableFrom <= startTime.Value && 
+                    ta.AvailableUntil >= endTime.Value);
+            }
+
+            // Apply teaching mode filters if provided
             if (canTeachOnline.HasValue)
             {
                 query = query.Where(ta => ta.CanTeachOnline == canTeachOnline.Value);
@@ -107,11 +123,13 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 query = query.Where(ta => ta.CanTeachOffline == canTeachOffline.Value);
             }
 
+            // Execute query with ordering
             return await query
                 .OrderBy(ta => ta.Tutor.FullName)
                 .ThenBy(ta => ta.AvailableFrom)
                 .ToListAsync();
         }
+
 
         public async Task<TutorAvailability> CreateAsync(TutorAvailability availability)
         {

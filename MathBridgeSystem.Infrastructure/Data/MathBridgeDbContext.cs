@@ -24,9 +24,9 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Contract> Contracts { get; set; }
 
-    public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
+    public virtual DbSet<Curriculum> Curricula { get; set; }
 
-    public virtual DbSet<MathProgram> MathPrograms { get; set; }
+    public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -43,6 +43,8 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
+
+    public virtual DbSet<School> Schools { get; set; }
 
     public virtual DbSet<SePayTransaction> SePayTransactions { get; set; }
 
@@ -165,6 +167,8 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("children");
 
+            entity.HasIndex(e => e.SchoolId, "IX_children_school");
+
             entity.HasIndex(e => e.CenterId, "ix_children_center_id");
 
             entity.HasIndex(e => e.ParentId, "ix_children_parent_id");
@@ -179,6 +183,9 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
+            entity.Property(e => e.CurrentTopic)
+                .HasMaxLength(200)
+                .HasColumnName("current_topic");
             entity.Property(e => e.DateOfBirth).HasColumnName("date_of_birth");
             entity.Property(e => e.FullName)
                 .HasMaxLength(255)
@@ -186,10 +193,11 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Grade)
                 .HasMaxLength(50)
                 .HasColumnName("grade");
+            entity.Property(e => e.LastTopicUpdate)
+                .HasColumnType("datetime")
+                .HasColumnName("last_topic_update");
             entity.Property(e => e.ParentId).HasColumnName("parent_id");
-            entity.Property(e => e.School)
-                .HasMaxLength(255)
-                .HasColumnName("school");
+            entity.Property(e => e.SchoolId).HasColumnName("school_id");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("active")
@@ -203,6 +211,11 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.ParentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_children_users");
+
+            entity.HasOne(d => d.School).WithMany(p => p.Children)
+                .HasForeignKey(d => d.SchoolId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_children_schools");
         });
 
         modelBuilder.Entity<Contract>(entity =>
@@ -298,6 +311,43 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_contracts_substitute_tutor2");
         });
 
+        modelBuilder.Entity<Curriculum>(entity =>
+        {
+            entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C7629F9DFD6");
+
+            entity.ToTable("curriculum");
+
+            entity.HasIndex(e => e.CurriculumCode, "IX_curriculum_code");
+
+            entity.HasIndex(e => e.CurriculumCode, "UQ__curricul__575F76878447E303").IsUnique();
+
+            entity.Property(e => e.CurriculumId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("curriculum_id");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.CurriculumCode)
+                .HasMaxLength(20)
+                .HasColumnName("curriculum_code");
+            entity.Property(e => e.CurriculumName)
+                .HasMaxLength(100)
+                .HasColumnName("curriculum_name");
+            entity.Property(e => e.Grades)
+                .HasMaxLength(20)
+                .HasColumnName("grades");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
+            entity.Property(e => e.SyllabusUrl)
+                .HasMaxLength(500)
+                .HasColumnName("syllabus_url");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+        });
+
         modelBuilder.Entity<FinalFeedback>(entity =>
         {
             entity.HasKey(e => e.FeedbackId).HasName("PK__final_fe__7A6B2B8CCDA9F45C");
@@ -353,28 +403,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_final_feedback_user_id");
-        });
-
-        modelBuilder.Entity<MathProgram>(entity =>
-        {
-            entity.HasKey(e => e.ProgramId).HasName("PK__math_pro__3A7890AC376DA2BD");
-
-            entity.ToTable("math_programs");
-
-            entity.HasIndex(e => e.ProgramName, "ix_math_programs_program_name");
-
-            entity.Property(e => e.ProgramId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("program_id");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.LinkSyllabus)
-                .HasMaxLength(1)
-                .HasColumnName("link_syllabus");
-            entity.Property(e => e.ProgramName)
-                .HasMaxLength(100)
-                .HasColumnName("program_name");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -523,7 +551,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("payment_packages");
 
-            entity.HasIndex(e => e.ProgramId, "ix_payment_packages_program_id");
+            entity.HasIndex(e => e.CurriculumId, "IX_payment_packages_curriculum");
 
             entity.Property(e => e.PackageId)
                 .HasDefaultValueSql("(newid())")
@@ -532,6 +560,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
+            entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(500)
                 .HasColumnName("description");
@@ -546,17 +575,16 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Price)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("price");
-            entity.Property(e => e.ProgramId).HasColumnName("program_id");
             entity.Property(e => e.SessionCount).HasColumnName("session_count");
             entity.Property(e => e.SessionsPerWeek).HasColumnName("sessions_per_week");
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
 
-            entity.HasOne(d => d.Program).WithMany(p => p.PaymentPackages)
-                .HasForeignKey(d => d.ProgramId)
+            entity.HasOne(d => d.Curriculum).WithMany(p => p.PaymentPackages)
+                .HasForeignKey(d => d.CurriculumId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_payment_packages_programs");
+                .HasConstraintName("FK_payment_packages_curriculum");
         });
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
@@ -737,6 +765,40 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_booking_sessions_tutors");
         });
 
+        modelBuilder.Entity<School>(entity =>
+        {
+            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF49D896822");
+
+            entity.ToTable("schools");
+
+            entity.HasIndex(e => e.CurriculumId, "IX_schools_curriculum");
+
+            entity.HasIndex(e => e.SchoolName, "IX_schools_name");
+
+            entity.Property(e => e.SchoolId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("school_id");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
+            entity.Property(e => e.SchoolName)
+                .HasMaxLength(255)
+                .HasColumnName("school_name");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.Curriculum).WithMany(p => p.Schools)
+                .HasForeignKey(d => d.CurriculumId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_schools_curriculum");
+        });
+
         modelBuilder.Entity<SePayTransaction>(entity =>
         {
             entity.HasIndex(e => e.Code, "ix_sepay_transactions_code").IsUnique();
@@ -861,7 +923,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasIndex(e => e.ChildId, "IX_test_results_child_id");
 
-            entity.HasIndex(e => e.MathProgramId, "IX_test_results_math_program_id");
+            entity.HasIndex(e => e.CurriculumId, "IX_test_results_curriculum");
 
             entity.HasIndex(e => e.Percentage, "IX_test_results_percentage");
 
@@ -881,8 +943,8 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
+            entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
             entity.Property(e => e.DurationMinutes).HasColumnName("duration_minutes");
-            entity.Property(e => e.MathProgramId).HasColumnName("math_program_id");
             entity.Property(e => e.MaxScore)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("max_score");
@@ -917,10 +979,10 @@ public partial class MathBridgeDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_test_results_child_id");
 
-            entity.HasOne(d => d.MathProgram).WithMany(p => p.TestResults)
-                .HasForeignKey(d => d.MathProgramId)
+            entity.HasOne(d => d.Curriculum).WithMany(p => p.TestResults)
+                .HasForeignKey(d => d.CurriculumId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_test_results_math_program_id");
+                .HasConstraintName("FK_test_results_curriculum");
 
             entity.HasOne(d => d.Tutor).WithMany(p => p.TestResults)
                 .HasForeignKey(d => d.TutorId)
@@ -958,9 +1020,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.MaxConcurrentBookings)
                 .HasDefaultValue(1)
                 .HasColumnName("max_concurrent_bookings");
-            entity.Property(e => e.MaxTravelDistanceKm)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("max_travel_distance_km");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("active")
