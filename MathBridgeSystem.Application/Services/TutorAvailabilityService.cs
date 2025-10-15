@@ -33,7 +33,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Validate tutor is verified
-            if (tutor.TutorVerification == null || tutor.TutorVerification.VerificationStatus != "verified")
+            if (tutor.TutorVerification == null || tutor.TutorVerification.VerificationStatus != "approved")
             {
                 throw new Exception("Tutor must be verified before creating availability");
             }
@@ -100,13 +100,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("Max concurrent bookings must be between 1 and 10");
             }
 
-            // Validate travel distance if offline teaching is enabled
-            if (request.CanTeachOffline && (!request.MaxTravelDistanceKm.HasValue || request.MaxTravelDistanceKm.Value <= 0))
-            {
-                throw new ArgumentException("Max travel distance must be provided when offline teaching is enabled");
-            }
-
-            // Check for conflicts
+                        // Check for conflicts
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 request.TutorId,
                 request.DayOfWeek,
@@ -131,8 +125,7 @@ namespace MathBridgeSystem.Application.Services
                 EffectiveUntil = request.EffectiveUntil,
                 MaxConcurrentBookings = request.MaxConcurrentBookings,
                 CanTeachOnline = request.CanTeachOnline,
-                CanTeachOffline = request.CanTeachOffline,
-                MaxTravelDistanceKm = request.MaxTravelDistanceKm
+                CanTeachOffline = request.CanTeachOffline
             };
 
             var created = await _availabilityRepository.CreateAsync(availability);
@@ -221,12 +214,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
             }
 
-            if (request.MaxTravelDistanceKm.HasValue)
-            {
-                availability.MaxTravelDistanceKm = request.MaxTravelDistanceKm.Value;
-            }
-
-            // Check for conflicts (excluding current availability)
+                        // Check for conflicts (excluding current availability)
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 availability.TutorId,
                 availability.DayOfWeek,
@@ -344,24 +332,7 @@ namespace MathBridgeSystem.Application.Services
             return pagedResults;
         }
 
-        public async Task<bool> CheckAvailabilityConflictAsync(
-            Guid tutorId,
-            int dayOfWeek,
-            TimeOnly startTime,
-            TimeOnly endTime,
-            DateOnly effectiveFrom,
-            DateOnly? effectiveUntil,
-            Guid? excludeAvailabilityId = null)
-        {
-            return await _availabilityRepository.HasConflictAsync(
-                tutorId,
-                dayOfWeek,
-                startTime,
-                endTime,
-                effectiveFrom,
-                effectiveUntil,
-                excludeAvailabilityId);
-        }
+
 
         public async Task UpdateAvailabilityStatusAsync(Guid availabilityId, string status)
         {
@@ -432,7 +403,6 @@ namespace MathBridgeSystem.Application.Services
                 AvailableSlots = availability.MaxConcurrentBookings - availability.CurrentBookings,
                 CanTeachOnline = availability.CanTeachOnline,
                 CanTeachOffline = availability.CanTeachOffline,
-                MaxTravelDistanceKm = availability.MaxTravelDistanceKm,
                 Status = availability.Status,
                 CreatedDate = availability.CreatedDate,
                 UpdatedDate = availability.UpdatedDate

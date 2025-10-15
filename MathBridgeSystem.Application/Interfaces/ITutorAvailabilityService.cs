@@ -13,7 +13,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<TutorAvailabilityResponse> GetAvailabilityByIdAsync(Guid availabilityId);
         Task<List<TutorAvailabilityResponse>> GetTutorAvailabilitiesAsync(Guid tutorId, bool activeOnly = true);
         Task<List<AvailableTutorResponse>> SearchAvailableTutorsAsync(SearchAvailableTutorsRequest request);
-        Task<bool> CheckAvailabilityConflictAsync(Guid tutorId, int dayOfWeek, TimeOnly startTime, TimeOnly endTime, DateOnly effectiveFrom, DateOnly? effectiveUntil, Guid? excludeAvailabilityId = null);
         Task UpdateAvailabilityStatusAsync(Guid availabilityId, string status);
         Task IncrementBookingCountAsync(Guid availabilityId);
         Task DecrementBookingCountAsync(Guid availabilityId);

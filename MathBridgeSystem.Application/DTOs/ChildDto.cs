@@ -10,7 +10,8 @@ namespace MathBridgeSystem.Application.DTOs
     {
         public Guid ChildId { get; set; }
         public string FullName { get; set; }
-        public string School { get; set; }
+        public Guid SchoolId { get; set; }
+        public string SchoolName { get; set; }
         public Guid? CenterId { get; set; }
         public string? CenterName { get; set; }
         public string Grade { get; set; }

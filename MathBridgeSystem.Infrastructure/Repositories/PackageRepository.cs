@@ -25,19 +25,17 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // public async Task<List<PaymentPackage>> GetAllAsync()
-        // {
-        //     return await _context.PaymentPackages
-        //         .Include(p => p.Program)
-        //         .ToListAsync();
-        // }
-        //
-        // public async Task<PaymentPackage> GetByIdAsync(Guid id)
-        // {
-        //     return await _context.PaymentPackages
-        //         .Include(p => p.Program)
-        //         .FirstOrDefaultAsync(p => p.PackageId == id);
-        // }
+        public async Task<List<PaymentPackage>> GetAllAsync()
+        {
+            return await _context.PaymentPackages
+                .ToListAsync();
+        }
+
+        public async Task<PaymentPackage> GetByIdAsync(Guid id)
+        {
+            return await _context.PaymentPackages
+                .FirstOrDefaultAsync(p => p.PackageId == id);
+        }
 
         public async Task<bool> ExistsAsync(Guid id)
         {

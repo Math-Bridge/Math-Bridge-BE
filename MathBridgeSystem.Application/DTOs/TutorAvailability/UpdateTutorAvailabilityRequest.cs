@@ -12,6 +12,5 @@ namespace MathBridgeSystem.Application.DTOs.TutorAvailability
         public int? MaxConcurrentBookings { get; set; }
         public bool? CanTeachOnline { get; set; }
         public bool? CanTeachOffline { get; set; }
-        public decimal? MaxTravelDistanceKm { get; set; }
     }
 }

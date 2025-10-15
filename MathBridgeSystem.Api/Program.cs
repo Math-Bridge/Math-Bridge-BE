@@ -67,7 +67,6 @@ builder.Services.AddScoped<ISePayRepository, SePayRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<IMathProgramRepository, MathProgramRepository>();
 builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorAvailabilityRepository, TutorAvailabilityRepository>();

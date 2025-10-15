@@ -10,8 +10,8 @@ namespace MathBridgeSystem.Domain.Interfaces
     public interface IPackageRepository
     {
         Task AddAsync(PaymentPackage package);
-        // Task<List<PaymentPackage>> GetAllAsync();
-        // Task<PaymentPackage> GetByIdAsync(Guid id);
+        Task<List<PaymentPackage>> GetAllAsync();
+        Task<PaymentPackage> GetByIdAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
     }
 }

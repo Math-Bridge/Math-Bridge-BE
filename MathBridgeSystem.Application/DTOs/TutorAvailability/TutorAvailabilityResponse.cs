@@ -18,8 +18,7 @@ namespace MathBridgeSystem.Application.DTOs.TutorAvailability
         public int AvailableSlots { get; set; }
         public bool CanTeachOnline { get; set; }
         public bool CanTeachOffline { get; set; }
-        public decimal? MaxTravelDistanceKm { get; set; }
-        public string Status { get; set; }
+                public string Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }
