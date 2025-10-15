@@ -70,6 +70,8 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IMathProgramRepository, MathProgramRepository>();
 builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
+builder.Services.AddScoped<ITutorAvailabilityRepository, TutorAvailabilityRepository>();
+
 
 // === SERVICE REGISTRATIONS ===
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -79,6 +81,8 @@ builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ITutorAvailabilityService, TutorAvailabilityService>();
+
 
 // === CORE BUSINESS SERVICES ===
 builder.Services.AddScoped<IChildService, ChildService>();
