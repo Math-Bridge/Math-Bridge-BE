@@ -140,7 +140,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Availability not found");
             }
 
-            // Update only provided fields
+            // Update only provided fields, preserve old data if null
             if (request.DayOfWeek.HasValue)
             {
                 if (request.DayOfWeek.Value < 0 || request.DayOfWeek.Value > 6)
@@ -164,6 +164,14 @@ namespace MathBridgeSystem.Application.Services
             if (availability.AvailableUntil <= availability.AvailableFrom)
             {
                 throw new ArgumentException("Available until time must be after available from time");
+            }
+
+            // Validate time slot duration (must be between 1.5 and 2 hours) - same as CreateAvailability
+            var duration = availability.AvailableUntil.ToTimeSpan() - availability.AvailableFrom.ToTimeSpan();
+            var durationMinutes = duration.TotalMinutes;
+            if (durationMinutes < 90 || durationMinutes > 120)
+            {
+                throw new ArgumentException("Time slot duration must be between 1.5 hours (90 minutes) and 2 hours (120 minutes)");
             }
 
             if (request.EffectiveFrom.HasValue)
@@ -214,7 +222,25 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
             }
 
-                        // Check for conflicts (excluding current availability)
+            // Check for minimum 15-minute spacing with existing time slots (excluding current availability)
+            var existingSlots = await _availabilityRepository.GetByTutorAndDayAsync(
+                availability.TutorId,
+                availability.DayOfWeek,
+                availability.EffectiveFrom,
+                availability.EffectiveUntil);
+
+            foreach (var slot in existingSlots.Where(s => s.AvailabilityId != availabilityId))
+            {
+                var timeDiff1 = Math.Abs((availability.AvailableFrom.ToTimeSpan() - slot.AvailableUntil.ToTimeSpan()).TotalMinutes);
+                var timeDiff2 = Math.Abs((slot.AvailableFrom.ToTimeSpan() - availability.AvailableUntil.ToTimeSpan()).TotalMinutes);
+
+                if (timeDiff1 < 15 || timeDiff2 < 15)
+                {
+                    throw new Exception($"Time slots must have at least 15 minutes spacing. Conflict with slot {slot.AvailableFrom:HH:mm}-{slot.AvailableUntil:HH:mm}");
+                }
+            }
+
+            // Check for conflicts (excluding current availability)
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 availability.TutorId,
                 availability.DayOfWeek,
@@ -413,13 +439,13 @@ namespace MathBridgeSystem.Application.Services
         {
             return dayOfWeek switch
             {
-                0 => "Sunday",
-                1 => "Monday",
-                2 => "Tuesday",
-                3 => "Wednesday",
-                4 => "Thursday",
-                5 => "Friday",
-                6 => "Saturday",
+                8 => "Sunday",
+                2 => "Monday",
+                3 => "Tuesday",
+                4  => "Wednesday",
+                5 => "Thursday",
+                6 => "Friday",
+                7 => "Saturday",
                 _ => "Unknown"
             };
         }

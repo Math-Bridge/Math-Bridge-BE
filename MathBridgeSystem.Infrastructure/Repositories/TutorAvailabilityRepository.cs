@@ -38,6 +38,31 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<TutorAvailability>> GetByTutorAndDayAsync(Guid tutorId, int dayOfWeek, DateOnly effectiveFrom, DateOnly? effectiveUntil)
+        {
+            var query = _context.TutorAvailabilities
+                .Where(ta => ta.TutorId == tutorId)
+                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => ta.Status == "active");
+
+            // Check for effective date overlap
+            if (effectiveUntil.HasValue)
+            {
+                query = query.Where(ta => 
+                    ta.EffectiveFrom <= effectiveUntil.Value &&
+                    (ta.EffectiveUntil == null || ta.EffectiveUntil >= effectiveFrom));
+            }
+            else
+            {
+                query = query.Where(ta => 
+                    ta.EffectiveUntil == null || ta.EffectiveUntil >= effectiveFrom);
+            }
+
+            return await query
+                .OrderBy(ta => ta.AvailableFrom)
+                .ToListAsync();
+        }
+
         public async Task<List<TutorAvailability>> GetActiveTutorAvailabilitiesAsync(Guid tutorId)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
