@@ -6,7 +6,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace MathBridgeSystem.Presentation.Controllers
+namespace MathBridgeSystem.Api.Controllers
 {
     [Route("api/users")]
     [ApiController]

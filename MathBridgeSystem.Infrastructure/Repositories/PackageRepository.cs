@@ -28,14 +28,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<List<PaymentPackage>> GetAllAsync()
         {
             return await _context.PaymentPackages
-                .Include(p => p.Program)
                 .ToListAsync();
         }
 
         public async Task<PaymentPackage> GetByIdAsync(Guid id)
         {
             return await _context.PaymentPackages
-                .Include(p => p.Program)
                 .FirstOrDefaultAsync(p => p.PackageId == id);
         }
 

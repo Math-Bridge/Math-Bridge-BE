@@ -9,7 +9,6 @@ namespace MathBridgeSystem.Application.DTOs
     public class CreatePackageRequest
     {
         public string PackageName { get; set; }
-        public Guid ProgramId { get; set; }
         public string Grade { get; set; }
         public decimal Price { get; set; }
         public int SessionCount { get; set; }

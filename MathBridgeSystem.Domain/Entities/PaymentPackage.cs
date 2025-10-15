@@ -9,8 +9,6 @@ public partial class PaymentPackage
 
     public string PackageName { get; set; } = null!;
 
-    public Guid ProgramId { get; set; }
-
     public string Grade { get; set; } = null!;
 
     public decimal Price { get; set; }
@@ -29,7 +27,9 @@ public partial class PaymentPackage
 
     public DateTime? UpdatedDate { get; set; }
 
+    public Guid CurriculumId { get; set; }
+
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
-    public virtual MathProgram Program { get; set; } = null!;
+    public virtual Curriculum Curriculum { get; set; } = null!;
 }

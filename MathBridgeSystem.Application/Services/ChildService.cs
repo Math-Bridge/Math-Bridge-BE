@@ -48,7 +48,7 @@ namespace MathBridgeSystem.Application.Services
                 ChildId = Guid.NewGuid(),
                 ParentId = parentId,
                 FullName = request.FullName,
-                School = request.School,
+                SchoolId = request.SchoolId,
                 CenterId = request.CenterId, // Có thể NULL
                 Grade = request.Grade,
                 DateOfBirth = request.DateOfBirth,
@@ -78,7 +78,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Invalid grade");
 
             child.FullName = request.FullName;
-            child.School = request.School;
+            child.SchoolId = request.SchoolId;
             child.CenterId = request.CenterId; // Added
             child.Grade = request.Grade;
             child.DateOfBirth = request.DateOfBirth;
@@ -118,7 +118,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 ChildId = child.ChildId,
                 FullName = child.FullName,
-                School = child.School,
+                SchoolId = child.SchoolId,
+                SchoolName = child.School?.SchoolName ?? string.Empty,
                 CenterId = child.CenterId,
                 CenterName = centerName,
                 Grade = child.Grade,
@@ -134,7 +135,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 ChildId = c.ChildId,
                 FullName = c.FullName,
-                School = c.School,
+                SchoolId = c.SchoolId,
+                SchoolName = c.School?.SchoolName ?? string.Empty,
                 CenterId = c.CenterId,
                 CenterName = c.Center?.Name,
                 Grade = c.Grade,
@@ -150,7 +152,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 ChildId = c.ChildId,
                 FullName = c.FullName,
-                School = c.School,
+                SchoolId = c.SchoolId,
+                SchoolName = c.School?.SchoolName ?? string.Empty,
                 CenterId = c.CenterId,
                 CenterName = c.Center?.Name,
                 Grade = c.Grade,

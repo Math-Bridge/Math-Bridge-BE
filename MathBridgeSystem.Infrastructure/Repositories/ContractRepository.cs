@@ -79,23 +79,23 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         }
     }
 
-    public class MathProgramRepository : IMathProgramRepository
-    {
-        private readonly MathBridgeDbContext _context;
-
-        public MathProgramRepository(MathBridgeDbContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        public async Task<MathProgram> GetByIdAsync(Guid id)
-        {
-            return await _context.MathPrograms.FirstOrDefaultAsync(p => p.ProgramId == id);
-        }
-
-        public async Task<bool> ExistsAsync(Guid id)
-        {
-            return await _context.MathPrograms.AnyAsync(p => p.ProgramId == id);
-        }
-    }
+    // public class MathProgramRepository : IMathProgramRepository
+    // {
+    //     private readonly MathBridgeDbContext _context;
+    //
+    //     public MathProgramRepository(MathBridgeDbContext context)
+    //     {
+    //         _context = context ?? throw new ArgumentNullException(nameof(context));
+    //     }
+    //
+    //     public async Task<MathProgram> GetByIdAsync(Guid id)
+    //     {
+    //         return await _context.MathPrograms.FirstOrDefaultAsync(p => p.ProgramId == id);
+    //     }
+    //
+    //     public async Task<bool> ExistsAsync(Guid id)
+    //     {
+    //         return await _context.MathPrograms.AnyAsync(p => p.ProgramId == id);
+    //     }
+    // }
 }

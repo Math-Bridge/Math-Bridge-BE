@@ -9,19 +9,25 @@ public partial class TutorAvailability
 
     public Guid TutorId { get; set; }
 
-    public string TimeSlot { get; set; } = null!;
+    public int DayOfWeek { get; set; }
 
-    public bool IsRecurring { get; set; }
+    public TimeOnly AvailableFrom { get; set; }
 
-    public DateTime? RecurrenceEndDate { get; set; }
+    public TimeOnly AvailableUntil { get; set; }
 
-    public bool IsBooked { get; set; }
+    public DateOnly EffectiveFrom { get; set; }
 
-    public bool IsOnline { get; set; }
+    public DateOnly? EffectiveUntil { get; set; }
 
-    public string? VideoCallPlatform { get; set; }
+    public int MaxConcurrentBookings { get; set; }
 
-    public string? VideoCallLink { get; set; }
+    public int CurrentBookings { get; set; }
+
+    public bool CanTeachOnline { get; set; }
+
+    public bool CanTeachOffline { get; set; }
+
+    public string Status { get; set; } = null!;
 
     public DateTime CreatedDate { get; set; }
 
