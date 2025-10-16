@@ -17,48 +17,48 @@ public class SePayRepository : ISePayRepository
         _context = context;
     }
 
-    public async Task<SePayTransaction> AddAsync(SePayTransaction transaction)
+    public async Task<SepayTransaction> AddAsync(SepayTransaction transaction)
     {
-        _context.SePayTransactions.Add(transaction);
+        _context.SepayTransactions.Add(transaction);
         await _context.SaveChangesAsync();
         return transaction;
     }
 
-    public async Task<SePayTransaction?> GetByIdAsync(Guid id)
+    public async Task<SepayTransaction?> GetByIdAsync(Guid id)
     {
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
                 .ThenInclude(w => w.Parent)
             .FirstOrDefaultAsync(s => s.SepayTransactionId  == id);
     }
 
-    public async Task<SePayTransaction?> GetByWalletTransactionIdAsync(Guid walletTransactionId)
+    public async Task<SepayTransaction?> GetByWalletTransactionIdAsync(Guid walletTransactionId)
     {
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
                 .ThenInclude(w => w.Parent)
             .FirstOrDefaultAsync(s => s.WalletTransactionId == walletTransactionId);
     }
 
-    public async Task<SePayTransaction?> GetByOrderReferenceAsync(string orderReference)
+    public async Task<SepayTransaction?> GetByOrderReferenceAsync(string orderReference)
     {
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
                 .ThenInclude(w => w.Parent)
             .FirstOrDefaultAsync(s => s.OrderReference == orderReference);
     }
 
-    public async Task<SePayTransaction?> ExistsByCodeAsync(string code)
+    public async Task<SepayTransaction?> ExistsByCodeAsync(string code)
     {
-        return await _context.SePayTransactions.Include(s => s.WalletTransaction)
+        return await _context.SepayTransactions.Include(s => s.WalletTransaction)
             .FirstOrDefaultAsync(s => s.Code == code);
     }
 
-    public async Task<IEnumerable<SePayTransaction>> GetByUserIdAsync(Guid userId, int pageNumber = 1, int pageSize = 10)
+    public async Task<IEnumerable<SepayTransaction>> GetByUserIdAsync(Guid userId, int pageNumber = 1, int pageSize = 10)
     {
         var skip = (pageNumber - 1) * pageSize;
         
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
             .Where(s => s.WalletTransaction.ParentId == userId)
             .OrderByDescending(s => s.CreatedAt)
@@ -67,25 +67,25 @@ public class SePayRepository : ISePayRepository
             .ToListAsync();
     }
 
-    public async Task<SePayTransaction> UpdateAsync(SePayTransaction transaction)
+    public async Task<SepayTransaction> UpdateAsync(SepayTransaction transaction)
     {
-        _context.SePayTransactions.Update(transaction);
+        _context.SepayTransactions.Update(transaction);
         await _context.SaveChangesAsync();
         return transaction;
     }
 
-    public async Task<IEnumerable<SePayTransaction>> GetPendingTransactionsAsync()
+    public async Task<IEnumerable<SepayTransaction>> GetPendingTransactionsAsync()
     {
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
             .Where(s => s.WalletTransaction.Status == "Pending")
             .OrderBy(s => s.CreatedAt)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<SePayTransaction>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<SepayTransaction>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
-        return await _context.SePayTransactions
+        return await _context.SepayTransactions
             .Include(s => s.WalletTransaction)
             .Where(s => s.TransactionDate >= startDate && s.TransactionDate <= endDate)
             .OrderByDescending(s => s.TransactionDate)

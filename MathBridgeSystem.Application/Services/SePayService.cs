@@ -99,7 +99,7 @@ public class SePayService : ISePayService
             var qrCodeUrl = GenerateQrCodeUrl(request.Amount, orderReference);
 
             // Create SePay transaction record
-            var sePayTransaction = new SePayTransaction
+            var sePayTransaction = new SepayTransaction
             {
                 SepayTransactionId = Guid.NewGuid(),
                 WalletTransactionId = createdWalletTransaction.TransactionId,

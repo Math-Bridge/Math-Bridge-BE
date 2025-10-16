@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MathBridgeSystem.Domain.Entities;
 
-public partial class SePayTransaction
+public partial class SepayTransaction
 {
     public Guid SepayTransactionId { get; set; }
 
