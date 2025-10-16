@@ -30,11 +30,11 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
-    public virtual DbSet<PayOstransaction> PayOstransactions { get; set; }
-
     public virtual DbSet<PaymentGatewayConfig> PaymentGatewayConfigs { get; set; }
 
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
+
+    public virtual DbSet<PayosTransaction> PayosTransactions { get; set; }
 
     public virtual DbSet<RescheduleRequest> RescheduleRequests { get; set; }
 
@@ -46,7 +46,7 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<School> Schools { get; set; }
 
-    public virtual DbSet<SePayTransaction> SePayTransactions { get; set; }
+    public virtual DbSet<SepayTransaction> SepayTransactions { get; set; }
 
     public virtual DbSet<SupportRequest> SupportRequests { get; set; }
 
@@ -455,61 +455,11 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_notifications_user");
         });
 
-        modelBuilder.Entity<PayOstransaction>(entity =>
-        {
-            entity.HasKey(e => e.PayosTransactionId).HasName("PK__PayOSTra__11A5DD8D2EE1B2CF");
-
-            entity.ToTable("PayOSTransactions");
-
-            entity.HasIndex(e => e.CreatedDate, "IX_PayOSTransactions_CreatedDate").IsDescending();
-
-            entity.HasIndex(e => e.OrderCode, "IX_PayOSTransactions_OrderCode").IsUnique();
-
-            entity.HasIndex(e => e.PaymentStatus, "IX_PayOSTransactions_PaymentStatus");
-
-            entity.HasIndex(e => e.WalletTransactionId, "IX_PayOSTransactions_WalletTransactionId");
-
-            entity.Property(e => e.PayosTransactionId)
-                .HasDefaultValueSql("(newsequentialid())")
-                .HasColumnName("payos_transaction_id");
-            entity.Property(e => e.Amount)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("amount");
-            entity.Property(e => e.CancelUrl).HasColumnName("cancel_url");
-            entity.Property(e => e.CheckoutUrl).HasColumnName("checkout_url");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.OrderCode).HasColumnName("order_code");
-            entity.Property(e => e.PaidAt)
-                .HasColumnType("datetime")
-                .HasColumnName("paid_at");
-            entity.Property(e => e.PaymentLinkId)
-                .HasMaxLength(255)
-                .HasColumnName("payment_link_id");
-            entity.Property(e => e.PaymentStatus)
-                .HasMaxLength(50)
-                .HasColumnName("payment_status");
-            entity.Property(e => e.ReturnUrl).HasColumnName("return_url");
-            entity.Property(e => e.UpdatedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-            entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
-
-            entity.HasOne(d => d.WalletTransaction).WithMany(p => p.PayOstransactions)
-                .HasForeignKey(d => d.WalletTransactionId)
-                .HasConstraintName("FK_PayOSTransactions_WalletTransactions");
-        });
-
         modelBuilder.Entity<PaymentGatewayConfig>(entity =>
         {
             entity.HasKey(e => e.GatewayId).HasName("PK__PaymentG__0AF5B00B7BAD3E38");
 
-            entity.ToTable("PaymentGatewayConfig");
+            entity.ToTable("payment_gateway_config");
 
             entity.HasIndex(e => e.GatewayName, "UQ_PaymentGatewayConfig_GatewayName").IsUnique();
 
@@ -585,6 +535,56 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.CurriculumId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_payment_packages_curriculum");
+        });
+
+        modelBuilder.Entity<PayosTransaction>(entity =>
+        {
+            entity.HasKey(e => e.PayosTransactionId).HasName("PK__PayOSTra__11A5DD8D2EE1B2CF");
+
+            entity.ToTable("payos_transactions");
+
+            entity.HasIndex(e => e.CreatedDate, "IX_PayOSTransactions_CreatedDate").IsDescending();
+
+            entity.HasIndex(e => e.OrderCode, "IX_PayOSTransactions_OrderCode").IsUnique();
+
+            entity.HasIndex(e => e.PaymentStatus, "IX_PayOSTransactions_PaymentStatus");
+
+            entity.HasIndex(e => e.WalletTransactionId, "IX_PayOSTransactions_WalletTransactionId");
+
+            entity.Property(e => e.PayosTransactionId)
+                .HasDefaultValueSql("(newsequentialid())")
+                .HasColumnName("payos_transaction_id");
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("amount");
+            entity.Property(e => e.CancelUrl).HasColumnName("cancel_url");
+            entity.Property(e => e.CheckoutUrl).HasColumnName("checkout_url");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
+            entity.Property(e => e.OrderCode).HasColumnName("order_code");
+            entity.Property(e => e.PaidAt)
+                .HasColumnType("datetime")
+                .HasColumnName("paid_at");
+            entity.Property(e => e.PaymentLinkId)
+                .HasMaxLength(255)
+                .HasColumnName("payment_link_id");
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(50)
+                .HasColumnName("payment_status");
+            entity.Property(e => e.ReturnUrl).HasColumnName("return_url");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+            entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
+
+            entity.HasOne(d => d.WalletTransaction).WithMany(p => p.PayosTransactions)
+                .HasForeignKey(d => d.WalletTransactionId)
+                .HasConstraintName("FK_PayOSTransactions_WalletTransactions");
         });
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
@@ -799,8 +799,12 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("FK_schools_curriculum");
         });
 
-        modelBuilder.Entity<SePayTransaction>(entity =>
+        modelBuilder.Entity<SepayTransaction>(entity =>
         {
+            entity.HasKey(e => e.SepayTransactionId).HasName("PK_SepayTransactions");
+
+            entity.ToTable("sepay_transactions");
+
             entity.HasIndex(e => e.Code, "ix_sepay_transactions_code").IsUnique();
 
             entity.HasIndex(e => e.TransactionDate, "ix_sepay_transactions_date");
@@ -851,7 +855,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("transfer_type");
             entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
 
-            entity.HasOne(d => d.WalletTransaction).WithMany(p => p.SePayTransactions)
+            entity.HasOne(d => d.WalletTransaction).WithMany(p => p.SepayTransactions)
                 .HasForeignKey(d => d.WalletTransactionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_sepay_transactions_wallet_transaction");
@@ -1202,6 +1206,8 @@ public partial class MathBridgeDbContext : DbContext
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
             entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AF29459AA2");
+
+            entity.ToTable("wallet_transactions");
 
             entity.HasIndex(e => e.PaymentGateway, "IX_WalletTransactions_PaymentGateway");
 

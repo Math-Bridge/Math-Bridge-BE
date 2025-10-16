@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MathBridgeSystem.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddSePayTransaction : Migration
+    public partial class AddSepayTransaction : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -79,7 +79,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SePayTransactions",
+                name: "SepayTransactions",
                 columns: table => new
                 {
                     sepay_transaction_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "newid()"),
@@ -100,7 +100,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SePayTransactions", x => x.sepay_transaction_id);
+                    table.PrimaryKey("PK_SepayTransactions", x => x.sepay_transaction_id);
                     table.ForeignKey(
                         name: "fk_sepay_transactions_wallet_transaction",
                         column: x => x.wallet_transaction_id,
@@ -117,23 +117,23 @@ namespace MathBridgeSystem.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "ix_sepay_transactions_code",
-                table: "SePayTransactions",
+                table: "SepayTransactions",
                 column: "code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_sepay_transactions_date",
-                table: "SePayTransactions",
+                table: "SepayTransactions",
                 column: "transaction_date");
 
             migrationBuilder.CreateIndex(
                 name: "ix_sepay_transactions_order_reference",
-                table: "SePayTransactions",
+                table: "SepayTransactions",
                 column: "order_reference");
 
             migrationBuilder.CreateIndex(
                 name: "ix_sepay_transactions_wallet_transaction_id",
-                table: "SePayTransactions",
+                table: "SepayTransactions",
                 column: "wallet_transaction_id");
 
             migrationBuilder.CreateIndex(
@@ -172,7 +172,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "SePayTransactions");
+                name: "SepayTransactions");
 
             migrationBuilder.DropTable(
                 name: "WalletTransactions");

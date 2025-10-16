@@ -31,7 +31,7 @@ public partial class WalletTransaction
 
     public virtual User Parent { get; set; } = null!;
 
-    public virtual ICollection<PayOstransaction> PayOstransactions { get; set; } = new List<PayOstransaction>();
+    public virtual ICollection<PayosTransaction> PayosTransactions { get; set; } = new List<PayosTransaction>();
 
-    public virtual ICollection<SePayTransaction> SePayTransactions { get; set; } = new List<SePayTransaction>();
+    public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
 }

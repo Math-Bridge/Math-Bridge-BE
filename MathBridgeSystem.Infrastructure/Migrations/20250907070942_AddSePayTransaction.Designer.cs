@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MathBridgeSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(MathBridgeDbContext))]
-    [Migration("20250907070942_AddSePayTransaction")]
-    partial class AddSePayTransaction
+    [Migration("20250907070942_AddSepayTransaction")]
+    partial class AddSepayTransaction
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,9 +55,9 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("MathBridgeSystem.Domain.Entities.SePayTransaction", b =>
+            modelBuilder.Entity("MathBridgeSystem.Domain.Entities.SepayTransaction", b =>
                 {
-                    b.Property<Guid>("SePayTransactionId")
+                    b.Property<Guid>("SepayTransactionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("sepay_transaction_id")
@@ -136,7 +136,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("wallet_transaction_id");
 
-                    b.HasKey("SePayTransactionId");
+                    b.HasKey("SepayTransactionId");
 
                     b.HasIndex("Code")
                         .IsUnique()
@@ -151,7 +151,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                     b.HasIndex("WalletTransactionId")
                         .HasDatabaseName("ix_sepay_transactions_wallet_transaction_id");
 
-                    b.ToTable("SePayTransactions");
+                    b.ToTable("SepayTransactions");
                 });
 
             modelBuilder.Entity("MathBridgeSystem.Domain.Entities.User", b =>
@@ -307,7 +307,7 @@ namespace MathBridgeSystem.Infrastructure.Migrations
                     b.ToTable("WalletTransactions");
                 });
 
-            modelBuilder.Entity("MathBridgeSystem.Domain.Entities.SePayTransaction", b =>
+            modelBuilder.Entity("MathBridgeSystem.Domain.Entities.SepayTransaction", b =>
                 {
                     b.HasOne("MathBridgeSystem.Domain.Entities.WalletTransaction", "WalletTransaction")
                         .WithMany()
