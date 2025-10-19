@@ -49,6 +49,12 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new ArgumentException("Available until time must be after available from time");
             }
+            
+            if (request.AvailableFrom < TimeOnly.FromTimeSpan(new TimeSpan(16, 0, 0)) ||
+                request.AvailableUntil > TimeOnly.FromTimeSpan(new TimeSpan(22, 0, 0)))
+            {
+                throw new ArgumentException("Available time must be between 16:00 and 22:00");
+            }
 
             // Validate time slot duration (must be between 1.5 and 2 hours)
             var duration = request.AvailableUntil.ToTimeSpan() - request.AvailableFrom.ToTimeSpan();

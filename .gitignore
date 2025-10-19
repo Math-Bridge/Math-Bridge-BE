@@ -30,3 +30,4 @@ MathBridgeSystem.Api/mathbridge_firebase.json
 MathBridgeSystem.Api/appsettings.json
 /.vs/MathBridgeSystem
 *.py
+ProjectOverview.md
