@@ -199,7 +199,6 @@ namespace MathBridgeSystem.Application.Services
                 CenterName = c.Center?.Name,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
-                TimeSlot = c.TimeSlot,
                 IsOnline = c.IsOnline,
                 Status = c.Status
             }).ToList();

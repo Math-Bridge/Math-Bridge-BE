@@ -153,7 +153,6 @@ namespace MathBridgeSystem.Application.Services
                 SubstituteTutor2Id = request.SubstituteTutor2Id,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
-                TimeSlot = request.TimeSlot,
                 IsOnline = request.IsOnline,
                 OfflineAddress = request.OfflineAddress,
                 OfflineLatitude = request.OfflineLatitude,
@@ -185,7 +184,6 @@ namespace MathBridgeSystem.Application.Services
                 CenterName = c.Center?.Name,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
-                TimeSlot = c.TimeSlot,
                 IsOnline = c.IsOnline,
                 Status = c.Status
             }).ToList();

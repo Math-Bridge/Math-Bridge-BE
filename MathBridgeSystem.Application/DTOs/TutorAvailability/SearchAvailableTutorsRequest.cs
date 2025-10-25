@@ -1,6 +1,6 @@
 using System;
 
-namespace MathBridgeSystem.Application.DTOs.TutorAvailability
+namespace MathBridgeSystem.Application.DTOs.TutorSchedule
 {
     public class SearchAvailableTutorsRequest
     {

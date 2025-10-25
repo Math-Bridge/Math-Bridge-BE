@@ -7,7 +7,7 @@ public partial class SepayTransaction
 {
     public Guid SepayTransactionId { get; set; }
 
-    public Guid WalletTransactionId { get; set; }
+    public Guid? WalletTransactionId { get; set; }
 
     public string Gateway { get; set; } = null!;
 
@@ -35,5 +35,9 @@ public partial class SepayTransaction
 
     public DateTime CreatedAt { get; set; }
 
-    public virtual WalletTransaction WalletTransaction { get; set; } = null!;
+    public Guid? ContractId { get; set; }
+
+    public virtual Contract? Contract { get; set; }
+
+    public virtual WalletTransaction? WalletTransaction { get; set; }
 }

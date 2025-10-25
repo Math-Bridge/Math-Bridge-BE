@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.TutorAvailability;
+using MathBridgeSystem.Application.DTOs.TutorSchedule;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Services
 {
-    public class TutorAvailabilityService : ITutorAvailabilityService
+    public class TutorScheduleService : ITutorScheduleService
     {
-        private readonly ITutorAvailabilityRepository _availabilityRepository;
+        private readonly ITutorScheduleRepository _availabilityRepository;
         private readonly IUserRepository _userRepository;
 
-        public TutorAvailabilityService(
-            ITutorAvailabilityRepository availabilityRepository,
+        public TutorScheduleService(
+            ITutorScheduleRepository availabilityRepository,
             IUserRepository userRepository)
         {
             _availabilityRepository = availabilityRepository ?? throw new ArgumentNullException(nameof(availabilityRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
-        public async Task<Guid> CreateAvailabilityAsync(CreateTutorAvailabilityRequest request)
+        public async Task<Guid> CreateAvailabilityAsync(CreateTutorScheduleRequest request)
         {
             // Validate tutor exists and has tutor role
             var tutor = await _userRepository.GetTutorWithVerificationAsync(request.TutorId);
@@ -121,7 +121,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Create entity
-            var availability = new TutorAvailability
+            var availability = new TutorSchedule
             {
                 TutorId = request.TutorId,
                 DayOfWeek = request.DayOfWeek,
@@ -129,7 +129,6 @@ namespace MathBridgeSystem.Application.Services
                 AvailableUntil = request.AvailableUntil,
                 EffectiveFrom = request.EffectiveFrom,
                 EffectiveUntil = request.EffectiveUntil,
-                MaxConcurrentBookings = request.MaxConcurrentBookings,
                 CanTeachOnline = request.CanTeachOnline,
                 CanTeachOffline = request.CanTeachOffline
             };
@@ -138,7 +137,7 @@ namespace MathBridgeSystem.Application.Services
             return created.AvailabilityId;
         }
 
-        public async Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorAvailabilityRequest request)
+        public async Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorScheduleRequest request)
         {
             var availability = await _availabilityRepository.GetByIdAsync(availabilityId);
             if (availability == null)
@@ -195,22 +194,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new ArgumentException("Effective until date must be after effective from date");
             }
-
-            if (request.MaxConcurrentBookings.HasValue)
-            {
-                if (request.MaxConcurrentBookings.Value < 1 || request.MaxConcurrentBookings.Value > 10)
-                {
-                    throw new ArgumentException("Max concurrent bookings must be between 1 and 10");
-                }
-
-                // Prevent reducing max bookings below current bookings
-                if (request.MaxConcurrentBookings.Value < availability.CurrentBookings)
-                {
-                    throw new ArgumentException($"Cannot reduce max concurrent bookings below current bookings ({availability.CurrentBookings})");
-                }
-
-                availability.MaxConcurrentBookings = request.MaxConcurrentBookings.Value;
-            }
+            
 
             if (request.CanTeachOnline.HasValue)
             {
@@ -273,15 +257,15 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Prevent deletion if there are active bookings
-            if (availability.CurrentBookings > 0)
+            if (availability.IsBooked == true)
             {
-                throw new Exception($"Cannot delete availability with active bookings ({availability.CurrentBookings})");
+                throw new Exception($"Cannot delete availability with active bookings");
             }
 
             await _availabilityRepository.DeleteAsync(availabilityId);
         }
 
-        public async Task<TutorAvailabilityResponse> GetAvailabilityByIdAsync(Guid availabilityId)
+        public async Task<TutorScheduleResponse> GetAvailabilityByIdAsync(Guid availabilityId)
         {
             var availability = await _availabilityRepository.GetByIdAsync(availabilityId);
             if (availability == null)
@@ -292,13 +276,13 @@ namespace MathBridgeSystem.Application.Services
             return MapToResponse(availability);
         }
 
-        public async Task<List<TutorAvailabilityResponse>> GetTutorAvailabilitiesAsync(Guid tutorId, bool activeOnly = true)
+        public async Task<List<TutorScheduleResponse>> GetTutorSchedulesAsync(Guid tutorId, bool activeOnly = true)
         {
-            List<TutorAvailability> availabilities;
+            List<TutorSchedule> availabilities;
 
             if (activeOnly)
             {
-                availabilities = await _availabilityRepository.GetActiveTutorAvailabilitiesAsync(tutorId);
+                availabilities = await _availabilityRepository.GetActiveTutorSchedulesAsync(tutorId);
             }
             else
             {
@@ -348,7 +332,6 @@ namespace MathBridgeSystem.Application.Services
                     TutorName = group.First().Tutor.FullName,
                     TutorEmail = group.First().Tutor.Email,
                     AvailabilitySlots = group.Select(MapToResponse).ToList(),
-                    TotalAvailableSlots = group.Sum(a => a.MaxConcurrentBookings - a.CurrentBookings),
                     CanTeachOnline = group.Any(a => a.CanTeachOnline),
                     CanTeachOffline = group.Any(a => a.CanTeachOffline)
                 })
@@ -384,18 +367,9 @@ namespace MathBridgeSystem.Application.Services
             availability.Status = status.ToLower();
             await _availabilityRepository.UpdateAsync(availability);
         }
+        
 
-        public async Task IncrementBookingCountAsync(Guid availabilityId)
-        {
-            await _availabilityRepository.UpdateBookingCountAsync(availabilityId, 1);
-        }
-
-        public async Task DecrementBookingCountAsync(Guid availabilityId)
-        {
-            await _availabilityRepository.UpdateBookingCountAsync(availabilityId, -1);
-        }
-
-        public async Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorAvailabilityRequest> requests)
+        public async Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorScheduleRequest> requests)
         {
             var createdIds = new List<Guid>();
 
@@ -417,9 +391,9 @@ namespace MathBridgeSystem.Application.Services
             return createdIds;
         }
 
-        private TutorAvailabilityResponse MapToResponse(TutorAvailability availability)
+        private TutorScheduleResponse MapToResponse(TutorSchedule availability)
         {
-            return new TutorAvailabilityResponse
+            return new TutorScheduleResponse
             {
                 AvailabilityId = availability.AvailabilityId,
                 TutorId = availability.TutorId,
@@ -430,9 +404,6 @@ namespace MathBridgeSystem.Application.Services
                 AvailableUntil = availability.AvailableUntil,
                 EffectiveFrom = availability.EffectiveFrom,
                 EffectiveUntil = availability.EffectiveUntil,
-                MaxConcurrentBookings = availability.MaxConcurrentBookings,
-                CurrentBookings = availability.CurrentBookings,
-                AvailableSlots = availability.MaxConcurrentBookings - availability.CurrentBookings,
                 CanTeachOnline = availability.CanTeachOnline,
                 CanTeachOffline = availability.CanTeachOffline,
                 Status = availability.Status,

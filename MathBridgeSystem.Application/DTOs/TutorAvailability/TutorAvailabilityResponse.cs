@@ -1,8 +1,8 @@
 using System;
 
-namespace MathBridgeSystem.Application.DTOs.TutorAvailability
+namespace MathBridgeSystem.Application.DTOs.TutorSchedule
 {
-    public class TutorAvailabilityResponse
+    public class TutorScheduleResponse
     {
         public Guid AvailabilityId { get; set; }
         public Guid TutorId { get; set; }

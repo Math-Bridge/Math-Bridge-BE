@@ -1,11 +1,11 @@
 using System;
 
-namespace MathBridgeSystem.Application.DTOs.TutorAvailability
+namespace MathBridgeSystem.Application.DTOs.TutorSchedule
 {
-    public class CreateTutorAvailabilityRequest
+    public class CreateTutorScheduleRequest
     {
         public Guid TutorId { get; set; }
-        public int DayOfWeek { get; set; }
+        public byte DayOfWeek { get; set; }
         public TimeOnly AvailableFrom { get; set; }
         public TimeOnly AvailableUntil { get; set; }
         public DateOnly EffectiveFrom { get; set; }

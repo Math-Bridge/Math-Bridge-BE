@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.TutorAvailability;
+using MathBridgeSystem.Application.DTOs.TutorSchedule;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +12,11 @@ namespace MathBridgeSystem.Api.Controllers
 {
     [Route("api/tutor-availabilities")]
     [ApiController]
-    public class TutorAvailabilityController : ControllerBase
+    public class TutorScheduleController : ControllerBase
     {
-        private readonly ITutorAvailabilityService _availabilityService;
+        private readonly ITutorScheduleService _availabilityService;
 
-        public TutorAvailabilityController(ITutorAvailabilityService availabilityService)
+        public TutorScheduleController(ITutorScheduleService availabilityService)
         {
             _availabilityService = availabilityService ?? throw new ArgumentNullException(nameof(availabilityService));
         }
@@ -26,7 +26,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> CreateAvailability([FromBody] CreateTutorAvailabilityRequest request)
+        public async Task<IActionResult> CreateAvailability([FromBody] CreateTutorScheduleRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -62,7 +62,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> UpdateAvailability(Guid id, [FromBody] UpdateTutorAvailabilityRequest request)
+        public async Task<IActionResult> UpdateAvailability(Guid id, [FromBody] UpdateTutorScheduleRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -159,7 +159,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpGet("tutor/{tutorId}")]
         [Authorize(Roles = "tutor,parent,admin,staff")]
-        public async Task<IActionResult> GetTutorAvailabilities(Guid tutorId, [FromQuery] bool activeOnly = true)
+        public async Task<IActionResult> GetTutorSchedules(Guid tutorId, [FromQuery] bool activeOnly = true)
         {
             try
             {
@@ -174,7 +174,7 @@ namespace MathBridgeSystem.Api.Controllers
                     }
                 }
 
-                var availabilities = await _availabilityService.GetTutorAvailabilitiesAsync(tutorId, activeOnly);
+                var availabilities = await _availabilityService.GetTutorSchedulesAsync(tutorId, activeOnly);
                 return Ok(availabilities);
             }
             catch (Exception ex)
@@ -193,7 +193,7 @@ namespace MathBridgeSystem.Api.Controllers
             try
             {
                 var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var availabilities = await _availabilityService.GetTutorAvailabilitiesAsync(userId, activeOnly);
+                var availabilities = await _availabilityService.GetTutorSchedulesAsync(userId, activeOnly);
                 return Ok(availabilities);
             }
             catch (Exception ex)
@@ -274,7 +274,7 @@ namespace MathBridgeSystem.Api.Controllers
         [HttpPost("bulk")]
         [Authorize(Roles = "tutor,admin,staff")]
         public async Task<IActionResult> BulkCreateAvailabilities(
-            [FromBody] List<CreateTutorAvailabilityRequest> requests)
+            [FromBody] List<CreateTutorScheduleRequest> requests)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

@@ -1,21 +1,19 @@
-using MathBridgeSystem.Application.DTOs.TutorAvailability;
+using MathBridgeSystem.Application.DTOs.TutorSchedule;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Interfaces
 {
-    public interface ITutorAvailabilityService
+    public interface ITutorScheduleService
     {
-        Task<Guid> CreateAvailabilityAsync(CreateTutorAvailabilityRequest request);
-        Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorAvailabilityRequest request);
+        Task<Guid> CreateAvailabilityAsync(CreateTutorScheduleRequest request);
+        Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorScheduleRequest request);
         Task DeleteAvailabilityAsync(Guid availabilityId);
-        Task<TutorAvailabilityResponse> GetAvailabilityByIdAsync(Guid availabilityId);
-        Task<List<TutorAvailabilityResponse>> GetTutorAvailabilitiesAsync(Guid tutorId, bool activeOnly = true);
+        Task<TutorScheduleResponse> GetAvailabilityByIdAsync(Guid availabilityId);
+        Task<List<TutorScheduleResponse>> GetTutorSchedulesAsync(Guid tutorId, bool activeOnly = true);
         Task<List<AvailableTutorResponse>> SearchAvailableTutorsAsync(SearchAvailableTutorsRequest request);
         Task UpdateAvailabilityStatusAsync(Guid availabilityId, string status);
-        Task IncrementBookingCountAsync(Guid availabilityId);
-        Task DecrementBookingCountAsync(Guid availabilityId);
-        Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorAvailabilityRequest> requests);
+        Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorScheduleRequest> requests);
     }
 }
