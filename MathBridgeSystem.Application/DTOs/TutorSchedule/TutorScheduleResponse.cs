@@ -15,9 +15,6 @@ namespace MathBridgeSystem.Application.DTOs.TutorSchedule
         public TimeOnly AvailableUntil { get; set; }
         public DateOnly EffectiveFrom { get; set; }
         public DateOnly? EffectiveUntil { get; set; }
-        public int MaxConcurrentBookings { get; set; }
-        public int CurrentBookings { get; set; }
-        public int AvailableSlots { get; set; }
         public bool CanTeachOnline { get; set; }
         public bool CanTeachOffline { get; set; }
         public string Status { get; set; }

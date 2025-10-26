@@ -45,7 +45,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             if (request.DaysOfWeek == 0) {
-                throw new ArgumentException(\"At least one day must be selected\");
+                throw new ArgumentException("At least one day must be selected");
             }
 
             // Validate time ranges
@@ -170,7 +170,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             if (request.DaysOfWeek == 0) {
-                throw new ArgumentException(\"At least one day must be selected\");
+                throw new ArgumentException("At least one day must be selected");
             }
 
             // Validate time ranges after update
@@ -407,7 +407,7 @@ namespace MathBridgeSystem.Application.Services
                 TutorId = availability.TutorId,
                 TutorName = availability.Tutor?.FullName ?? "Unknown",
                 DaysOfWeeks = availability.DaysOfWeek,
-                DaysOfWeeksName= GetDaysOfWeekName(availability.DaysOfWeek),
+                DaysOfWeeksDisplay = GetDaysOfWeekName(availability.DaysOfWeek),
                 AvailableFrom = availability.AvailableFrom,
                 AvailableUntil = availability.AvailableUntil,
                 EffectiveFrom = availability.EffectiveFrom,
@@ -419,6 +419,37 @@ namespace MathBridgeSystem.Application.Services
                 UpdatedDate = availability.UpdatedDate
             };
         }
+        private string GetDaysOfWeekName(int daysOfWeek)
+        {
+            if (daysOfWeek == 0) return "None";
+
+            var days = new List<string>();
+            if ((daysOfWeek & 1) > 0) days.Add("Sunday");
+            if ((daysOfWeek & 2) > 0) days.Add("Monday");
+            if ((daysOfWeek & 4) > 0) days.Add("Tuesday");
+            if ((daysOfWeek & 8) > 0) days.Add("Wednesday");
+            if ((daysOfWeek & 16) > 0) days.Add("Thursday");
+            if ((daysOfWeek & 32) > 0) days.Add("Friday");
+            if ((daysOfWeek & 64) > 0) days.Add("Saturday");
+
+            return string.Join(", ", days);
+        }
+
+        private List<string> GetDaysOfWeekList(int daysOfWeek)
+        {
+            var days = new List<string>();
+            if ((daysOfWeek & 1) > 0) days.Add("Sunday");
+            if ((daysOfWeek & 2) > 0) days.Add("Monday");
+            if ((daysOfWeek & 4) > 0) days.Add("Tuesday");
+            if ((daysOfWeek & 8) > 0) days.Add("Wednesday");
+            if ((daysOfWeek & 16) > 0) days.Add("Thursday");
+            if ((daysOfWeek & 32) > 0) days.Add("Friday");
+            if ((daysOfWeek & 64) > 0) days.Add("Saturday");
+
+            return days;
+        }
+
 
         }
+    
 }

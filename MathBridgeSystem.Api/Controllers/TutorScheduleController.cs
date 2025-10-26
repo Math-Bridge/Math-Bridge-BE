@@ -308,5 +308,41 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+/// <summary>
+        /// Get bitmask day flags reference for DaysOfWeek/DaysOfWeeks.
+        /// Days: Sunday=1 (bit 0), Monday=2 (bit 1), Tuesday=4 (bit 2), Wednesday=8 (bit 3),
+        /// Thursday=16 (bit 4), Friday=32 (bit 5), Saturday=64 (bit 6).
+        /// All days = 127. Common examples: Weekdays Mon-Fri=62, Weekends Sat-Sun=65,
+        /// Mon Wed Fri=42, Tue Thu=20.
+        /// </summary>
+        /// <returns>JSON object with day values and common combinations</returns>
+        [HttpGet("dayflags")]
+        [AllowAnonymous]
+        public IActionResult GetDayFlags()
+        {
+            var response = new
+            {
+                days = new
+                {
+                    Sunday = 1,
+                    Monday = 2,
+                    Tuesday = 4,
+                    Wednesday = 8,
+                    Thursday = 16,
+                    Friday = 32,
+                    Saturday = 64
+                },
+                common = new
+                {
+                    AllDays = 127,
+                    Weekdays = 62, // Mon-Fri
+                    Weekends = 65, // Sat-Sun
+                    MonWedFri = 42,
+                    TueThu = 20
+                }
+            };
+            return Ok(response);
+        }
     }
 }

@@ -116,7 +116,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             
             if (dayOfWeek.HasValue)
             {
-                query = query.Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0.Value);
+                query = query.Where(ta => (ta.DaysOfWeek & (1 << dayOfWeek.Value)) != 0);
             }
 
             // Apply date filter only if provided
