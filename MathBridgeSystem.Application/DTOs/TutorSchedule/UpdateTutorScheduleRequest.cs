@@ -11,5 +11,6 @@ namespace MathBridgeSystem.Application.DTOs.TutorSchedule
         public DateOnly? EffectiveUntil { get; set; }
         public bool? CanTeachOnline { get; set; }
         public bool? CanTeachOffline { get; set; }
+        public bool? IsBooked { get; set; }
     }
 }

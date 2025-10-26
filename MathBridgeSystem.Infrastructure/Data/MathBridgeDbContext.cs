@@ -1058,7 +1058,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.DaysOfWeek).HasColumnName("day_of_week");
+            entity.Property(e => e.DaysOfWeek).HasColumnName("days_of_week");
             entity.Property(e => e.EffectiveFrom).HasColumnName("effective_from");
             entity.Property(e => e.EffectiveUntil).HasColumnName("effective_until");
             entity.Property(e => e.IsBooked).HasColumnName("is_booked");

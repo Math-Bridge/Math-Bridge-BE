@@ -10,7 +10,6 @@ namespace MathBridgeSystem.Application.DTOs.TutorSchedule
         public string TutorName { get; set; }
         public byte DaysOfWeeks { get; set; }
         public string DaysOfWeeksDisplay { get; set; }
-        public List<string> DaysOfWeeksList { get; set; }
         public TimeOnly AvailableFrom { get; set; }
         public TimeOnly AvailableUntil { get; set; }
         public DateOnly EffectiveFrom { get; set; }
@@ -20,5 +19,6 @@ namespace MathBridgeSystem.Application.DTOs.TutorSchedule
         public string Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public bool? IsBooked { get; set; }
     }
 }

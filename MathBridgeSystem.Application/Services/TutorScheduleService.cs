@@ -103,12 +103,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
             }
-
-            // Validate max concurrent bookings
-            if (request.MaxConcurrentBookings < 1 || request.MaxConcurrentBookings > 10)
-            {
-                throw new ArgumentException("Max concurrent bookings must be between 1 and 10");
-            }
+            
 
                         // Check for conflicts
             var hasConflict = await _availabilityRepository.HasConflictAsync(
@@ -134,7 +129,8 @@ namespace MathBridgeSystem.Application.Services
                 EffectiveFrom = request.EffectiveFrom,
                 EffectiveUntil = request.EffectiveUntil,
                 CanTeachOnline = request.CanTeachOnline,
-                CanTeachOffline = request.CanTeachOffline
+                CanTeachOffline = request.CanTeachOffline,
+                IsBooked  = request.isBooked,
             };
 
             var created = await _availabilityRepository.CreateAsync(availability);
@@ -168,7 +164,10 @@ namespace MathBridgeSystem.Application.Services
             {
                 availability.AvailableUntil = request.AvailableUntil.Value;
             }
-
+            if (request.IsBooked.HasValue)
+            {
+                availability.IsBooked = request.IsBooked.Value;
+            }
             if (request.DaysOfWeek == 0) {
                 throw new ArgumentException("At least one day must be selected");
             }
@@ -416,7 +415,8 @@ namespace MathBridgeSystem.Application.Services
                 CanTeachOffline = availability.CanTeachOffline,
                 Status = availability.Status,
                 CreatedDate = availability.CreatedDate,
-                UpdatedDate = availability.UpdatedDate
+                UpdatedDate = availability.UpdatedDate,
+                IsBooked = availability.IsBooked
             };
         }
         private string GetDaysOfWeekName(int daysOfWeek)

@@ -99,7 +99,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         }
 
         public async Task<List<TutorSchedule>> SearchAvailableTutorsAsync(
-            int? dayOfWeek, 
+            byte? dayOfWeek, 
             TimeOnly? startTime, 
             TimeOnly? endTime, 
             bool? canTeachOnline, 
@@ -116,7 +116,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             
             if (dayOfWeek.HasValue)
             {
-                query = query.Where(ta => (ta.DaysOfWeek & (1 << dayOfWeek.Value)) != 0);
+                query = query.Where(ta => ta.DaysOfWeek == dayOfWeek.Value);
             }
 
             // Apply date filter only if provided
