@@ -4,7 +4,7 @@ namespace MathBridgeSystem.Application.DTOs.TutorSchedule
 {
     public class SearchAvailableTutorsRequest
     {
-        public int? DayOfWeek { get; set; }
+        public int? DaysOfWeek { get; set; }
         public TimeOnly? StartTime { get; set; }
         public TimeOnly? EndTime { get; set; }
         public bool? CanTeachOnline { get; set; }

@@ -39,9 +39,13 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Validate day of week range
-            if (request.DayOfWeek < 0 || request.DayOfWeek > 6)
+            if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
                 throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+            }
+
+            if (request.DaysOfWeek == 0) {
+                throw new ArgumentException(\"At least one day must be selected\");
             }
 
             // Validate time ranges
@@ -67,7 +71,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for minimum 15-minute spacing with existing time slots
             var existingSlots = await _availabilityRepository.GetByTutorIdAsync(request.TutorId);
             var slotsOnSameDay = existingSlots
-                .Where(a => a.DayOfWeek == request.DayOfWeek 
+                .Where(a => a.DaysOfWeek == request.DaysOfWeek 
                     && a.Status == "active"
                     && (!request.EffectiveUntil.HasValue || !a.EffectiveUntil.HasValue || 
                         a.EffectiveFrom <= request.EffectiveUntil.Value)
@@ -109,7 +113,7 @@ namespace MathBridgeSystem.Application.Services
                         // Check for conflicts
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 request.TutorId,
-                request.DayOfWeek,
+                request.DaysOfWeek,
                 request.AvailableFrom,
                 request.AvailableUntil,
                 request.EffectiveFrom,
@@ -124,7 +128,7 @@ namespace MathBridgeSystem.Application.Services
             var availability = new TutorSchedule
             {
                 TutorId = request.TutorId,
-                DayOfWeek = request.DayOfWeek,
+                DaysOfWeek = request.DaysOfWeek,
                 AvailableFrom = request.AvailableFrom,
                 AvailableUntil = request.AvailableUntil,
                 EffectiveFrom = request.EffectiveFrom,
@@ -146,13 +150,13 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Update only provided fields, preserve old data if null
-            if (request.DayOfWeek.HasValue)
+            if (request.DaysOfWeek.HasValue)
             {
-                if (request.DayOfWeek.Value < 0 || request.DayOfWeek.Value > 6)
+                if (request.DaysOfWeek.Value < 0 || request.DaysOfWeek.Value > 6)
                 {
                     throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
                 }
-                availability.DayOfWeek = request.DayOfWeek.Value;
+                availability.DaysOfWeek = request.DaysOfWeek.Value;
             }
 
             if (request.AvailableFrom.HasValue)
@@ -163,6 +167,10 @@ namespace MathBridgeSystem.Application.Services
             if (request.AvailableUntil.HasValue)
             {
                 availability.AvailableUntil = request.AvailableUntil.Value;
+            }
+
+            if (request.DaysOfWeek == 0) {
+                throw new ArgumentException(\"At least one day must be selected\");
             }
 
             // Validate time ranges after update
@@ -215,7 +223,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for minimum 15-minute spacing with existing time slots (excluding current availability)
             var existingSlots = await _availabilityRepository.GetByTutorAndDayAsync(
                 availability.TutorId,
-                availability.DayOfWeek,
+                availability.DaysOfWeek,
                 availability.EffectiveFrom,
                 availability.EffectiveUntil);
 
@@ -233,7 +241,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for conflicts (excluding current availability)
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 availability.TutorId,
-                availability.DayOfWeek,
+                availability.DaysOfWeek,
                 availability.AvailableFrom,
                 availability.AvailableUntil,
                 availability.EffectiveFrom,
@@ -295,7 +303,7 @@ namespace MathBridgeSystem.Application.Services
         public async Task<List<AvailableTutorResponse>> SearchAvailableTutorsAsync(SearchAvailableTutorsRequest request)
         {
             // Validate search parameters
-            if (request.DayOfWeek < 0 || request.DayOfWeek > 6)
+            if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
                 throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
             }
@@ -316,7 +324,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             var availabilities = await _availabilityRepository.SearchAvailableTutorsAsync(
-                request.DayOfWeek,
+                request.DaysOfWeek,
                 request.StartTime,
                 request.EndTime,
                 request.CanTeachOnline,
@@ -384,7 +392,7 @@ namespace MathBridgeSystem.Application.Services
                 {
                     // Log error but continue with other requests
                     // In production, consider more sophisticated error handling
-                    throw new Exception($"Failed to create availability for day {request.DayOfWeek}: {ex.Message}");
+                    throw new Exception($"Failed to create availability for day {request.DaysOfWeek}: {ex.Message}");
                 }
             }
 
@@ -398,8 +406,8 @@ namespace MathBridgeSystem.Application.Services
                 AvailabilityId = availability.AvailabilityId,
                 TutorId = availability.TutorId,
                 TutorName = availability.Tutor?.FullName ?? "Unknown",
-                DayOfWeek = availability.DayOfWeek,
-                DayOfWeekName = GetDayOfWeekName(availability.DayOfWeek),
+                DaysOfWeeks = availability.DaysOfWeek,
+                DaysOfWeeksName= GetDaysOfWeekName(availability.DaysOfWeek),
                 AvailableFrom = availability.AvailableFrom,
                 AvailableUntil = availability.AvailableUntil,
                 EffectiveFrom = availability.EffectiveFrom,
@@ -412,19 +420,5 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        private string GetDayOfWeekName(int dayOfWeek)
-        {
-            return dayOfWeek switch
-            {
-                8 => "Sunday",
-                2 => "Monday",
-                3 => "Tuesday",
-                4  => "Wednesday",
-                5 => "Thursday",
-                6 => "Friday",
-                7 => "Saturday",
-                _ => "Unknown"
-            };
         }
-    }
 }

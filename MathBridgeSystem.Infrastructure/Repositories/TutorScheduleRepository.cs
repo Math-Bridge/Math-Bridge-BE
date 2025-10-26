@@ -33,16 +33,16 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                 .Where(ta => ta.TutorId == tutorId)
-                .OrderBy(ta => ta.DayOfWeek)
+                .OrderBy(ta => ta.DaysOfWeek)
                 .ThenBy(ta => ta.AvailableFrom)
                 .ToListAsync();
         }
 
-        public async Task<List<TutorSchedule>> GetByTutorAndDayAsync(Guid tutorId, int dayOfWeek, DateOnly effectiveFrom, DateOnly? effectiveUntil)
+        public async Task<List<TutorSchedule>> GetByTutorAndDayAsync(Guid tutorId, byte daysOfWeek, DateOnly effectiveFrom, DateOnly? effectiveUntil)
         {
             var query = _context.TutorSchedules
                 .Where(ta => ta.TutorId == tutorId)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             // Check for effective date overlap
@@ -73,17 +73,17 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Where(ta => ta.Status == "active")
                 .Where(ta => ta.EffectiveFrom <= today)
                 .Where(ta => ta.EffectiveUntil == null || ta.EffectiveUntil >= today)
-                .OrderBy(ta => ta.DayOfWeek)
+                .OrderBy(ta => ta.DaysOfWeek)
                 .ThenBy(ta => ta.AvailableFrom)
                 .ToListAsync();
         }
 
-        public async Task<List<TutorSchedule>> GetByDayOfWeekAsync(int dayOfWeek, DateTime? effectiveDate = null)
+        public async Task<List<TutorSchedule>> GetByDaysOfWeekAsync(byte daysOfWeek, DateTime? effectiveDate = null)
         {
             var query = _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                     .ThenInclude(t => t.Role)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             if (effectiveDate.HasValue)
@@ -116,7 +116,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             
             if (dayOfWeek.HasValue)
             {
-                query = query.Where(ta => ta.DayOfWeek == dayOfWeek.Value);
+                query = query.Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0.Value);
             }
 
             // Apply date filter only if provided
@@ -188,7 +188,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<bool> HasConflictAsync(
             Guid tutorId, 
-            int dayOfWeek, 
+            byte daysOfWeek, 
             TimeOnly startTime, 
             TimeOnly endTime, 
             DateOnly effectiveFrom, 
@@ -197,7 +197,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             var query = _context.TutorSchedules
                 .Where(ta => ta.TutorId == tutorId)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             // Exclude specific availability (for updates)
