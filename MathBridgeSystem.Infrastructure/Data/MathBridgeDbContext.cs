@@ -42,21 +42,23 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Role> Roles { get; set; }
 
-    public virtual DbSet<Schedule> Schedules { get; set; }
-
     public virtual DbSet<School> Schools { get; set; }
 
     public virtual DbSet<SepayTransaction> SepayTransactions { get; set; }
+
+    public virtual DbSet<Session> Sessions { get; set; }
 
     public virtual DbSet<SupportRequest> SupportRequests { get; set; }
 
     public virtual DbSet<TestResult> TestResults { get; set; }
 
-    public virtual DbSet<TutorAvailability> TutorAvailabilities { get; set; }
-
     public virtual DbSet<TutorCenter> TutorCenters { get; set; }
 
+    public virtual DbSet<TutorSchedule> TutorSchedules { get; set; }
+
     public virtual DbSet<TutorVerification> TutorVerifications { get; set; }
+
+    public virtual DbSet<Unit> Units { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -70,7 +72,7 @@ public partial class MathBridgeDbContext : DbContext
     {
         modelBuilder.Entity<Center>(entity =>
         {
-            entity.HasKey(e => e.CenterId).HasName("PK__centers__290A2887C10C6CE2");
+            entity.HasKey(e => e.CenterId).HasName("PK__centers__290A2887526C5A12");
 
             entity.ToTable("centers");
 
@@ -122,7 +124,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<ChatMessage>(entity =>
         {
-            entity.HasKey(e => e.MessageId).HasName("PK__chat_mes__0BBF6EE698C73749");
+            entity.HasKey(e => e.MessageId).HasName("PK__chat_mes__0BBF6EE69D14EC58");
 
             entity.ToTable("chat_messages");
 
@@ -163,7 +165,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Child>(entity =>
         {
-            entity.HasKey(e => e.ChildId).HasName("PK__children__015ADC0542C2C488");
+            entity.HasKey(e => e.ChildId).HasName("PK__children__015ADC05C21463A1");
 
             entity.ToTable("children");
 
@@ -220,7 +222,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Contract>(entity =>
         {
-            entity.HasKey(e => e.ContractId).HasName("PK__contract__F8D66423D110B34A");
+            entity.HasKey(e => e.ContractId).HasName("PK__contract__F8D66423932B1126");
 
             entity.ToTable("contracts");
 
@@ -243,7 +245,9 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
+            entity.Property(e => e.DaysOfWeeks).HasColumnName("days_of_weeks");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.IsOnline).HasColumnName("is_online");
             entity.Property(e => e.MainTutorId).HasColumnName("main_tutor_id");
             entity.Property(e => e.MaxDistanceKm)
@@ -263,14 +267,12 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.ParentId).HasColumnName("parent_id");
             entity.Property(e => e.RescheduleCount).HasColumnName("reschedule_count");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasColumnName("status");
             entity.Property(e => e.SubstituteTutor1Id).HasColumnName("substitute_tutor1_id");
             entity.Property(e => e.SubstituteTutor2Id).HasColumnName("substitute_tutor2_id");
-            entity.Property(e => e.TimeSlot)
-                .HasMaxLength(50)
-                .HasColumnName("time_slot");
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
@@ -289,7 +291,6 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasOne(d => d.MainTutor).WithMany(p => p.ContractMainTutors)
                 .HasForeignKey(d => d.MainTutorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_contracts_main_tutor");
 
             entity.HasOne(d => d.Package).WithMany(p => p.Contracts)
@@ -313,13 +314,13 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Curriculum>(entity =>
         {
-            entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C7629F9DFD6");
+            entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C76352BF625");
 
             entity.ToTable("curriculum");
 
             entity.HasIndex(e => e.CurriculumCode, "IX_curriculum_code");
 
-            entity.HasIndex(e => e.CurriculumCode, "UQ__curricul__575F76878447E303").IsUnique();
+            entity.HasIndex(e => e.CurriculumCode, "UQ__curricul__575F76872A623D21").IsUnique();
 
             entity.Property(e => e.CurriculumId)
                 .HasDefaultValueSql("(newid())")
@@ -343,6 +344,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.SyllabusUrl)
                 .HasMaxLength(500)
                 .HasColumnName("syllabus_url");
+            entity.Property(e => e.TotalCredits).HasColumnName("total_credits");
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
@@ -350,7 +352,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<FinalFeedback>(entity =>
         {
-            entity.HasKey(e => e.FeedbackId).HasName("PK__final_fe__7A6B2B8CCDA9F45C");
+            entity.HasKey(e => e.FeedbackId).HasName("PK__final_fe__7A6B2B8C88297D2D");
 
             entity.ToTable("final_feedback");
 
@@ -407,7 +409,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__E059842F892B6739");
+            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__E059842F41695738");
 
             entity.ToTable("notifications");
 
@@ -457,7 +459,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<PaymentGatewayConfig>(entity =>
         {
-            entity.HasKey(e => e.GatewayId).HasName("PK__PaymentG__0AF5B00B7BAD3E38");
+            entity.HasKey(e => e.GatewayId).HasName("PK__payment___0AF5B00B1B274D31");
 
             entity.ToTable("payment_gateway_config");
 
@@ -497,7 +499,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<PaymentPackage>(entity =>
         {
-            entity.HasKey(e => e.PackageId).HasName("PK__payment___63846AE80AB549F6");
+            entity.HasKey(e => e.PackageId).HasName("PK__payment___63846AE8C179A8BE");
 
             entity.ToTable("payment_packages");
 
@@ -539,7 +541,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<PayosTransaction>(entity =>
         {
-            entity.HasKey(e => e.PayosTransactionId).HasName("PK__PayOSTra__11A5DD8D2EE1B2CF");
+            entity.HasKey(e => e.PayosTransactionId).HasName("PK__payos_tr__11A5DD8D5AA3D100");
 
             entity.ToTable("payos_transactions");
 
@@ -559,6 +561,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("amount");
             entity.Property(e => e.CancelUrl).HasColumnName("cancel_url");
             entity.Property(e => e.CheckoutUrl).HasColumnName("checkout_url");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -582,6 +585,10 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("updated_date");
             entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
 
+            entity.HasOne(d => d.Contract).WithMany(p => p.PayosTransactions)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("contract_link");
+
             entity.HasOne(d => d.WalletTransaction).WithMany(p => p.PayosTransactions)
                 .HasForeignKey(d => d.WalletTransactionId)
                 .HasConstraintName("FK_PayOSTransactions_WalletTransactions");
@@ -589,7 +596,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
         {
-            entity.HasKey(e => e.RequestId).HasName("PK__reschedu__18D3B90F540C00B6");
+            entity.HasKey(e => e.RequestId).HasName("PK__reschedu__18D3B90F1BFC4B87");
 
             entity.ToTable("reschedule_requests");
 
@@ -643,7 +650,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Review>(entity =>
         {
-            entity.HasKey(e => e.ReviewId).HasName("PK__reviews__60883D90B0E45E28");
+            entity.HasKey(e => e.ReviewId).HasName("PK__reviews__60883D90D1F42160");
 
             entity.ToTable("reviews");
 
@@ -679,11 +686,11 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__roles__760965CC610C41A2");
+            entity.HasKey(e => e.RoleId).HasName("PK__roles__760965CC23BBB9E9");
 
             entity.ToTable("roles");
 
-            entity.HasIndex(e => e.RoleName, "UQ__roles__783254B1FA804F1D").IsUnique();
+            entity.HasIndex(e => e.RoleName, "UQ__roles__783254B1E80F97AE").IsUnique();
 
             entity.HasIndex(e => e.RoleName, "ix_roles_name");
 
@@ -698,76 +705,9 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("role_name");
         });
 
-        modelBuilder.Entity<Schedule>(entity =>
-        {
-            entity.HasKey(e => e.BookingId).HasName("PK__booking___5DE3A5B1295A2414");
-
-            entity.ToTable("schedule");
-
-            entity.HasIndex(e => e.ContractId, "ix_booking_sessions_contract_id");
-
-            entity.HasIndex(e => e.PaymentStatus, "ix_booking_sessions_payment_status");
-
-            entity.HasIndex(e => e.Status, "ix_booking_sessions_status");
-
-            entity.HasIndex(e => e.TutorId, "ix_booking_sessions_tutor_id");
-
-            entity.Property(e => e.BookingId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("booking_id");
-            entity.Property(e => e.ContractId).HasColumnName("contract_id");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.EndTime)
-                .HasColumnType("datetime")
-                .HasColumnName("end_time");
-            entity.Property(e => e.IsOnline).HasColumnName("is_online");
-            entity.Property(e => e.OfflineAddress)
-                .HasMaxLength(500)
-                .HasColumnName("offline_address");
-            entity.Property(e => e.OfflineLatitude)
-                .HasColumnType("decimal(9, 6)")
-                .HasColumnName("offline_latitude");
-            entity.Property(e => e.OfflineLongitude)
-                .HasColumnType("decimal(9, 6)")
-                .HasColumnName("offline_longitude");
-            entity.Property(e => e.PaymentStatus)
-                .HasMaxLength(20)
-                .HasColumnName("payment_status");
-            entity.Property(e => e.SessionDate).HasColumnName("session_date");
-            entity.Property(e => e.StartTime)
-                .HasColumnType("datetime")
-                .HasColumnName("start_time");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasColumnName("status");
-            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_at");
-            entity.Property(e => e.VideoCallLink)
-                .HasMaxLength(255)
-                .HasColumnName("video_call_link");
-            entity.Property(e => e.VideoCallPlatform)
-                .HasMaxLength(50)
-                .HasColumnName("video_call_platform");
-
-            entity.HasOne(d => d.Contract).WithMany(p => p.Schedules)
-                .HasForeignKey(d => d.ContractId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_booking_sessions_contract");
-
-            entity.HasOne(d => d.Tutor).WithMany(p => p.Schedules)
-                .HasForeignKey(d => d.TutorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_booking_sessions_tutors");
-        });
-
         modelBuilder.Entity<School>(entity =>
         {
-            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF49D896822");
+            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF4957EF47B");
 
             entity.ToTable("schools");
 
@@ -801,9 +741,13 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<SepayTransaction>(entity =>
         {
-            entity.HasKey(e => e.SepayTransactionId).HasName("PK_SepayTransactions");
+            entity.HasKey(e => e.SepayTransactionId).HasName("PK_SePayTransactions");
 
             entity.ToTable("sepay_transactions");
+
+            entity.HasIndex(e => e.ContractId, "idx_sepay_transactions_contract_id").HasFilter("([contract_id] IS NOT NULL)");
+
+            entity.HasIndex(e => e.WalletTransactionId, "idx_sepay_transactions_wallet_transaction_id").HasFilter("([wallet_transaction_id] IS NOT NULL)");
 
             entity.HasIndex(e => e.Code, "ix_sepay_transactions_code").IsUnique();
 
@@ -828,6 +772,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Content)
                 .HasMaxLength(500)
                 .HasColumnName("content");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnName("created_at");
@@ -855,15 +800,80 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnName("transfer_type");
             entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
 
+            entity.HasOne(d => d.Contract).WithMany(p => p.SepayTransactions)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("fk_sepay_transactions_contract");
+
             entity.HasOne(d => d.WalletTransaction).WithMany(p => p.SepayTransactions)
                 .HasForeignKey(d => d.WalletTransactionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_sepay_transactions_wallet_transaction");
+        });
+
+        modelBuilder.Entity<Session>(entity =>
+        {
+            entity.HasKey(e => e.BookingId).HasName("PK__schedule__5DE3A5B16338CF16");
+
+            entity.ToTable("sessions");
+
+            entity.HasIndex(e => e.ContractId, "ix_booking_sessions_contract_id");
+
+            entity.HasIndex(e => e.Status, "ix_booking_sessions_status");
+
+            entity.HasIndex(e => e.TutorId, "ix_booking_sessions_tutor_id");
+
+            entity.Property(e => e.BookingId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("booking_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.EndTime)
+                .HasColumnType("datetime")
+                .HasColumnName("end_time");
+            entity.Property(e => e.IsOnline).HasColumnName("is_online");
+            entity.Property(e => e.OfflineAddress)
+                .HasMaxLength(500)
+                .HasColumnName("offline_address");
+            entity.Property(e => e.OfflineLatitude)
+                .HasColumnType("decimal(9, 6)")
+                .HasColumnName("offline_latitude");
+            entity.Property(e => e.OfflineLongitude)
+                .HasColumnType("decimal(9, 6)")
+                .HasColumnName("offline_longitude");
+            entity.Property(e => e.SessionDate).HasColumnName("session_date");
+            entity.Property(e => e.StartTime)
+                .HasColumnType("datetime")
+                .HasColumnName("start_time");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasColumnName("status");
+            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.VideoCallLink)
+                .HasMaxLength(255)
+                .HasColumnName("video_call_link");
+            entity.Property(e => e.VideoCallPlatform)
+                .HasMaxLength(50)
+                .HasColumnName("video_call_platform");
+
+            entity.HasOne(d => d.Contract).WithMany(p => p.Sessions)
+                .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_booking_sessions_contract");
+
+            entity.HasOne(d => d.Tutor).WithMany(p => p.Sessions)
+                .HasForeignKey(d => d.TutorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_booking_sessions_tutors");
         });
 
         modelBuilder.Entity<SupportRequest>(entity =>
         {
-            entity.HasKey(e => e.RequestId).HasName("PK__support___18D3B90F8ABA8002");
+            entity.HasKey(e => e.RequestId).HasName("PK__support___18D3B90FDFBEA4AD");
 
             entity.ToTable("support_requests");
 
@@ -921,7 +931,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<TestResult>(entity =>
         {
-            entity.HasKey(e => e.ResultId).HasName("PK__test_res__AFB3C3163CFF330B");
+            entity.HasKey(e => e.ResultId).HasName("PK__test_res__AFB3C316774AFA46");
 
             entity.ToTable("test_results");
 
@@ -994,56 +1004,11 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("FK_test_results_tutor_id");
         });
 
-        modelBuilder.Entity<TutorAvailability>(entity =>
-        {
-            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_av__86E3A80189C0EFA9");
-
-            entity.ToTable("tutor_availabilities");
-
-            entity.HasIndex(e => new { e.TutorId, e.DayOfWeek, e.AvailableFrom, e.AvailableUntil }, "IX_tutor_day_time");
-
-            entity.Property(e => e.AvailabilityId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("availability_id");
-            entity.Property(e => e.AvailableFrom).HasColumnName("available_from");
-            entity.Property(e => e.AvailableUntil).HasColumnName("available_until");
-            entity.Property(e => e.CanTeachOffline)
-                .HasDefaultValue(true)
-                .HasColumnName("can_teach_offline");
-            entity.Property(e => e.CanTeachOnline)
-                .HasDefaultValue(true)
-                .HasColumnName("can_teach_online");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.CurrentBookings).HasColumnName("current_bookings");
-            entity.Property(e => e.DayOfWeek).HasColumnName("day_of_week");
-            entity.Property(e => e.EffectiveFrom).HasColumnName("effective_from");
-            entity.Property(e => e.EffectiveUntil).HasColumnName("effective_until");
-            entity.Property(e => e.MaxConcurrentBookings)
-                .HasDefaultValue(1)
-                .HasColumnName("max_concurrent_bookings");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("active")
-                .HasColumnName("status");
-            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
-            entity.Property(e => e.UpdatedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-
-            entity.HasOne(d => d.Tutor).WithMany(p => p.TutorAvailabilities)
-                .HasForeignKey(d => d.TutorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__tutor_ava__tutor__2EA5EC27");
-        });
-
         modelBuilder.Entity<TutorCenter>(entity =>
         {
-            entity.HasKey(e => e.TutorCenterId).HasName("PK__tutor_ce__E4F33A881CEA8C48");
+            entity.HasKey(e => e.TutorCenterId).HasName("PK__tutor_ce__E4F33A88509B8636");
 
-            entity.ToTable("tutor_centers", tb => tb.HasTrigger("tr_update_center_tutor_count"));
+            entity.ToTable("tutor_centers");
 
             entity.HasIndex(e => e.CenterId, "ix_tutor_centers_center_id");
 
@@ -1072,9 +1037,49 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_tutor_centers_tutor");
         });
 
+        modelBuilder.Entity<TutorSchedule>(entity =>
+        {
+            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_av__86E3A80163D5EEF8");
+
+            entity.ToTable("tutor_schedule");
+
+            entity.Property(e => e.AvailabilityId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("availability_id");
+            entity.Property(e => e.AvailableFrom).HasColumnName("available_from");
+            entity.Property(e => e.AvailableUntil).HasColumnName("available_until");
+            entity.Property(e => e.CanTeachOffline)
+                .HasDefaultValue(true)
+                .HasColumnName("can_teach_offline");
+            entity.Property(e => e.CanTeachOnline)
+                .HasDefaultValue(true)
+                .HasColumnName("can_teach_online");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.DaysOfWeek).HasColumnName("days_of_week");
+            entity.Property(e => e.EffectiveFrom).HasColumnName("effective_from");
+            entity.Property(e => e.EffectiveUntil).HasColumnName("effective_until");
+            entity.Property(e => e.IsBooked).HasColumnName("is_booked");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("active")
+                .HasColumnName("status");
+            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.Tutor).WithMany(p => p.TutorSchedules)
+                .HasForeignKey(d => d.TutorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__tutor_ava__tutor__0618D7E0");
+        });
+
         modelBuilder.Entity<TutorVerification>(entity =>
         {
-            entity.HasKey(e => e.VerificationId).HasName("PK__tutor_ve__24F17969C25B1111");
+            entity.HasKey(e => e.VerificationId).HasName("PK__tutor_ve__24F1796982ADF4CD");
 
             entity.ToTable("tutor_verifications");
 
@@ -1114,9 +1119,58 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_tutor_verifications_users");
         });
 
+        modelBuilder.Entity<Unit>(entity =>
+        {
+            entity.HasKey(e => e.UnitId).HasName("PK__units__D3AF5BD7ADCFE7F5");
+
+            entity.ToTable("units");
+
+            entity.HasIndex(e => new { e.CurriculumId, e.UnitName }, "UQ_units_curriculum_name").IsUnique();
+
+            entity.Property(e => e.UnitId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("unit_id");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.Credit)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("credit");
+            entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
+            entity.Property(e => e.LearningObjectives).HasColumnName("learning_objectives");
+            entity.Property(e => e.UnitDescription)
+                .HasMaxLength(500)
+                .HasColumnName("unit_description");
+            entity.Property(e => e.UnitName)
+                .HasMaxLength(100)
+                .HasColumnName("unit_name");
+            entity.Property(e => e.UnitOrder).HasColumnName("unit_order");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.UnitCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_units_created_by");
+
+            entity.HasOne(d => d.Curriculum).WithMany(p => p.Units)
+                .HasForeignKey(d => d.CurriculumId)
+                .HasConstraintName("FK_units_curriculum");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.UnitUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_units_updated_by");
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370F99768E01");
+            entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370F4678BC13");
 
             entity.ToTable("users");
 
@@ -1124,7 +1178,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasIndex(e => new { e.Latitude, e.Longitude }, "IX_users_location_coordinates");
 
-            entity.HasIndex(e => e.Email, "UQ__users__AB6E616455322907").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__users__AB6E616496FFE2D6").IsUnique();
 
             entity.HasIndex(e => e.Email, "ix_users_email");
 
@@ -1205,7 +1259,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AF29459AA2");
+            entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AFCEAB3D23");
 
             entity.ToTable("wallet_transactions");
 

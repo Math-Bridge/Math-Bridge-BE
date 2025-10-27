@@ -39,6 +39,24 @@ namespace MathBridgeSystem.Application.Services
             _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
         }
 
+        private string FormatDaysOfWeek(byte? daysOfWeek)
+        {
+            if (!daysOfWeek.HasValue) return string.Empty;
+
+            var days = new List<string>();
+            var value = daysOfWeek.Value;
+
+            if ((value & 1) != 0) days.Add("Sun");
+            if ((value & 2) != 0) days.Add("Mon");
+            if ((value & 4) != 0) days.Add("Tue");
+            if ((value & 8) != 0) days.Add("Wed");
+            if ((value & 16) != 0) days.Add("Thu");
+            if ((value & 32) != 0) days.Add("Fri");
+            if ((value & 64) != 0) days.Add("Sat");
+
+            return string.Join(", ", days);
+        }
+
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
         {
             var child = await _childRepository.GetByIdAsync(request.ChildId);
@@ -135,11 +153,22 @@ namespace MathBridgeSystem.Application.Services
                 }
             }
 
-            if (!new[] { "mon_evening", "tue_evening", "wed_evening", "thu_evening", "fri_evening", "sat_evening", "sun_evening" }.Contains(request.TimeSlot))
-                throw new Exception("Invalid time slot");
+            
 
             if (request.VideoCallPlatform != null && !new[] { "zoom", "google_meet" }.Contains(request.VideoCallPlatform))
                 throw new Exception("Invalid video call platform");
+
+            if (!request.StartTime.HasValue || !request.EndTime.HasValue)
+                throw new Exception("Start and end times are required");
+
+            if (request.EndTime.Value <= request.StartTime.Value)
+                throw new Exception("End time must be after start time");
+
+            if (request.StartTime.Value.Hour < 16 || request.EndTime.Value.Hour > 22)
+                throw new Exception("Time must be between 16:00 and 22:00");
+
+            if (!request.DaysOfWeeks.HasValue || request.DaysOfWeeks.Value < 1 || request.DaysOfWeeks.Value > 127)
+                throw new Exception("DaysOfWeeks must be between 1 and 127");
 
             var contract = new Contract
             {
@@ -153,7 +182,9 @@ namespace MathBridgeSystem.Application.Services
                 SubstituteTutor2Id = request.SubstituteTutor2Id,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
-                TimeSlot = request.TimeSlot,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                DaysOfWeeks = request.DaysOfWeeks,
                 IsOnline = request.IsOnline,
                 OfflineAddress = request.OfflineAddress,
                 OfflineLatitude = request.OfflineLatitude,
@@ -185,7 +216,10 @@ namespace MathBridgeSystem.Application.Services
                 CenterName = c.Center?.Name,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
-                TimeSlot = c.TimeSlot,
+                StartTime = c.StartTime,
+                EndTime = c.EndTime,
+                DaysOfWeeks = c.DaysOfWeeks,
+                DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
                 IsOnline = c.IsOnline,
                 Status = c.Status
             }).ToList();

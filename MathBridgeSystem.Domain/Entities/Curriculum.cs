@@ -21,9 +21,13 @@ public partial class Curriculum
 
     public DateTime? UpdatedDate { get; set; }
 
+    public byte? TotalCredits { get; set; }
+
     public virtual ICollection<PaymentPackage> PaymentPackages { get; set; } = new List<PaymentPackage>();
 
     public virtual ICollection<School> Schools { get; set; } = new List<School>();
 
     public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+
+    public virtual ICollection<Unit> Units { get; set; } = new List<Unit>();
 }

@@ -13,7 +13,7 @@ public partial class Contract
 
     public Guid PackageId { get; set; }
 
-    public Guid MainTutorId { get; set; }
+    public Guid? MainTutorId { get; set; }
 
     public Guid? SubstituteTutor1Id { get; set; }
 
@@ -22,8 +22,6 @@ public partial class Contract
     public DateOnly StartDate { get; set; }
 
     public DateOnly EndDate { get; set; }
-
-    public string TimeSlot { get; set; } = null!;
 
     public bool IsOnline { get; set; }
 
@@ -47,13 +45,19 @@ public partial class Contract
 
     public Guid? CenterId { get; set; }
 
+    public TimeOnly? StartTime { get; set; }
+
+    public TimeOnly? EndTime { get; set; }
+
+    public byte? DaysOfWeeks { get; set; }
+
     public virtual Center? Center { get; set; }
 
     public virtual Child Child { get; set; } = null!;
 
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
-    public virtual User MainTutor { get; set; } = null!;
+    public virtual User? MainTutor { get; set; }
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
@@ -61,7 +65,11 @@ public partial class Contract
 
     public virtual User Parent { get; set; } = null!;
 
-    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+    public virtual ICollection<PayosTransaction> PayosTransactions { get; set; } = new List<PayosTransaction>();
+
+    public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
+
+    public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
 
     public virtual User? SubstituteTutor1 { get; set; }
 

@@ -85,7 +85,7 @@ public partial class User
 
     public virtual Role Role { get; set; } = null!;
 
-    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+    public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
 
     public virtual ICollection<SupportRequest> SupportRequestAssignedToUsers { get; set; } = new List<SupportRequest>();
 
@@ -93,11 +93,15 @@ public partial class User
 
     public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
-    public virtual ICollection<TutorAvailability> TutorAvailabilities { get; set; } = new List<TutorAvailability>();
-
     public virtual ICollection<TutorCenter> TutorCenters { get; set; } = new List<TutorCenter>();
 
+    public virtual ICollection<TutorSchedule> TutorSchedules { get; set; } = new List<TutorSchedule>();
+
     public virtual TutorVerification? TutorVerification { get; set; }
+
+    public virtual ICollection<Unit> UnitCreatedByNavigations { get; set; } = new List<Unit>();
+
+    public virtual ICollection<Unit> UnitUpdatedByNavigations { get; set; } = new List<Unit>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
 }

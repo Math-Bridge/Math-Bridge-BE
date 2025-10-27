@@ -25,7 +25,7 @@ public partial class Notification
 
     public DateTime? SentDate { get; set; }
 
-    public virtual Schedule? Booking { get; set; }
+    public virtual Session? Booking { get; set; }
 
     public virtual Contract? Contract { get; set; }
 

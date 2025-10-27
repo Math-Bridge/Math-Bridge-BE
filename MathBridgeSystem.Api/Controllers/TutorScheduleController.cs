@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.TutorAvailability;
+using MathBridgeSystem.Application.DTOs.TutorSchedule;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +12,11 @@ namespace MathBridgeSystem.Api.Controllers
 {
     [Route("api/tutor-availabilities")]
     [ApiController]
-    public class TutorAvailabilityController : ControllerBase
+    public class TutorScheduleController : ControllerBase
     {
-        private readonly ITutorAvailabilityService _availabilityService;
+        private readonly ITutorScheduleService _availabilityService;
 
-        public TutorAvailabilityController(ITutorAvailabilityService availabilityService)
+        public TutorScheduleController(ITutorScheduleService availabilityService)
         {
             _availabilityService = availabilityService ?? throw new ArgumentNullException(nameof(availabilityService));
         }
@@ -26,7 +26,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> CreateAvailability([FromBody] CreateTutorAvailabilityRequest request)
+        public async Task<IActionResult> CreateAvailability([FromBody] CreateTutorScheduleRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -62,7 +62,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "tutor,admin,staff")]
-        public async Task<IActionResult> UpdateAvailability(Guid id, [FromBody] UpdateTutorAvailabilityRequest request)
+        public async Task<IActionResult> UpdateAvailability(Guid id, [FromBody] UpdateTutorScheduleRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -159,7 +159,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         [HttpGet("tutor/{tutorId}")]
         [Authorize(Roles = "tutor,parent,admin,staff")]
-        public async Task<IActionResult> GetTutorAvailabilities(Guid tutorId, [FromQuery] bool activeOnly = true)
+        public async Task<IActionResult> GetTutorSchedules(Guid tutorId, [FromQuery] bool activeOnly = true)
         {
             try
             {
@@ -174,7 +174,7 @@ namespace MathBridgeSystem.Api.Controllers
                     }
                 }
 
-                var availabilities = await _availabilityService.GetTutorAvailabilitiesAsync(tutorId, activeOnly);
+                var availabilities = await _availabilityService.GetTutorSchedulesAsync(tutorId, activeOnly);
                 return Ok(availabilities);
             }
             catch (Exception ex)
@@ -193,7 +193,7 @@ namespace MathBridgeSystem.Api.Controllers
             try
             {
                 var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var availabilities = await _availabilityService.GetTutorAvailabilitiesAsync(userId, activeOnly);
+                var availabilities = await _availabilityService.GetTutorSchedulesAsync(userId, activeOnly);
                 return Ok(availabilities);
             }
             catch (Exception ex)
@@ -274,7 +274,7 @@ namespace MathBridgeSystem.Api.Controllers
         [HttpPost("bulk")]
         [Authorize(Roles = "tutor,admin,staff")]
         public async Task<IActionResult> BulkCreateAvailabilities(
-            [FromBody] List<CreateTutorAvailabilityRequest> requests)
+            [FromBody] List<CreateTutorScheduleRequest> requests)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -307,6 +307,42 @@ namespace MathBridgeSystem.Api.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+/// <summary>
+        /// Get bitmask day flags reference for DaysOfWeek/DaysOfWeeks.
+        /// Days: Sunday=1 (bit 0), Monday=2 (bit 1), Tuesday=4 (bit 2), Wednesday=8 (bit 3),
+        /// Thursday=16 (bit 4), Friday=32 (bit 5), Saturday=64 (bit 6).
+        /// All days = 127. Common examples: Weekdays Mon-Fri=62, Weekends Sat-Sun=65,
+        /// Mon Wed Fri=42, Tue Thu=20.
+        /// </summary>
+        /// <returns>JSON object with day values and common combinations</returns>
+        [HttpGet("dayflags")]
+        [AllowAnonymous]
+        public IActionResult GetDayFlags()
+        {
+            var response = new
+            {
+                days = new
+                {
+                    Sunday = 1,
+                    Monday = 2,
+                    Tuesday = 4,
+                    Wednesday = 8,
+                    Thursday = 16,
+                    Friday = 32,
+                    Saturday = 64
+                },
+                common = new
+                {
+                    AllDays = 127,
+                    Weekdays = 62, // Mon-Fri
+                    Weekends = 65, // Sat-Sun
+                    MonWedFri = 42,
+                    TueThu = 20
+                }
+            };
+            return Ok(response);
         }
     }
 }

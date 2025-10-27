@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.TutorAvailability;
+using MathBridgeSystem.Application.DTOs.TutorSchedule;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Services
 {
-    public class TutorAvailabilityService : ITutorAvailabilityService
+    public class TutorScheduleService : ITutorScheduleService
     {
-        private readonly ITutorAvailabilityRepository _availabilityRepository;
+        private readonly ITutorScheduleRepository _availabilityRepository;
         private readonly IUserRepository _userRepository;
 
-        public TutorAvailabilityService(
-            ITutorAvailabilityRepository availabilityRepository,
+        public TutorScheduleService(
+            ITutorScheduleRepository availabilityRepository,
             IUserRepository userRepository)
         {
             _availabilityRepository = availabilityRepository ?? throw new ArgumentNullException(nameof(availabilityRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
-        public async Task<Guid> CreateAvailabilityAsync(CreateTutorAvailabilityRequest request)
+        public async Task<Guid> CreateAvailabilityAsync(CreateTutorScheduleRequest request)
         {
             // Validate tutor exists and has tutor role
             var tutor = await _userRepository.GetTutorWithVerificationAsync(request.TutorId);
@@ -39,9 +39,13 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Validate day of week range
-            if (request.DayOfWeek < 0 || request.DayOfWeek > 6)
+            if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
                 throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+            }
+
+            if (request.DaysOfWeek == 0) {
+                throw new ArgumentException("At least one day must be selected");
             }
 
             // Validate time ranges
@@ -67,7 +71,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for minimum 15-minute spacing with existing time slots
             var existingSlots = await _availabilityRepository.GetByTutorIdAsync(request.TutorId);
             var slotsOnSameDay = existingSlots
-                .Where(a => a.DayOfWeek == request.DayOfWeek 
+                .Where(a => a.DaysOfWeek == request.DaysOfWeek 
                     && a.Status == "active"
                     && (!request.EffectiveUntil.HasValue || !a.EffectiveUntil.HasValue || 
                         a.EffectiveFrom <= request.EffectiveUntil.Value)
@@ -99,17 +103,12 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
             }
-
-            // Validate max concurrent bookings
-            if (request.MaxConcurrentBookings < 1 || request.MaxConcurrentBookings > 10)
-            {
-                throw new ArgumentException("Max concurrent bookings must be between 1 and 10");
-            }
+            
 
                         // Check for conflicts
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 request.TutorId,
-                request.DayOfWeek,
+                request.DaysOfWeek,
                 request.AvailableFrom,
                 request.AvailableUntil,
                 request.EffectiveFrom,
@@ -121,24 +120,24 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Create entity
-            var availability = new TutorAvailability
+            var availability = new TutorSchedule
             {
                 TutorId = request.TutorId,
-                DayOfWeek = request.DayOfWeek,
+                DaysOfWeek = request.DaysOfWeek,
                 AvailableFrom = request.AvailableFrom,
                 AvailableUntil = request.AvailableUntil,
                 EffectiveFrom = request.EffectiveFrom,
                 EffectiveUntil = request.EffectiveUntil,
-                MaxConcurrentBookings = request.MaxConcurrentBookings,
                 CanTeachOnline = request.CanTeachOnline,
-                CanTeachOffline = request.CanTeachOffline
+                CanTeachOffline = request.CanTeachOffline,
+                IsBooked  = request.isBooked,
             };
 
             var created = await _availabilityRepository.CreateAsync(availability);
             return created.AvailabilityId;
         }
 
-        public async Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorAvailabilityRequest request)
+        public async Task UpdateAvailabilityAsync(Guid availabilityId, UpdateTutorScheduleRequest request)
         {
             var availability = await _availabilityRepository.GetByIdAsync(availabilityId);
             if (availability == null)
@@ -147,13 +146,13 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Update only provided fields, preserve old data if null
-            if (request.DayOfWeek.HasValue)
+            if (request.DaysOfWeek.HasValue)
             {
-                if (request.DayOfWeek.Value < 0 || request.DayOfWeek.Value > 6)
+                if (request.DaysOfWeek.Value < 0 || request.DaysOfWeek.Value > 6)
                 {
                     throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
                 }
-                availability.DayOfWeek = request.DayOfWeek.Value;
+                availability.DaysOfWeek = request.DaysOfWeek.Value;
             }
 
             if (request.AvailableFrom.HasValue)
@@ -164,6 +163,13 @@ namespace MathBridgeSystem.Application.Services
             if (request.AvailableUntil.HasValue)
             {
                 availability.AvailableUntil = request.AvailableUntil.Value;
+            }
+            if (request.IsBooked.HasValue)
+            {
+                availability.IsBooked = request.IsBooked.Value;
+            }
+            if (request.DaysOfWeek == 0) {
+                throw new ArgumentException("At least one day must be selected");
             }
 
             // Validate time ranges after update
@@ -195,22 +201,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new ArgumentException("Effective until date must be after effective from date");
             }
-
-            if (request.MaxConcurrentBookings.HasValue)
-            {
-                if (request.MaxConcurrentBookings.Value < 1 || request.MaxConcurrentBookings.Value > 10)
-                {
-                    throw new ArgumentException("Max concurrent bookings must be between 1 and 10");
-                }
-
-                // Prevent reducing max bookings below current bookings
-                if (request.MaxConcurrentBookings.Value < availability.CurrentBookings)
-                {
-                    throw new ArgumentException($"Cannot reduce max concurrent bookings below current bookings ({availability.CurrentBookings})");
-                }
-
-                availability.MaxConcurrentBookings = request.MaxConcurrentBookings.Value;
-            }
+            
 
             if (request.CanTeachOnline.HasValue)
             {
@@ -231,7 +222,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for minimum 15-minute spacing with existing time slots (excluding current availability)
             var existingSlots = await _availabilityRepository.GetByTutorAndDayAsync(
                 availability.TutorId,
-                availability.DayOfWeek,
+                availability.DaysOfWeek,
                 availability.EffectiveFrom,
                 availability.EffectiveUntil);
 
@@ -249,7 +240,7 @@ namespace MathBridgeSystem.Application.Services
             // Check for conflicts (excluding current availability)
             var hasConflict = await _availabilityRepository.HasConflictAsync(
                 availability.TutorId,
-                availability.DayOfWeek,
+                availability.DaysOfWeek,
                 availability.AvailableFrom,
                 availability.AvailableUntil,
                 availability.EffectiveFrom,
@@ -273,15 +264,15 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Prevent deletion if there are active bookings
-            if (availability.CurrentBookings > 0)
+            if (availability.IsBooked == true)
             {
-                throw new Exception($"Cannot delete availability with active bookings ({availability.CurrentBookings})");
+                throw new Exception($"Cannot delete availability with active bookings");
             }
 
             await _availabilityRepository.DeleteAsync(availabilityId);
         }
 
-        public async Task<TutorAvailabilityResponse> GetAvailabilityByIdAsync(Guid availabilityId)
+        public async Task<TutorScheduleResponse> GetAvailabilityByIdAsync(Guid availabilityId)
         {
             var availability = await _availabilityRepository.GetByIdAsync(availabilityId);
             if (availability == null)
@@ -292,13 +283,13 @@ namespace MathBridgeSystem.Application.Services
             return MapToResponse(availability);
         }
 
-        public async Task<List<TutorAvailabilityResponse>> GetTutorAvailabilitiesAsync(Guid tutorId, bool activeOnly = true)
+        public async Task<List<TutorScheduleResponse>> GetTutorSchedulesAsync(Guid tutorId, bool activeOnly = true)
         {
-            List<TutorAvailability> availabilities;
+            List<TutorSchedule> availabilities;
 
             if (activeOnly)
             {
-                availabilities = await _availabilityRepository.GetActiveTutorAvailabilitiesAsync(tutorId);
+                availabilities = await _availabilityRepository.GetActiveTutorSchedulesAsync(tutorId);
             }
             else
             {
@@ -311,7 +302,7 @@ namespace MathBridgeSystem.Application.Services
         public async Task<List<AvailableTutorResponse>> SearchAvailableTutorsAsync(SearchAvailableTutorsRequest request)
         {
             // Validate search parameters
-            if (request.DayOfWeek < 0 || request.DayOfWeek > 6)
+            if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
                 throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
             }
@@ -332,7 +323,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             var availabilities = await _availabilityRepository.SearchAvailableTutorsAsync(
-                request.DayOfWeek,
+                request.DaysOfWeek,
                 request.StartTime,
                 request.EndTime,
                 request.CanTeachOnline,
@@ -348,7 +339,6 @@ namespace MathBridgeSystem.Application.Services
                     TutorName = group.First().Tutor.FullName,
                     TutorEmail = group.First().Tutor.Email,
                     AvailabilitySlots = group.Select(MapToResponse).ToList(),
-                    TotalAvailableSlots = group.Sum(a => a.MaxConcurrentBookings - a.CurrentBookings),
                     CanTeachOnline = group.Any(a => a.CanTeachOnline),
                     CanTeachOffline = group.Any(a => a.CanTeachOffline)
                 })
@@ -384,18 +374,9 @@ namespace MathBridgeSystem.Application.Services
             availability.Status = status.ToLower();
             await _availabilityRepository.UpdateAsync(availability);
         }
+        
 
-        public async Task IncrementBookingCountAsync(Guid availabilityId)
-        {
-            await _availabilityRepository.UpdateBookingCountAsync(availabilityId, 1);
-        }
-
-        public async Task DecrementBookingCountAsync(Guid availabilityId)
-        {
-            await _availabilityRepository.UpdateBookingCountAsync(availabilityId, -1);
-        }
-
-        public async Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorAvailabilityRequest> requests)
+        public async Task<List<Guid>> BulkCreateAvailabilitiesAsync(List<CreateTutorScheduleRequest> requests)
         {
             var createdIds = new List<Guid>();
 
@@ -410,50 +391,65 @@ namespace MathBridgeSystem.Application.Services
                 {
                     // Log error but continue with other requests
                     // In production, consider more sophisticated error handling
-                    throw new Exception($"Failed to create availability for day {request.DayOfWeek}: {ex.Message}");
+                    throw new Exception($"Failed to create availability for day {request.DaysOfWeek}: {ex.Message}");
                 }
             }
 
             return createdIds;
         }
 
-        private TutorAvailabilityResponse MapToResponse(TutorAvailability availability)
+        private TutorScheduleResponse MapToResponse(TutorSchedule availability)
         {
-            return new TutorAvailabilityResponse
+            return new TutorScheduleResponse
             {
                 AvailabilityId = availability.AvailabilityId,
                 TutorId = availability.TutorId,
                 TutorName = availability.Tutor?.FullName ?? "Unknown",
-                DayOfWeek = availability.DayOfWeek,
-                DayOfWeekName = GetDayOfWeekName(availability.DayOfWeek),
+                DaysOfWeeks = availability.DaysOfWeek,
+                DaysOfWeeksDisplay = GetDaysOfWeekName(availability.DaysOfWeek),
                 AvailableFrom = availability.AvailableFrom,
                 AvailableUntil = availability.AvailableUntil,
                 EffectiveFrom = availability.EffectiveFrom,
                 EffectiveUntil = availability.EffectiveUntil,
-                MaxConcurrentBookings = availability.MaxConcurrentBookings,
-                CurrentBookings = availability.CurrentBookings,
-                AvailableSlots = availability.MaxConcurrentBookings - availability.CurrentBookings,
                 CanTeachOnline = availability.CanTeachOnline,
                 CanTeachOffline = availability.CanTeachOffline,
                 Status = availability.Status,
                 CreatedDate = availability.CreatedDate,
-                UpdatedDate = availability.UpdatedDate
+                UpdatedDate = availability.UpdatedDate,
+                IsBooked = availability.IsBooked
             };
+        }
+        private string GetDaysOfWeekName(int daysOfWeek)
+        {
+            if (daysOfWeek == 0) return "None";
+
+            var days = new List<string>();
+            if ((daysOfWeek & 1) > 0) days.Add("Sunday");
+            if ((daysOfWeek & 2) > 0) days.Add("Monday");
+            if ((daysOfWeek & 4) > 0) days.Add("Tuesday");
+            if ((daysOfWeek & 8) > 0) days.Add("Wednesday");
+            if ((daysOfWeek & 16) > 0) days.Add("Thursday");
+            if ((daysOfWeek & 32) > 0) days.Add("Friday");
+            if ((daysOfWeek & 64) > 0) days.Add("Saturday");
+
+            return string.Join(", ", days);
         }
 
-        private string GetDayOfWeekName(int dayOfWeek)
+        private List<string> GetDaysOfWeekList(int daysOfWeek)
         {
-            return dayOfWeek switch
-            {
-                8 => "Sunday",
-                2 => "Monday",
-                3 => "Tuesday",
-                4  => "Wednesday",
-                5 => "Thursday",
-                6 => "Friday",
-                7 => "Saturday",
-                _ => "Unknown"
-            };
+            var days = new List<string>();
+            if ((daysOfWeek & 1) > 0) days.Add("Sunday");
+            if ((daysOfWeek & 2) > 0) days.Add("Monday");
+            if ((daysOfWeek & 4) > 0) days.Add("Tuesday");
+            if ((daysOfWeek & 8) > 0) days.Add("Wednesday");
+            if ((daysOfWeek & 16) > 0) days.Add("Thursday");
+            if ((daysOfWeek & 32) > 0) days.Add("Friday");
+            if ((daysOfWeek & 64) > 0) days.Add("Saturday");
+
+            return days;
         }
-    }
+
+
+        }
+    
 }

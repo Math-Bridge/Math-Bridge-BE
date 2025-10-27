@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MathBridgeSystem.Domain.Entities;
 
-public partial class Schedule
+public partial class Session
 {
     public Guid BookingId { get; set; }
 
@@ -30,8 +30,6 @@ public partial class Schedule
     public decimal? OfflineLongitude { get; set; }
 
     public string Status { get; set; } = null!;
-
-    public string PaymentStatus { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
 

@@ -27,7 +27,7 @@ public partial class RescheduleRequest
 
     public DateTime CreatedDate { get; set; }
 
-    public virtual Schedule Booking { get; set; } = null!;
+    public virtual Session Booking { get; set; } = null!;
 
     public virtual User Parent { get; set; } = null!;
 

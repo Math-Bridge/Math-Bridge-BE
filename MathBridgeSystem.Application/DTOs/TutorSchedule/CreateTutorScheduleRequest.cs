@@ -1,16 +1,16 @@
 using System;
 
-namespace MathBridgeSystem.Application.DTOs.TutorAvailability
+namespace MathBridgeSystem.Application.DTOs.TutorSchedule
 {
-    public class CreateTutorAvailabilityRequest
+    public class CreateTutorScheduleRequest
     {
         public Guid TutorId { get; set; }
-        public int DayOfWeek { get; set; }
+        public byte DaysOfWeek { get; set; }
         public TimeOnly AvailableFrom { get; set; }
         public TimeOnly AvailableUntil { get; set; }
         public DateOnly EffectiveFrom { get; set; }
         public DateOnly? EffectiveUntil { get; set; }
-        public int MaxConcurrentBookings { get; set; } = 1;
+        public bool isBooked { get; set; } = false;
         public bool CanTeachOnline { get; set; } = true;
         public bool CanTeachOffline { get; set; } = true;
             }

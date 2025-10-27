@@ -31,5 +31,9 @@ public partial class PayosTransaction
 
     public DateTime? PaidAt { get; set; }
 
+    public Guid? ContractId { get; set; }
+
+    public virtual Contract? Contract { get; set; }
+
     public virtual WalletTransaction WalletTransaction { get; set; } = null!;
 }

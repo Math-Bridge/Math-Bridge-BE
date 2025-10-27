@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Infrastructure.Repositories
 {
-    public class TutorAvailabilityRepository : ITutorAvailabilityRepository
+    public class TutorScheduleRepository : ITutorScheduleRepository
     {
         private readonly MathBridgeDbContext _context;
 
-        public TutorAvailabilityRepository(MathBridgeDbContext context)
+        public TutorScheduleRepository(MathBridgeDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<TutorAvailability> GetByIdAsync(Guid availabilityId)
+        public async Task<TutorSchedule> GetByIdAsync(Guid availabilityId)
         {
-            return await _context.TutorAvailabilities
+            return await _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                     .ThenInclude(t => t.Role)
                 .Include(ta => ta.Tutor)
@@ -28,21 +28,21 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .FirstOrDefaultAsync(ta => ta.AvailabilityId == availabilityId);
         }
 
-        public async Task<List<TutorAvailability>> GetByTutorIdAsync(Guid tutorId)
+        public async Task<List<TutorSchedule>> GetByTutorIdAsync(Guid tutorId)
         {
-            return await _context.TutorAvailabilities
+            return await _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                 .Where(ta => ta.TutorId == tutorId)
-                .OrderBy(ta => ta.DayOfWeek)
+                .OrderBy(ta => ta.DaysOfWeek)
                 .ThenBy(ta => ta.AvailableFrom)
                 .ToListAsync();
         }
 
-        public async Task<List<TutorAvailability>> GetByTutorAndDayAsync(Guid tutorId, int dayOfWeek, DateOnly effectiveFrom, DateOnly? effectiveUntil)
+        public async Task<List<TutorSchedule>> GetByTutorAndDayAsync(Guid tutorId, byte daysOfWeek, DateOnly effectiveFrom, DateOnly? effectiveUntil)
         {
-            var query = _context.TutorAvailabilities
+            var query = _context.TutorSchedules
                 .Where(ta => ta.TutorId == tutorId)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             // Check for effective date overlap
@@ -63,27 +63,27 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<TutorAvailability>> GetActiveTutorAvailabilitiesAsync(Guid tutorId)
+        public async Task<List<TutorSchedule>> GetActiveTutorSchedulesAsync(Guid tutorId)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             
-            return await _context.TutorAvailabilities
+            return await _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                 .Where(ta => ta.TutorId == tutorId)
                 .Where(ta => ta.Status == "active")
                 .Where(ta => ta.EffectiveFrom <= today)
                 .Where(ta => ta.EffectiveUntil == null || ta.EffectiveUntil >= today)
-                .OrderBy(ta => ta.DayOfWeek)
+                .OrderBy(ta => ta.DaysOfWeek)
                 .ThenBy(ta => ta.AvailableFrom)
                 .ToListAsync();
         }
 
-        public async Task<List<TutorAvailability>> GetByDayOfWeekAsync(int dayOfWeek, DateTime? effectiveDate = null)
+        public async Task<List<TutorSchedule>> GetByDaysOfWeekAsync(byte daysOfWeek, DateTime? effectiveDate = null)
         {
-            var query = _context.TutorAvailabilities
+            var query = _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                     .ThenInclude(t => t.Role)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             if (effectiveDate.HasValue)
@@ -98,8 +98,8 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<TutorAvailability>> SearchAvailableTutorsAsync(
-            int? dayOfWeek, 
+        public async Task<List<TutorSchedule>> SearchAvailableTutorsAsync(
+            byte? dayOfWeek, 
             TimeOnly? startTime, 
             TimeOnly? endTime, 
             bool? canTeachOnline, 
@@ -107,17 +107,16 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             DateTime? effectiveDate)
         {
             // Start with base query - only required filters
-            var query = _context.TutorAvailabilities
+            var query = _context.TutorSchedules
                 .Include(ta => ta.Tutor)
                 .ThenInclude(t => t.Role)
                 .Include(ta => ta.Tutor)
                 .ThenInclude(t => t.TutorVerification)
-                .Where(ta => ta.Status == "active")
-                .Where(ta => ta.CurrentBookings < ta.MaxConcurrentBookings);
+                .Where(ta => ta.Status == "active");
             
             if (dayOfWeek.HasValue)
             {
-                query = query.Where(ta => ta.DayOfWeek == dayOfWeek.Value);
+                query = query.Where(ta => ta.DaysOfWeek == dayOfWeek.Value);
             }
 
             // Apply date filter only if provided
@@ -156,50 +155,49 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         }
 
 
-        public async Task<TutorAvailability> CreateAsync(TutorAvailability availability)
+        public async Task<TutorSchedule> CreateAsync(TutorSchedule availability)
         {
             availability.AvailabilityId = Guid.NewGuid();
             availability.CreatedDate = DateTime.UtcNow;
             availability.Status = "active";
-            availability.CurrentBookings = 0;
 
-            await _context.TutorAvailabilities.AddAsync(availability);
+            await _context.TutorSchedules.AddAsync(availability);
             await _context.SaveChangesAsync();
 
             return availability;
         }
 
-        public async Task UpdateAsync(TutorAvailability availability)
+        public async Task UpdateAsync(TutorSchedule availability)
         {
             availability.UpdatedDate = DateTime.UtcNow;
-            _context.TutorAvailabilities.Update(availability);
+            _context.TutorSchedules.Update(availability);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid availabilityId)
         {
-            var availability = await _context.TutorAvailabilities
+            var availability = await _context.TutorSchedules
                 .FirstOrDefaultAsync(ta => ta.AvailabilityId == availabilityId);
 
             if (availability != null)
             {
-                _context.TutorAvailabilities.Remove(availability);
+                _context.TutorSchedules.Remove(availability);
                 await _context.SaveChangesAsync();
             }
         }
 
         public async Task<bool> HasConflictAsync(
             Guid tutorId, 
-            int dayOfWeek, 
+            byte daysOfWeek, 
             TimeOnly startTime, 
             TimeOnly endTime, 
             DateOnly effectiveFrom, 
             DateOnly? effectiveUntil, 
             Guid? excludeAvailabilityId = null)
         {
-            var query = _context.TutorAvailabilities
+            var query = _context.TutorSchedules
                 .Where(ta => ta.TutorId == tutorId)
-                .Where(ta => ta.DayOfWeek == dayOfWeek)
+                .Where(ta => (ta.DaysOfWeek & daysOfWeek) > 0)
                 .Where(ta => ta.Status == "active");
 
             // Exclude specific availability (for updates)
@@ -227,33 +225,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             }
 
             return await query.AnyAsync();
-        }
-
-        public async Task UpdateBookingCountAsync(Guid availabilityId, int increment)
-        {
-            var availability = await _context.TutorAvailabilities
-                .FirstOrDefaultAsync(ta => ta.AvailabilityId == availabilityId);
-
-            if (availability != null)
-            {
-                availability.CurrentBookings += increment;
-                
-                // Ensure current bookings doesn't go negative
-                if (availability.CurrentBookings < 0)
-                {
-                    availability.CurrentBookings = 0;
-                }
-
-                // Ensure current bookings doesn't exceed max
-                if (availability.CurrentBookings > availability.MaxConcurrentBookings)
-                {
-                    throw new InvalidOperationException(
-                        $"Cannot exceed maximum concurrent bookings ({availability.MaxConcurrentBookings})");
-                }
-
-                availability.UpdatedDate = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
         }
     }
 }
