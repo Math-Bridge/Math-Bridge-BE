@@ -70,6 +70,7 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
+builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 
 
 // === SERVICE REGISTRATIONS ===
@@ -88,6 +89,7 @@ builder.Services.AddScoped<IChildService, ChildService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<ICenterService, CenterService>();
+builder.Services.AddScoped<ISchoolService, SchoolService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
