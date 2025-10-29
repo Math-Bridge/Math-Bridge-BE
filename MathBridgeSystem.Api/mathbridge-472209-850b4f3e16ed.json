@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "mathbridge-472209",
+  "private_key_id": "850b4f3e16ed4a2edc9c77000ee1c1b302b0b3fd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCpt3575MFMFC4/\nXsYSevHP4QGUEUhiUTJKab9cuxZrAZmf02sCkGcaoQhgVGuLndiVjvOdkaIVB9o8\nHcuZbqGzlE8UaCViT+o1GkiiQofX/Am5on1kXN5dhvQqPIoDLuENNrJcFP28pchc\ngVWNJDloPu86JouZkXfwILq7nWMiMlrBYBe/GmWlgsAE2hEeotASep/c4/zy8Sr5\nkQ0oTXHMLaGq6HkKL6vLEKPzGXYrGKKazlFMrNvhFTkqInV3zlkFwQmCvyA94SaA\ne/FsYadP4F+gD4P1Ha4BE2HMXInrUzURH5hXKf1jIS8AYOrvVZqDHKt/VXo//hQo\nyhBhkyExAgMBAAECggEAInbROB6NhEIK3DKGPYV66nByThuuW8zKTiMoSY/ybvtt\ns2+O6P/i+BzgYxNxnXIJ4+EaJpLG28dy8UdJq5g0PQ/ueSHnCY5Z7LuwKUciZ+FW\nJjzRgtp7C3oWxibyDdBswi6rzJg0qKTvyZ03/sfu4nT5RpFCQwav2PMEiIne8jf7\nW+6AlvPtQfyEpjl8o7jA9nc9E9N9birBpW9XcAT87Na51QT9dWH61TAy0rkG0raL\nS/Smu06JudU1fGlCawT4a7mebtmcpaVXG1Bz41nGiqi1E97tuMxRF1fd2ndQ12d7\nUM5N8kjZWVaGJ09TpIlfAf+SN3NGRL6yPb3vQWfjawKBgQDop0dzLw8GgU+DimGq\n2H9hzQqsdN/Rn7udY2Xfp7Yu0s4+5oozzJ6F1YKe0kR8bffgYRUHrOIbIVUVY4Qn\nT45Aj1ZegKbxInKeNskBrYFOaXnd6gGEI5h0j/hzrnDkbQwrYDORfYwT/HWbUJq1\nMIvlHvXfOoa8f8YRBeVyxeln2wKBgQC6v2lgC6dNhec5J9IqhgNVDIFIDWUfW3oc\n934YolT53LBnYQJN7YwQ3SdM7W/LUXBRYOYGykTmWRIqME4OhQ5GomiCszoKA/lS\n2QiZcDBmM+z151Y1dAOp4btVe9r7eSKjsnzFgRZ/oReE1votKzDv0Bxx5gEE+xJM\n+WXhZe8+4wKBgQDNqqsIEQ64UnHHN/q0/CRHgeowoDUH66wAK1FwkKMF64c1pbmA\npx9v8lpBKmIumUwqR8g+e795+lJr0QiPc82uFshkTFjIDArFAGtbF1WayrVXzri+\nZnUsfeVF5myYEipS4f1UXWcKeABDZ9ML37mbt23lg6h+VHn0rIC0oG6ARwKBgQCx\nHFZJA+RhDqyztUOKltzULW7zMdkE+1H95O+PV222JwqakROJatBbMhNSzyEmuA8I\n7xhZuj3MJQ+oOXXeKWzXqrHpuydBVnGAlFumghM06uxCb2uAeI388RwlP7j4pPMo\nQ2A4RGxdER/oGabdbcgUuNAxaYzv91ps7F8mfPGBNwKBgB14UJ6D0v/wb+Wun9hb\n25IjFegFNZ6MPBVUVkw8+JZ/SzIb9SHI8cfKRuSVwewO84yJd7yZgEt+7dIoI0TG\nR7IYwnNa5WjfpdIHLQwON9y4QTksamZDLM6cxXoHcLuIO0TN9gPHqHxiAaycLx3C\nWWXhVvXesFdCFjZp8EB0OEdE\n-----END PRIVATE KEY-----\n",
+  "client_email": "pak-161@mathbridge-472209.iam.gserviceaccount.com",
+  "client_id": "114960126404391868981",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pak-161%40mathbridge-472209.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
