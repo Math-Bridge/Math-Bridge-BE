@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using MathBridgeSystem.Application.Interfaces;
+using Google.Apis.Auth.OAuth2;
 
 namespace MathBridgeSystem.Infrastructure.Services;
 
@@ -182,17 +184,50 @@ public class GoogleMeetProvider : IVideoConferenceProvider
 
     private async Task<string> GetAccessTokenAsync()
     {
-        // This should use Google's OAuth2 service account authentication
-        // For now, we'll retrieve from configuration
-        // In production, implement proper OAuth2 flow with Google.Apis.Auth
-        
-        var accessToken = _configuration["GoogleMeet:AccessToken"];
-        if (string.IsNullOrEmpty(accessToken))
+        try
         {
-            throw new InvalidOperationException("Google Meet access token not configured");
-        }
+            var serviceAccountPath = _configuration["GoogleMeet:ServiceAccountJsonPath"];
+            if (string.IsNullOrEmpty(serviceAccountPath))
+            {
+                throw new InvalidOperationException("Google Meet service account path not configured. Please add 'GoogleMeet:ServiceAccountJsonPath' to appsettings.json");
+            }
 
-        return accessToken;
+            // Ensure the path is absolute
+            if (!Path.IsPathRooted(serviceAccountPath))
+            {
+                serviceAccountPath = Path.Combine(Directory.GetCurrentDirectory(), serviceAccountPath);
+            }
+
+            if (!File.Exists(serviceAccountPath))
+            {
+                throw new FileNotFoundException($"Service account file not found at: {serviceAccountPath}");
+            }
+
+            // Load service account credentials
+            GoogleCredential credential;
+            using (var stream = new FileStream(serviceAccountPath, FileMode.Open, FileAccess.Read))
+            {
+                credential = GoogleCredential.FromStream(stream)
+                    .CreateScoped(new[]
+                    {
+                        "https://www.googleapis.com/auth/meetings.space.created",
+                        "https://www.googleapis.com/auth/meetings.space.readonly"
+                    });
+            }
+
+            // Get the access token
+            var token = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("Failed to obtain access token from service account");
+            }
+
+            return token;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error obtaining Google Meet access token: {ex.Message}", ex);
+        }
     }
 
     private class GoogleMeetSpaceResponse

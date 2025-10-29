@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
+        <PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     </ItemGroup>
