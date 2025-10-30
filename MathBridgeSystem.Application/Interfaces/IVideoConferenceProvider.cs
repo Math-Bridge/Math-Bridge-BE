@@ -6,15 +6,10 @@ namespace MathBridgeSystem.Application.Interfaces;
 public interface IVideoConferenceProvider
 {
     string PlatformName { get; }
+
+    Task<VideoConferenceCreationResult> CreateMeetingAsync();
     
-    Task<VideoConferenceCreationResult> CreateMeetingAsync(
-        string displayName, 
-        DateTime startTime, 
-        DateTime endTime);
     
-    Task<bool> DeleteMeetingAsync(string meetingId);
-    
-    Task<MeetingDetailsResult> GetMeetingDetailsAsync(string meetingId);
 }
 
 public class VideoConferenceCreationResult

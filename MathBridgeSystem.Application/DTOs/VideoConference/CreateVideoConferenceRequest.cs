@@ -12,17 +12,8 @@ public class CreateVideoConferenceRequest
     public Guid ContractId { get; set; }
 
     [Required]
-    [RegularExpression("^(GoogleMeet|Zoom)$", ErrorMessage = "Platform must be either 'GoogleMeet' or 'Zoom'")]
+    [RegularExpression("^(Meet|Zoom)$", ErrorMessage = "Platform must be either 'Meet' or 'Zoom'")]
     public string Platform { get; set; } = null!;
-
-    [Required]
-    public DateTime ScheduledStartTime { get; set; }
-
-    [Required]
-    public DateTime ScheduledEndTime { get; set; }
-
-    [MaxLength(255)]
-    public string? DisplayName { get; set; }
-
-    public List<Guid>? ParticipantUserIds { get; set; }
+    
+    
 }

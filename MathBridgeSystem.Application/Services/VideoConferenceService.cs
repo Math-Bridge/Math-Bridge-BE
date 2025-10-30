@@ -41,11 +41,7 @@ public class VideoConferenceService : IVideoConferenceService
             throw new Exception($"Video conference provider '{request.Platform}' not found");
 
         // Create meeting via provider
-        var displayName = request.DisplayName ?? $"Math Bridge Session - {booking.BookingId}";
-        var creationResult = await provider.CreateMeetingAsync(
-            displayName,
-            request.ScheduledStartTime,
-            request.ScheduledEndTime);
+        var creationResult = await provider.CreateMeetingAsync( );
 
         if (!creationResult.Success)
             throw new Exception($"Failed to create meeting: {creationResult.ErrorMessage}");
@@ -61,10 +57,6 @@ public class VideoConferenceService : IVideoConferenceService
             SpaceId = creationResult.MeetingId,
             MeetingUri = creationResult.MeetingUri,
             MeetingCode = creationResult.MeetingCode,
-            DisplayName = displayName,
-            ScheduledStartTime = request.ScheduledStartTime,
-            ScheduledEndTime = request.ScheduledEndTime,
-            Status = "Scheduled",
             CreatedByUserId = createdByUserId,
             CreatedDate = DateTime.UtcNow
         };
@@ -105,66 +97,12 @@ public class VideoConferenceService : IVideoConferenceService
         return sessions.Select(MapToDto).ToList();
     }
 
-    public async Task<VideoConferenceSessionDto> UpdateVideoConferenceAsync(
-        Guid conferenceId, 
-        UpdateVideoConferenceRequest request)
-    {
-        var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
-        if (session == null)
-            throw new Exception("Video conference session not found");
-
-        if (request.ScheduledStartTime.HasValue)
-            session.ScheduledStartTime = request.ScheduledStartTime.Value;
-
-        if (request.ScheduledEndTime.HasValue)
-            session.ScheduledEndTime = request.ScheduledEndTime.Value;
-
-        if (!string.IsNullOrEmpty(request.DisplayName))
-            session.DisplayName = request.DisplayName;
-
-        if (!string.IsNullOrEmpty(request.Status))
-            session.Status = request.Status;
-
-        session.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return await GetVideoConferenceAsync(conferenceId);
-    }
-
-    public async Task<bool> DeleteVideoConferenceAsync(Guid conferenceId)
-    {
-        var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
-        if (session == null)
-            return false;
-
-        // Delete meeting from provider if possible
-        if (_providers.TryGetValue(session.Platform, out var provider) && !string.IsNullOrEmpty(session.SpaceId))
-        {
-            try
-            {
-                await provider.DeleteMeetingAsync(session.SpaceId);
-            }
-            catch
-            {
-                // Continue even if provider deletion fails
-            }
-        }
-
-        _context.VideoConferenceSessions.Remove(session);
-        await _context.SaveChangesAsync();
-
-        return true;
-    }
-
     public async Task<VideoConferenceSessionDto> StartVideoConferenceAsync(Guid conferenceId)
     {
         var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
         if (session == null)
             throw new Exception("Video conference session not found");
-
-        session.ActualStartTime = DateTime.UtcNow;
-        session.Status = "InProgress";
+        
         session.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -177,9 +115,7 @@ public class VideoConferenceService : IVideoConferenceService
         var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
         if (session == null)
             throw new Exception("Video conference session not found");
-
-        session.ActualEndTime = DateTime.UtcNow;
-        session.Status = "Completed";
+        
         session.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -199,12 +135,6 @@ public class VideoConferenceService : IVideoConferenceService
             SpaceId = session.SpaceId,
             MeetingUri = session.MeetingUri,
             MeetingCode = session.MeetingCode,
-            DisplayName = session.DisplayName,
-            ScheduledStartTime = session.ScheduledStartTime,
-            ScheduledEndTime = session.ScheduledEndTime,
-            ActualStartTime = session.ActualStartTime,
-            ActualEndTime = session.ActualEndTime,
-            Status = session.Status,
             CreatedByUserId = session.CreatedByUserId,
             CreatedDate = session.CreatedDate,
             UpdatedDate = session.UpdatedDate,

@@ -21,18 +21,6 @@ public partial class VideoConferenceSession
 
     public string? MeetingCode { get; set; }
 
-    public string? DisplayName { get; set; }
-
-    public DateTime ScheduledStartTime { get; set; }
-
-    public DateTime ScheduledEndTime { get; set; }
-
-    public DateTime? ActualStartTime { get; set; }
-
-    public DateTime? ActualEndTime { get; set; }
-
-    public string? Status { get; set; }
-
     public Guid CreatedByUserId { get; set; }
 
     public DateTime CreatedDate { get; set; }

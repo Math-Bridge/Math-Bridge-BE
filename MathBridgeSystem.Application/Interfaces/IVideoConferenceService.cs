@@ -11,8 +11,4 @@ public interface IVideoConferenceService
     Task<VideoConferenceSessionDto> GetVideoConferenceAsync(Guid conferenceId);
     Task<List<VideoConferenceSessionDto>> GetVideoConferencesByBookingAsync(Guid bookingId);
     Task<List<VideoConferenceSessionDto>> GetVideoConferencesByContractAsync(Guid contractId);
-    Task<VideoConferenceSessionDto> UpdateVideoConferenceAsync(Guid conferenceId, UpdateVideoConferenceRequest request);
-    Task<bool> DeleteVideoConferenceAsync(Guid conferenceId);
-    Task<VideoConferenceSessionDto> StartVideoConferenceAsync(Guid conferenceId);
-    Task<VideoConferenceSessionDto> EndVideoConferenceAsync(Guid conferenceId);
 }

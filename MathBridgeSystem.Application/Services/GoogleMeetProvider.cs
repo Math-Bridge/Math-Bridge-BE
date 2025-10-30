@@ -15,17 +15,14 @@ public class GoogleMeetProvider : IVideoConferenceProvider
 {
     private readonly IConfiguration _configuration;
 
-    public string PlatformName => "GoogleMeet";
+    public string PlatformName => "Meet";
 
     public GoogleMeetProvider(IConfiguration configuration)
     {
         _configuration = configuration;
     }
 
-    public async Task<VideoConferenceCreationResult> CreateMeetingAsync(
-        string displayName, 
-        DateTime startTime, 
-        DateTime endTime)
+    public async Task<VideoConferenceCreationResult> CreateMeetingAsync()
     {
         try
         {
@@ -44,7 +41,6 @@ public class GoogleMeetProvider : IVideoConferenceProvider
             };
             
             var request = new CreateSpaceRequest { Space = space };
-            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Sending CreateSpaceRequest for: {displayName}");
             var response = await client.CreateSpaceAsync(request);
             Console.WriteLine($"[DEBUG] CreateMeetingAsync: Response received: {response?.Name}");
 
@@ -61,7 +57,6 @@ public class GoogleMeetProvider : IVideoConferenceProvider
             {
                 Success = true,
                 MeetingId = response.Name,
-                SpaceName = displayName,
                 MeetingUri = response.MeetingUri ?? string.Empty,
                 MeetingCode = ExtractMeetingCode(response.MeetingUri)
             };
@@ -86,24 +81,7 @@ public class GoogleMeetProvider : IVideoConferenceProvider
             };
         }
     }
-
-    public async Task<bool> DeleteMeetingAsync(string meetingId)
-    {
-        try
-        {
-            var credentials = await GetCredentialsAsync();
-            
-            var builder = new SpacesServiceClientBuilder();
-            var client = await builder.BuildAsync();
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
+    
     public async Task<MeetingDetailsResult> GetMeetingDetailsAsync(string meetingId)
     {
         try
@@ -183,7 +161,7 @@ public class GoogleMeetProvider : IVideoConferenceProvider
                 "https://www.googleapis.com/auth/calendar"
             };
 
-            string credentialCachePath = Path.Combine(Directory.GetCurrentDirectory(), "GoogleMeetTokenCache");
+            string credentialCachePath = Path.Combine(Directory.GetCurrentDirectory(), "TokenCache");
             Directory.CreateDirectory(credentialCachePath);
             Console.WriteLine($"[DEBUG] Token cache path: {credentialCachePath}");
 

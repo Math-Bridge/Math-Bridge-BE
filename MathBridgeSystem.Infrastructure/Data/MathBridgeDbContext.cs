@@ -1275,17 +1275,9 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasIndex(e => e.Platform, "IX_video_conference_platform");
 
-            entity.HasIndex(e => e.Status, "IX_video_conference_status");
-
             entity.Property(e => e.ConferenceId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("conference_id");
-            entity.Property(e => e.ActualEndTime)
-                .HasColumnType("datetime")
-                .HasColumnName("actual_end_time");
-            entity.Property(e => e.ActualStartTime)
-                .HasColumnType("datetime")
-                .HasColumnName("actual_start_time");
             entity.Property(e => e.BookingId).HasColumnName("booking_id");
             entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
@@ -1293,9 +1285,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.DisplayName)
-                .HasMaxLength(255)
-                .HasColumnName("display_name");
             entity.Property(e => e.MeetingCode)
                 .HasMaxLength(50)
                 .HasColumnName("meeting_code");
@@ -1305,22 +1294,12 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Platform)
                 .HasMaxLength(50)
                 .HasColumnName("platform");
-            entity.Property(e => e.ScheduledEndTime)
-                .HasColumnType("datetime")
-                .HasColumnName("scheduled_end_time");
-            entity.Property(e => e.ScheduledStartTime)
-                .HasColumnType("datetime")
-                .HasColumnName("scheduled_start_time");
             entity.Property(e => e.SpaceId)
                 .HasMaxLength(255)
                 .HasColumnName("space_id");
             entity.Property(e => e.SpaceName)
                 .HasMaxLength(500)
                 .HasColumnName("space_name");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .HasDefaultValue("scheduled")
-                .HasColumnName("status");
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");

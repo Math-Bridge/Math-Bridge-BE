@@ -22,10 +22,7 @@ public class ZoomProvider : IVideoConferenceProvider
         _configuration = configuration;
     }
 
-    public async Task<VideoConferenceCreationResult> CreateMeetingAsync(
-        string displayName, 
-        DateTime startTime, 
-        DateTime endTime)
+    public async Task<VideoConferenceCreationResult> CreateMeetingAsync()
     {
         try
         {
@@ -34,10 +31,7 @@ public class ZoomProvider : IVideoConferenceProvider
 
             var requestBody = new
             {
-                topic = displayName,
                 type = 2, // Scheduled meeting
-                start_time = startTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                duration = (int)(endTime - startTime).TotalMinutes,
                 timezone = "UTC",
                 settings = new
                 {
@@ -88,7 +82,6 @@ public class ZoomProvider : IVideoConferenceProvider
             {
                 Success = true,
                 MeetingId = meetingData.Id.ToString(),
-                SpaceName = displayName,
                 MeetingUri = meetingData.JoinUrl ?? string.Empty,
                 MeetingCode = meetingData.Id.ToString()
             };
