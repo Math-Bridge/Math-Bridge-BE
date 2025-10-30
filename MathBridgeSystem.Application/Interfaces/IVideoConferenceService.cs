@@ -15,6 +15,4 @@ public interface IVideoConferenceService
     Task<bool> DeleteVideoConferenceAsync(Guid conferenceId);
     Task<VideoConferenceSessionDto> StartVideoConferenceAsync(Guid conferenceId);
     Task<VideoConferenceSessionDto> EndVideoConferenceAsync(Guid conferenceId);
-    Task<VideoConferenceParticipantDto> JoinVideoConferenceAsync(Guid conferenceId, Guid userId);
-    Task<VideoConferenceParticipantDto> LeaveVideoConferenceAsync(Guid conferenceId, Guid userId);
 }

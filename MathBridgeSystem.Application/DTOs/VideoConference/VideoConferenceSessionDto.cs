@@ -21,19 +21,4 @@ public class VideoConferenceSessionDto
     public Guid CreatedByUserId { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
-    public List<VideoConferenceParticipantDto>? Participants { get; set; }
-}
-
-public class VideoConferenceParticipantDto
-{
-    public Guid ParticipantId { get; set; }
-    public Guid ConferenceId { get; set; }
-    public Guid UserId { get; set; }
-    public string ParticipantType { get; set; } = null!;
-    public DateTime? JoinedAt { get; set; }
-    public DateTime? LeftAt { get; set; }
-    public int? DurationMinutes { get; set; }
-    public string? Status { get; set; }
-    public string? UserName { get; set; }
-    public string? UserEmail { get; set; }
 }

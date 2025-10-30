@@ -103,8 +103,6 @@ public partial class User
 
     public virtual ICollection<Unit> UnitUpdatedByNavigations { get; set; } = new List<Unit>();
 
-    public virtual ICollection<VideoConferenceParticipant> VideoConferenceParticipants { get; set; } = new List<VideoConferenceParticipant>();
-
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();

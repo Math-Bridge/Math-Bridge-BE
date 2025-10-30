@@ -186,44 +186,4 @@ public class VideoConferenceController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-
-    /// <summary>
-    /// Join a video conference (records participant join time)
-    /// </summary>
-    /// <param name="conferenceId">Conference ID</param>
-    /// <returns>Participant details</returns>
-    [HttpPost("{conferenceId}/join")]
-    public async Task<IActionResult> JoinVideoConference(Guid conferenceId)
-    {
-        try
-        {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var participant = await _videoConferenceService.JoinVideoConferenceAsync(conferenceId, userId);
-            return Ok(participant);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Leave a video conference (records participant leave time and calculates duration)
-    /// </summary>
-    /// <param name="conferenceId">Conference ID</param>
-    /// <returns>Participant details with duration</returns>
-    [HttpPost("{conferenceId}/leave")]
-    public async Task<IActionResult> LeaveVideoConference(Guid conferenceId)
-    {
-        try
-        {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var participant = await _videoConferenceService.LeaveVideoConferenceAsync(conferenceId, userId);
-            return Ok(participant);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
 }

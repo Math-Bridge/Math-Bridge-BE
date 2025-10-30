@@ -62,8 +62,6 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<VideoConferenceParticipant> VideoConferenceParticipants { get; set; }
-
     public virtual DbSet<VideoConferenceSession> VideoConferenceSessions { get; set; }
 
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
@@ -1263,53 +1261,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_users_roles");
-        });
-
-        modelBuilder.Entity<VideoConferenceParticipant>(entity =>
-        {
-            entity.HasKey(e => e.ParticipantId).HasName("PK__video_co__4E0378067F293D8E");
-
-            entity.ToTable("video_conference_participants");
-
-            entity.HasIndex(e => e.ConferenceId, "IX_participant_conference");
-
-            entity.HasIndex(e => e.UserId, "IX_participant_user");
-
-            entity.Property(e => e.ParticipantId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("participant_id");
-            entity.Property(e => e.ConferenceId).HasColumnName("conference_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.DurationMinutes).HasColumnName("duration_minutes");
-            entity.Property(e => e.JoinedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("joined_at");
-            entity.Property(e => e.LeftAt)
-                .HasColumnType("datetime")
-                .HasColumnName("left_at");
-            entity.Property(e => e.ParticipantType)
-                .HasMaxLength(50)
-                .HasColumnName("participant_type");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .HasDefaultValue("invited")
-                .HasColumnName("status");
-            entity.Property(e => e.UpdatedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.Conference).WithMany(p => p.VideoConferenceParticipants)
-                .HasForeignKey(d => d.ConferenceId)
-                .HasConstraintName("FK_participant_conference");
-
-            entity.HasOne(d => d.User).WithMany(p => p.VideoConferenceParticipants)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_participant_user");
         });
 
         modelBuilder.Entity<VideoConferenceSession>(entity =>

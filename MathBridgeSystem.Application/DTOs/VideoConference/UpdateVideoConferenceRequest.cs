@@ -14,24 +14,3 @@ public class UpdateVideoConferenceRequest
     [RegularExpression("^(Scheduled|InProgress|Completed|Cancelled|Failed)$")]
     public string? Status { get; set; }
 }
-
-public class StartVideoConferenceRequest
-{
-    [Required]
-    public Guid ConferenceId { get; set; }
-}
-
-public class EndVideoConferenceRequest
-{
-    [Required]
-    public Guid ConferenceId { get; set; }
-}
-
-public class JoinVideoConferenceRequest
-{
-    [Required]
-    public Guid ConferenceId { get; set; }
-    
-    [Required]
-    public Guid UserId { get; set; }
-}

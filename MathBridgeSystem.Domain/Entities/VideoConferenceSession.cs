@@ -44,6 +44,4 @@ public partial class VideoConferenceSession
     public virtual Contract Contract { get; set; } = null!;
 
     public virtual User CreatedByUser { get; set; } = null!;
-
-    public virtual ICollection<VideoConferenceParticipant> VideoConferenceParticipants { get; set; } = new List<VideoConferenceParticipant>();
 }

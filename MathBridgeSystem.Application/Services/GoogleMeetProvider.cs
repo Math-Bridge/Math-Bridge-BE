@@ -108,7 +108,6 @@ public class GoogleMeetProvider : IVideoConferenceProvider
     {
         try
         {
-            var credentials = await GetCredentialsAsync();
             
             var builder = new SpacesServiceClientBuilder();
             var client = await builder.BuildAsync();

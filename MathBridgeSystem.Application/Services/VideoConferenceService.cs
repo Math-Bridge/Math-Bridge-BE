@@ -71,24 +71,6 @@ public class VideoConferenceService : IVideoConferenceService
 
         _context.VideoConferenceSessions.Add(conferenceSession);
 
-        // Add participants if provided
-        if (request.ParticipantUserIds != null && request.ParticipantUserIds.Any())
-        {
-            foreach (var userId in request.ParticipantUserIds)
-            {
-                var participant = new VideoConferenceParticipant
-                {
-                    ParticipantId = Guid.NewGuid(),
-                    ConferenceId = conferenceSession.ConferenceId,
-                    UserId = userId,
-                    ParticipantType = userId == contract.ChildId ? "Student" : "Tutor",
-                    Status = "Invited",
-                    CreatedDate = DateTime.UtcNow
-                };
-                _context.VideoConferenceParticipants.Add(participant);
-            }
-        }
-
         await _context.SaveChangesAsync();
 
         return await GetVideoConferenceAsync(conferenceSession.ConferenceId);
@@ -97,8 +79,6 @@ public class VideoConferenceService : IVideoConferenceService
     public async Task<VideoConferenceSessionDto> GetVideoConferenceAsync(Guid conferenceId)
     {
         var session = await _context.VideoConferenceSessions
-            .Include(s => s.VideoConferenceParticipants)
-            .ThenInclude(p => p.User)
             .FirstOrDefaultAsync(s => s.ConferenceId == conferenceId);
 
         if (session == null)
@@ -110,8 +90,6 @@ public class VideoConferenceService : IVideoConferenceService
     public async Task<List<VideoConferenceSessionDto>> GetVideoConferencesByBookingAsync(Guid bookingId)
     {
         var sessions = await _context.VideoConferenceSessions
-            .Include(s => s.VideoConferenceParticipants)
-            .ThenInclude(p => p.User)
             .Where(s => s.BookingId == bookingId)
             .ToListAsync();
 
@@ -121,8 +99,6 @@ public class VideoConferenceService : IVideoConferenceService
     public async Task<List<VideoConferenceSessionDto>> GetVideoConferencesByContractAsync(Guid contractId)
     {
         var sessions = await _context.VideoConferenceSessions
-            .Include(s => s.VideoConferenceParticipants)
-            .ThenInclude(p => p.User)
             .Where(s => s.ContractId == contractId)
             .ToListAsync();
 
@@ -210,93 +186,7 @@ public class VideoConferenceService : IVideoConferenceService
 
         return await GetVideoConferenceAsync(conferenceId);
     }
-
-    public async Task<VideoConferenceParticipantDto> JoinVideoConferenceAsync(Guid conferenceId, Guid userId)
-    {
-        var participant = await _context.VideoConferenceParticipants
-            .FirstOrDefaultAsync(p => p.ConferenceId == conferenceId && p.UserId == userId);
-
-        if (participant == null)
-        {
-            // Create new participant if not exists
-            var session = await _context.VideoConferenceSessions
-                .Include(s => s.Contract)
-                .FirstOrDefaultAsync(s => s.ConferenceId == conferenceId);
-
-            if (session == null)
-                throw new Exception("Video conference session not found");
-
-            participant = new VideoConferenceParticipant
-            {
-                ParticipantId = Guid.NewGuid(),
-                ConferenceId = conferenceId,
-                UserId = userId,
-                ParticipantType = userId == session.Contract.ChildId ? "Student" : "Tutor",
-                Status = "Joined",
-                CreatedDate = DateTime.UtcNow
-            };
-            _context.VideoConferenceParticipants.Add(participant);
-        }
-
-        participant.JoinedAt = DateTime.UtcNow;
-        participant.Status = "Joined";
-        participant.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        var user = await _context.Users.FindAsync(userId);
-        return new VideoConferenceParticipantDto
-        {
-            ParticipantId = participant.ParticipantId,
-            ConferenceId = participant.ConferenceId,
-            UserId = participant.UserId,
-            ParticipantType = participant.ParticipantType,
-            JoinedAt = participant.JoinedAt,
-            LeftAt = participant.LeftAt,
-            DurationMinutes = participant.DurationMinutes,
-            Status = participant.Status,
-            UserName = user?.FullName,
-            UserEmail = user?.Email
-        };
-    }
-
-    public async Task<VideoConferenceParticipantDto> LeaveVideoConferenceAsync(Guid conferenceId, Guid userId)
-    {
-        var participant = await _context.VideoConferenceParticipants
-            .FirstOrDefaultAsync(p => p.ConferenceId == conferenceId && p.UserId == userId);
-
-        if (participant == null)
-            throw new Exception("Participant not found in this conference");
-
-        participant.LeftAt = DateTime.UtcNow;
-        participant.Status = "Left";
-
-        if (participant.JoinedAt.HasValue)
-        {
-            var duration = (participant.LeftAt.Value - participant.JoinedAt.Value).TotalMinutes;
-            participant.DurationMinutes = (int)Math.Round(duration);
-        }
-
-        participant.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        var user = await _context.Users.FindAsync(userId);
-        return new VideoConferenceParticipantDto
-        {
-            ParticipantId = participant.ParticipantId,
-            ConferenceId = participant.ConferenceId,
-            UserId = participant.UserId,
-            ParticipantType = participant.ParticipantType,
-            JoinedAt = participant.JoinedAt,
-            LeftAt = participant.LeftAt,
-            DurationMinutes = participant.DurationMinutes,
-            Status = participant.Status,
-            UserName = user?.FullName,
-            UserEmail = user?.Email
-        };
-    }
-
+    
     private VideoConferenceSessionDto MapToDto(VideoConferenceSession session)
     {
         return new VideoConferenceSessionDto
@@ -318,19 +208,6 @@ public class VideoConferenceService : IVideoConferenceService
             CreatedByUserId = session.CreatedByUserId,
             CreatedDate = session.CreatedDate,
             UpdatedDate = session.UpdatedDate,
-            Participants = session.VideoConferenceParticipants?.Select(p => new VideoConferenceParticipantDto
-            {
-                ParticipantId = p.ParticipantId,
-                ConferenceId = p.ConferenceId,
-                UserId = p.UserId,
-                ParticipantType = p.ParticipantType,
-                JoinedAt = p.JoinedAt,
-                LeftAt = p.LeftAt,
-                DurationMinutes = p.DurationMinutes,
-                Status = p.Status,
-                UserName = p.User?.FullName,
-                UserEmail = p.User?.Email
-            }).ToList()
         };
     }
 }
