@@ -1,27 +1,24 @@
 using System;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using MathBridgeSystem.Application.Interfaces;
 using Google.Apis.Auth.OAuth2;
+using Google.Apps.Meet.V2;
+using Grpc.Core;
+using Google.Api.Gax.Grpc;
+using Google.Apis.Util.Store;
 
-namespace MathBridgeSystem.Infrastructure.Services;
+namespace MathBridgeSystem.Application.Services;
 
 public class GoogleMeetProvider : IVideoConferenceProvider
 {
-    private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
-    private readonly string _apiBaseUrl = "https://meet.googleapis.com/v2";
 
     public string PlatformName => "GoogleMeet";
 
-    public GoogleMeetProvider(HttpClient httpClient, IConfiguration configuration)
+    public GoogleMeetProvider(IConfiguration configuration)
     {
-        _httpClient = httpClient;
         _configuration = configuration;
     }
 
@@ -32,70 +29,56 @@ public class GoogleMeetProvider : IVideoConferenceProvider
     {
         try
         {
-            var accessToken = await GetAccessTokenAsync();
+            var credentials = await GetCredentialsAsync();
+            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Credentials obtained");
             
-            // Create a new space (conference)
-            var requestBody = new
+            var builder = new SpacesServiceClientBuilder();
+            builder.Credential = credentials;
+            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Builder credential set");
+            
+            var client = await builder.BuildAsync();
+            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Client built successfully");
+            
+            var space = new Space
             {
-                config = new
-                {
-                    entryPointAccess = "ALL",
-                    accessType = "OPEN"
-                }
             };
+            
+            var request = new CreateSpaceRequest { Space = space };
+            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Sending CreateSpaceRequest for: {displayName}");
+            var response = await client.CreateSpaceAsync(request);
+            Console.WriteLine($"[DEBUG] CreateMeetingAsync: Response received: {response?.Name}");
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/spaces");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            request.Content = new StringContent(
-                JsonSerializer.Serialize(requestBody),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await _httpClient.SendAsync(request);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
+            if (response == null || string.IsNullOrEmpty(response.Name))
             {
                 return new VideoConferenceCreationResult
                 {
                     Success = false,
-                    ErrorMessage = $"Google Meet API error: {response.StatusCode} - {responseContent}"
+                    ErrorMessage = "Failed to create Google Meet space: Invalid response"
                 };
-            }
-
-            var spaceData = JsonSerializer.Deserialize<GoogleMeetSpaceResponse>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (spaceData == null || string.IsNullOrEmpty(spaceData.Name))
-            {
-                return new VideoConferenceCreationResult
-                {
-                    Success = false,
-                    ErrorMessage = "Failed to parse Google Meet response"
-                };
-            }
-
-            // Extract meeting code from the meetingUri if available
-            string? meetingCode = null;
-            if (!string.IsNullOrEmpty(spaceData.MeetingUri))
-            {
-                var uri = new Uri(spaceData.MeetingUri);
-                meetingCode = uri.Segments.LastOrDefault()?.TrimEnd('/');
             }
 
             return new VideoConferenceCreationResult
             {
                 Success = true,
-                MeetingId = spaceData.Name,
+                MeetingId = response.Name,
                 SpaceName = displayName,
-                MeetingUri = spaceData.MeetingUri ?? $"https://meet.google.com/{meetingCode}",
-                MeetingCode = meetingCode
+                MeetingUri = response.MeetingUri ?? string.Empty,
+                MeetingCode = ExtractMeetingCode(response.MeetingUri)
+            };
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.PermissionDenied)
+        {
+            Console.WriteLine($"[ERROR] PermissionDenied: {ex.Message}");
+            return new VideoConferenceCreationResult
+            {
+                Success = false,
+                ErrorMessage = $"Google Meet API Permission Denied: Ensure service account has meetings.space.created scope and proper IAM permissions. Error: {ex.Message}"
             };
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] CreateMeetingAsync exception: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
             return new VideoConferenceCreationResult
             {
                 Success = false,
@@ -108,13 +91,12 @@ public class GoogleMeetProvider : IVideoConferenceProvider
     {
         try
         {
-            var accessToken = await GetAccessTokenAsync();
+            var credentials = await GetCredentialsAsync();
+            
+            var builder = new SpacesServiceClientBuilder();
+            var client = await builder.BuildAsync();
 
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/{meetingId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            var response = await _httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            return true;
         }
         catch
         {
@@ -126,47 +108,35 @@ public class GoogleMeetProvider : IVideoConferenceProvider
     {
         try
         {
-            var accessToken = await GetAccessTokenAsync();
+            var credentials = await GetCredentialsAsync();
+            
+            var builder = new SpacesServiceClientBuilder();
+            var client = await builder.BuildAsync();
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/{meetingId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var request = new GetSpaceRequest
+            {
+                SpaceName = SpaceName.FromSpace(meetingId.Replace("spaces/", ""))
+            };
 
-            var response = await _httpClient.SendAsync(request);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var response = await client.GetSpaceAsync(request);
 
-            if (!response.IsSuccessStatusCode)
+            if (response == null)
             {
                 return new MeetingDetailsResult
                 {
                     Success = false,
                     MeetingId = meetingId,
                     MeetingUri = string.Empty,
-                    ErrorMessage = $"Failed to get meeting details: {response.StatusCode}"
-                };
-            }
-
-            var spaceData = JsonSerializer.Deserialize<GoogleMeetSpaceResponse>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (spaceData == null)
-            {
-                return new MeetingDetailsResult
-                {
-                    Success = false,
-                    MeetingId = meetingId,
-                    MeetingUri = string.Empty,
-                    ErrorMessage = "Failed to parse meeting details"
+                    ErrorMessage = "Failed to retrieve meeting details"
                 };
             }
 
             return new MeetingDetailsResult
             {
                 Success = true,
-                MeetingId = spaceData.Name ?? meetingId,
-                MeetingUri = spaceData.MeetingUri ?? string.Empty,
-                MeetingCode = spaceData.MeetingCode,
+                MeetingId = response.Name ?? meetingId,
+                MeetingUri = response.MeetingUri ?? string.Empty,
+                MeetingCode = ExtractMeetingCode(response.MeetingUri),
                 Status = "Active"
             };
         }
@@ -182,58 +152,82 @@ public class GoogleMeetProvider : IVideoConferenceProvider
         }
     }
 
-    private async Task<string> GetAccessTokenAsync()
+    private async Task<ICredential> GetCredentialsAsync()
     {
         try
         {
-            var serviceAccountPath = _configuration["GoogleMeet:ServiceAccountJsonPath"];
-            if (string.IsNullOrEmpty(serviceAccountPath))
+            var oauthJsonPath = _configuration["GoogleMeet:OAuthCredentialsPath"];
+            Console.WriteLine($"[DEBUG] GoogleMeet:OAuthCredentialsPath = {oauthJsonPath}");
+            
+            if (string.IsNullOrEmpty(oauthJsonPath))
             {
-                throw new InvalidOperationException("Google Meet service account path not configured. Please add 'GoogleMeet:ServiceAccountJsonPath' to appsettings.json");
+                throw new InvalidOperationException("GoogleMeet:OAuthCredentialsPath configuration is missing");
             }
 
-            // Ensure the path is absolute
-            if (!Path.IsPathRooted(serviceAccountPath))
+            if (!Path.IsPathRooted(oauthJsonPath))
             {
-                serviceAccountPath = Path.Combine(Directory.GetCurrentDirectory(), serviceAccountPath);
+                oauthJsonPath = Path.Combine(Directory.GetCurrentDirectory(), oauthJsonPath);
+                Console.WriteLine($"[DEBUG] Relative path converted to: {oauthJsonPath}");
             }
 
-            if (!File.Exists(serviceAccountPath))
+            Console.WriteLine($"[DEBUG] Checking if OAuth credentials file exists: {oauthJsonPath}");
+            if (!File.Exists(oauthJsonPath))
             {
-                throw new FileNotFoundException($"Service account file not found at: {serviceAccountPath}");
+                throw new FileNotFoundException($"OAuth credentials file not found at: {oauthJsonPath}");
             }
 
-            // Load service account credentials
-            GoogleCredential credential;
-            using (var stream = new FileStream(serviceAccountPath, FileMode.Open, FileAccess.Read))
+            Console.WriteLine($"[DEBUG] OAuth credentials file found! Loading...");
+            
+            var scopes = new[]
             {
-                credential = GoogleCredential.FromStream(stream)
-                    .CreateScoped(new[]
-                    {
-                        "https://www.googleapis.com/auth/meetings.space.created",
-                        "https://www.googleapis.com/auth/meetings.space.readonly"
-                    });
+                "https://www.googleapis.com/auth/meetings.space.created",
+                "https://www.googleapis.com/auth/calendar"
+            };
+
+            string credentialCachePath = Path.Combine(Directory.GetCurrentDirectory(), "GoogleMeetTokenCache");
+            Directory.CreateDirectory(credentialCachePath);
+            Console.WriteLine($"[DEBUG] Token cache path: {credentialCachePath}");
+
+            var fileDataStore = new FileDataStore(credentialCachePath, true);
+            
+            GoogleClientSecrets clientSecrets;
+            using (var stream = new FileStream(oauthJsonPath, FileMode.Open, FileAccess.Read))
+            {
+                clientSecrets = GoogleClientSecrets.FromStream(stream);
+                Console.WriteLine($"[DEBUG] Client secrets loaded successfully");
             }
 
-            // Get the access token
-            var token = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new InvalidOperationException("Failed to obtain access token from service account");
-            }
+            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                clientSecrets.Secrets,
+                scopes,
+                "mathbridge-user",
+                CancellationToken.None,
+                fileDataStore);
 
-            return token;
+            Console.WriteLine($"[DEBUG] OAuth 2.0 authorization successful");
+            return credential;
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error obtaining Google Meet access token: {ex.Message}", ex);
+            Console.WriteLine($"[ERROR] Error obtaining Google Meet credentials: {ex.Message}");
+            Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+            throw new InvalidOperationException($"Error obtaining Google Meet credentials: {ex.Message}", ex);
         }
     }
 
-    private class GoogleMeetSpaceResponse
+    private string ExtractMeetingCode(string meetingUri)
     {
-        public string? Name { get; set; }
-        public string? MeetingUri { get; set; }
-        public string? MeetingCode { get; set; }
+        if (string.IsNullOrEmpty(meetingUri))
+            return string.Empty;
+        
+        try
+        {
+            var uri = new Uri(meetingUri);
+            return uri.Segments.LastOrDefault()?.TrimEnd('/') ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 }

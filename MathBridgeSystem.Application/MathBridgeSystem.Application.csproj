@@ -8,7 +8,8 @@
 	<ItemGroup>
 		<PackageReference Include="FirebaseAdmin" Version="3.2.0" />
 		<PackageReference Include="FirebaseDatabase.net" Version="5.0.0" />
-		<PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
+		<PackageReference Include="Google.Apps.Meet.V2" Version="1.0.0-beta05" />
+		<PackageReference Include="Google.Api.Gax.Grpc" Version="4.9.0" />
 		<PackageReference Include="MailKit" Version="4.13.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
@@ -21,7 +22,6 @@
 		<PackageReference Include="MimeKit" Version="4.13.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
-		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\MathBridgeSystem.Infrastructure\MathBridgeSystem.Infrastructure.csproj" />
