@@ -71,9 +71,14 @@ builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
-//builder.Services.AddHttpClient<IVideoConferenceProvider, GoogleMeetProvider>();
+// Register GoogleMeetProvider
+builder.Services.AddHttpClient<MeetProvider>();
+builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
+
+// Register ZoomProvider
 builder.Services.AddHttpClient<ZoomProvider>();
-builder.Services.AddScoped<IVideoConferenceProvider>(sp => sp.GetRequiredService<ZoomProvider>());
+builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
+
 
 // === SERVICE REGISTRATIONS ===
 builder.Services.AddScoped<IAuthService, AuthService>();

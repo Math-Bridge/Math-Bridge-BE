@@ -12,13 +12,13 @@ using MathBridgeSystem.Application.DTOs.VideoConference;
 
 namespace MathBridgeSystem.Application.Services;
 
-public class GoogleMeetProvider : IVideoConferenceProvider
+public class MeetProvider : IVideoConferenceProvider
 {
     private readonly IConfiguration _configuration;
 
     public string PlatformName => "Meet";
 
-    public GoogleMeetProvider(IConfiguration configuration)
+    public MeetProvider(IConfiguration configuration)
     {
         _configuration = configuration;
     }
@@ -130,68 +130,74 @@ public class GoogleMeetProvider : IVideoConferenceProvider
         }
     }
 
-    private async Task<ICredential> GetCredentialsAsync()
+private async Task<ICredential> GetCredentialsAsync()
+{
+    try
     {
-        try
+        var oauthJsonPath = _configuration["GoogleMeet:OAuthCredentialsPath"];
+        var userEmail = _configuration["GoogleMeet:WorkspaceUserEmail"];
+        
+        Console.WriteLine($"[DEBUG] GoogleMeet:OAuthCredentialsPath = {oauthJsonPath}");
+        Console.WriteLine($"[DEBUG] GoogleMeet:WorkspaceUserEmail = {userEmail}");
+        
+        if (string.IsNullOrEmpty(oauthJsonPath))
         {
-            var oauthJsonPath = _configuration["GoogleMeet:OAuthCredentialsPath"];
-            Console.WriteLine($"[DEBUG] GoogleMeet:OAuthCredentialsPath = {oauthJsonPath}");
-            
-            if (string.IsNullOrEmpty(oauthJsonPath))
-            {
-                throw new InvalidOperationException("GoogleMeet:OAuthCredentialsPath configuration is missing");
-            }
-
-            if (!Path.IsPathRooted(oauthJsonPath))
-            {
-                oauthJsonPath = Path.Combine(Directory.GetCurrentDirectory(), oauthJsonPath);
-                Console.WriteLine($"[DEBUG] Relative path converted to: {oauthJsonPath}");
-            }
-
-            Console.WriteLine($"[DEBUG] Checking if OAuth credentials file exists: {oauthJsonPath}");
-            if (!File.Exists(oauthJsonPath))
-            {
-                throw new FileNotFoundException($"OAuth credentials file not found at: {oauthJsonPath}");
-            }
-
-            Console.WriteLine($"[DEBUG] OAuth credentials file found! Loading...");
-            
-            var scopes = new[]
-            {
-                "https://www.googleapis.com/auth/meetings.space.created",
-                "https://www.googleapis.com/auth/calendar"
-            };
-
-            string credentialCachePath = Path.Combine(Directory.GetCurrentDirectory(), "TokenCache");
-            Directory.CreateDirectory(credentialCachePath);
-            Console.WriteLine($"[DEBUG] Token cache path: {credentialCachePath}");
-
-            var fileDataStore = new FileDataStore(credentialCachePath, true);
-            
-            GoogleClientSecrets clientSecrets;
-            using (var stream = new FileStream(oauthJsonPath, FileMode.Open, FileAccess.Read))
-            {
-                clientSecrets = GoogleClientSecrets.FromStream(stream);
-                Console.WriteLine($"[DEBUG] Client secrets loaded successfully");
-            }
-
-            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                clientSecrets.Secrets,
-                scopes,
-                "mathbridge-user",
-                CancellationToken.None,
-                fileDataStore);
-
-            Console.WriteLine($"[DEBUG] OAuth 2.0 authorization successful");
-            return credential;
+            throw new InvalidOperationException("GoogleMeet:OAuthCredentialsPath configuration is missing");
         }
-        catch (Exception ex)
+
+        if (!Path.IsPathRooted(oauthJsonPath))
         {
-            Console.WriteLine($"[ERROR] Error obtaining Google Meet credentials: {ex.Message}");
-            Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
-            throw new InvalidOperationException($"Error obtaining Google Meet credentials: {ex.Message}", ex);
+            oauthJsonPath = Path.Combine(Directory.GetCurrentDirectory(), oauthJsonPath);
+            Console.WriteLine($"[DEBUG] Relative path converted to: {oauthJsonPath}");
         }
+
+        Console.WriteLine($"[DEBUG] Checking if OAuth credentials file exists: {oauthJsonPath}");
+        if (!File.Exists(oauthJsonPath))
+        {
+            throw new FileNotFoundException($"OAuth credentials file not found at: {oauthJsonPath}");
+        }
+
+        var scopes = new[]
+        {
+            "https://www.googleapis.com/auth/meetings.space.created",
+            "https://www.googleapis.com/auth/calendar"
+        };
+
+        // Load the service account credential from the JSON file
+        var googleCredential = GoogleCredential.FromFile(oauthJsonPath);
+        
+        // Extract the underlying service account credential
+        var originalCredential = googleCredential.UnderlyingCredential as ServiceAccountCredential;
+        
+        if (originalCredential == null)
+        {
+            throw new InvalidOperationException("The credential file does not contain a service account credential");
+        }
+
+        // Create initializer with token server URL
+        var initializer = new ServiceAccountCredential.Initializer(
+            originalCredential.Id, 
+            "https://oauth2.googleapis.com/token")  // ← Token server URL
+        {
+            User = userEmail,  // ← Domain-wide delegation
+            Key = originalCredential.Key,
+            KeyId = originalCredential.KeyId,
+            Scopes = scopes
+        };
+
+        // Create the delegated credential
+        var delegatedCredential = new ServiceAccountCredential(initializer);
+
+        Console.WriteLine($"[DEBUG] Server-to-server OAuth with delegation to {userEmail} successful");
+        return delegatedCredential;
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] Error obtaining Google Meet credentials: {ex.Message}");
+        Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+        throw new InvalidOperationException($"Error obtaining Google Meet credentials: {ex.Message}", ex);
+    }
+}
 
     private string ExtractMeetingCode(string meetingUri)
     {
