@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using MathBridgeSystem.Application.DTOs.VideoConference;
 using Microsoft.Extensions.Configuration;
 using MathBridgeSystem.Application.Interfaces;
 
@@ -28,7 +29,7 @@ public class ZoomProvider : IVideoConferenceProvider
         {
             var accessToken = await GetAccessTokenAsync();
             var userId = _configuration["Zoom:UserId"] ?? "me";
-
+            //var userId = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/users/{_configuration["Zoom:UserId"]}");
             var requestBody = new
             {
                 type = 2, // Scheduled meeting
@@ -96,98 +97,44 @@ public class ZoomProvider : IVideoConferenceProvider
         }
     }
 
-    public async Task<bool> DeleteMeetingAsync(string meetingId)
-    {
-        try
-        {
-            var accessToken = await GetAccessTokenAsync();
-
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/meetings/{meetingId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            var response = await _httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    public async Task<MeetingDetailsResult> GetMeetingDetailsAsync(string meetingId)
-    {
-        try
-        {
-            var accessToken = await GetAccessTokenAsync();
-
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/meetings/{meetingId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            var response = await _httpClient.SendAsync(request);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new MeetingDetailsResult
-                {
-                    Success = false,
-                    MeetingId = meetingId,
-                    MeetingUri = string.Empty,
-                    ErrorMessage = $"Failed to get meeting details: {response.StatusCode}"
-                };
-            }
-
-            var meetingData = JsonSerializer.Deserialize<ZoomMeetingResponse>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (meetingData == null)
-            {
-                return new MeetingDetailsResult
-                {
-                    Success = false,
-                    MeetingId = meetingId,
-                    MeetingUri = string.Empty,
-                    ErrorMessage = "Failed to parse meeting details"
-                };
-            }
-
-            return new MeetingDetailsResult
-            {
-                Success = true,
-                MeetingId = meetingData.Id.ToString(),
-                MeetingUri = meetingData.JoinUrl ?? string.Empty,
-                MeetingCode = meetingData.Id.ToString(),
-                Status = meetingData.Status ?? "waiting"
-            };
-        }
-        catch (Exception ex)
-        {
-            return new MeetingDetailsResult
-            {
-                Success = false,
-                MeetingId = meetingId,
-                MeetingUri = string.Empty,
-                ErrorMessage = $"Exception: {ex.Message}"
-            };
-        }
-    }
+    
 
     private async Task<string> GetAccessTokenAsync()
-    {
-        // This should use Zoom's OAuth2 Server-to-Server authentication
-        // For now, we'll retrieve from configuration
-        // In production, implement proper OAuth2 flow
-        
-        var accessToken = _configuration["Zoom:AccessToken"];
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new InvalidOperationException("Zoom access token not configured");
-        }
+{
+    var clientId = _configuration["Zoom:ClientId"];
+    var clientSecret = _configuration["Zoom:ClientSecret"];
 
-        return accessToken;
+    if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+    {
+        throw new InvalidOperationException("Zoom client credentials not configured");
     }
+
+    var request = new HttpRequestMessage(HttpMethod.Post, "https://zoom.us/oauth/token");
+
+    var authHeader = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
+    request.Headers.Authorization = new AuthenticationHeaderValue("Basic", authHeader);
+
+    var content = new FormUrlEncodedContent(new[]
+    {
+        new KeyValuePair<string, string>("grant_type", "client_credentials")
+    });
+    request.Content = content;
+
+    var response = await _httpClient.SendAsync(request);
+    var responseContent = await response.Content.ReadAsStringAsync();
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException($"Failed to get Zoom access token: {response.StatusCode} - {responseContent}");
+    }
+
+    var json = await System.Text.Json.JsonDocument.ParseAsync(new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(responseContent)));
+    var token = json.RootElement.GetProperty("access_token").GetString();
+    if (string.IsNullOrEmpty(token))
+    {
+        throw new InvalidOperationException("Zoom access token is empty or not found in response");
+    }
+    return token;
+}
 
     private class ZoomMeetingResponse
     {

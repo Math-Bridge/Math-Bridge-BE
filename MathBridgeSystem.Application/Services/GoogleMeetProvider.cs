@@ -8,6 +8,7 @@ using Google.Apps.Meet.V2;
 using Grpc.Core;
 using Google.Api.Gax.Grpc;
 using Google.Apis.Util.Store;
+using MathBridgeSystem.Application.DTOs.VideoConference;
 
 namespace MathBridgeSystem.Application.Services;
 
