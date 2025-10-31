@@ -83,52 +83,6 @@ public class MeetProvider : IVideoConferenceProvider
         }
     }
     
-    public async Task<MeetingDetailsResult> GetMeetingDetailsAsync(string meetingId)
-    {
-        try
-        {
-            
-            var builder = new SpacesServiceClientBuilder();
-            var client = await builder.BuildAsync();
-
-            var request = new GetSpaceRequest
-            {
-                SpaceName = SpaceName.FromSpace(meetingId.Replace("spaces/", ""))
-            };
-
-            var response = await client.GetSpaceAsync(request);
-
-            if (response == null)
-            {
-                return new MeetingDetailsResult
-                {
-                    Success = false,
-                    MeetingId = meetingId,
-                    MeetingUri = string.Empty,
-                    ErrorMessage = "Failed to retrieve meeting details"
-                };
-            }
-
-            return new MeetingDetailsResult
-            {
-                Success = true,
-                MeetingId = response.Name ?? meetingId,
-                MeetingUri = response.MeetingUri ?? string.Empty,
-                MeetingCode = ExtractMeetingCode(response.MeetingUri),
-                Status = "Active"
-            };
-        }
-        catch (Exception ex)
-        {
-            return new MeetingDetailsResult
-            {
-                Success = false,
-                MeetingId = meetingId,
-                MeetingUri = string.Empty,
-                ErrorMessage = $"Exception: {ex.Message}"
-            };
-        }
-    }
 
 private async Task<ICredential> GetCredentialsAsync()
 {

@@ -148,15 +148,5 @@ public class ZoomProvider : IVideoConferenceProvider
         _tokenExpiryTime = DateTime.UtcNow.AddSeconds(expiresIn);
         return token;
     }
-
-    private class ZoomMeetingResponse
-    {
-        public long Id { get; set; }
-        public string? Topic { get; set; }
-        public string? JoinUrl { get; set; }
-        public string? StartUrl { get; set; }
-        public string? Status { get; set; }
-        public DateTime? StartTime { get; set; }
-        public int Duration { get; set; }
-    }
+    
 }

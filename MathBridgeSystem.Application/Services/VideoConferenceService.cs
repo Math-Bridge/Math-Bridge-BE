@@ -96,32 +96,6 @@ public class VideoConferenceService : IVideoConferenceService
 
         return sessions.Select(MapToDto).ToList();
     }
-
-    public async Task<VideoConferenceSessionDto> StartVideoConferenceAsync(Guid conferenceId)
-    {
-        var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
-        if (session == null)
-            throw new Exception("Video conference session not found");
-        
-        session.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return await GetVideoConferenceAsync(conferenceId);
-    }
-
-    public async Task<VideoConferenceSessionDto> EndVideoConferenceAsync(Guid conferenceId)
-    {
-        var session = await _context.VideoConferenceSessions.FindAsync(conferenceId);
-        if (session == null)
-            throw new Exception("Video conference session not found");
-        
-        session.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return await GetVideoConferenceAsync(conferenceId);
-    }
     
     private VideoConferenceSessionDto MapToDto(VideoConferenceSession session)
     {
