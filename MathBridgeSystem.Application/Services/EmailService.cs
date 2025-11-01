@@ -14,19 +14,15 @@ namespace MathBridgeSystem.Application.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly string _serviceAccountEmail;
-        private readonly string _serviceAccountPrivateKey;
-        private readonly string _adminEmail;
         private readonly string _fromEmail;
         private readonly ILogger<EmailService> _logger;
+        private readonly IConfiguration _configuration;
         private GmailService _gmailService;
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _logger = logger;
-            _serviceAccountEmail = configuration["Gmail:ServiceAccountEmail"] ?? throw new ArgumentNullException("Gmail:ServiceAccountEmail");
-            _serviceAccountPrivateKey = configuration["Gmail:ServiceAccountPrivateKey"] ?? throw new ArgumentNullException("Gmail:ServiceAccountPrivateKey");
-            _adminEmail = configuration["Gmail:AdminEmail"] ?? throw new ArgumentNullException("Gmail:AdminEmail");
+            _configuration = configuration;
             _fromEmail = configuration["Gmail:FromEmail"] ?? throw new ArgumentNullException("Gmail:FromEmail");
             
             InitializeGmailService();
@@ -53,13 +49,11 @@ namespace MathBridgeSystem.Application.Services
 
         private ServiceAccountCredential CreateCredential()
         {
-            var keyStream = new MemoryStream(Encoding.UTF8.GetBytes(_serviceAccountPrivateKey));
-            var credential = ServiceAccountCredential.FromServiceAccountData(keyStream);
-            var scopedCredential = credential.CreateScoped(
-                GmailService.Scope.GmailSend)
-                .CreateWithUser(_adminEmail);
+            var credentialsPath = _configuration["GoogleMeet:OAuthCredentialsPath"] 
+                ?? throw new ArgumentNullException("GoogleMeet:OAuthCredentialsPath");
             
-            return (ServiceAccountCredential)scopedCredential;
+            var credential = GoogleCredential.FromFile(credentialsPath);
+            return credential.CreateScoped(new[] { GmailService.Scope.GmailSend });
         }
 
         public async Task SendVerificationLinkAsync(string email, string link)
