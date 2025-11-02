@@ -70,6 +70,8 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
+builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
+builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
 
 
 // === SERVICE REGISTRATIONS ===
@@ -88,6 +90,8 @@ builder.Services.AddScoped<IChildService, ChildService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<ICenterService, CenterService>();
+builder.Services.AddScoped<ISchoolService, SchoolService>();
+builder.Services.AddScoped<ICurriculumService, CurriculumService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
@@ -119,7 +123,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech","http://localhost:5173")
+        policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech", "http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });

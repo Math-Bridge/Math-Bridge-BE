@@ -28,31 +28,60 @@ namespace MathBridgeSystem.Api.Controllers
                 var packageId = await _packageService.CreatePackageAsync(request);
                 return Ok(new { packageId });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-    }
 
-    [Route("api/packages")]
-    [ApiController]
-    public class PackageController : ControllerBase
-    {
-        private readonly IPackageService _packageService;
-
-        public PackageController(IPackageService packageService)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePackage(Guid id, [FromBody] UpdatePackageRequest request)
         {
-            _packageService = packageService ?? throw new ArgumentNullException(nameof(packageService));
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var updatedPackage = await _packageService.UpdatePackageAsync(id, request);
+                return Ok(updatedPackage);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Package not found" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllPackages()
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePackage(Guid id)
         {
             try
             {
-                var packages = await _packageService.GetAllPackagesAsync();
-                return Ok(packages);
+                await _packageService.DeletePackageAsync(id);
+                return NoContent(); // 204
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Package not found" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -61,4 +90,3 @@ namespace MathBridgeSystem.Api.Controllers
         }
     }
 }
-
