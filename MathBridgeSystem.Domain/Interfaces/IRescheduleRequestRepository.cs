@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using MathBridgeSystem.Domain.Entities;
+using System;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Domain.Interfaces
 {
-    internal class IRescheduleRequestRepository
+    public interface IRescheduleRequestRepository
     {
+        Task AddAsync(RescheduleRequest entity);
+        Task<RescheduleRequest?> GetByIdWithDetailsAsync(Guid id);
+        Task UpdateAsync(RescheduleRequest entity);
+        Task<bool> HasPendingRequestForBookingAsync(Guid bookingId);
     }
 }
