@@ -601,13 +601,14 @@ public partial class MathBridgeDbContext : DbContext
             entity.ToTable("reschedule_requests");
 
             entity.HasIndex(e => e.BookingId, "ix_reschedule_requests_booking_id");
-
             entity.HasIndex(e => e.ParentId, "ix_reschedule_requests_parent_id");
+            entity.HasIndex(e => e.ContractId, "IX_reschedule_requests_contract_id"); // THÊM INDEX
 
             entity.Property(e => e.RequestId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("request_id");
             entity.Property(e => e.BookingId).HasColumnName("booking_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id"); // THÊM
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
@@ -629,23 +630,33 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("status");
 
-            entity.HasOne(d => d.Booking).WithMany(p => p.RescheduleRequests)
-                .HasForeignKey(d => d.BookingId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_reschedule_requests_booking");
+            entity.HasOne(d => d.Contract)
+                  .WithMany(p => p.RescheduleRequests)
+                  .HasForeignKey(d => d.ContractId)
+                  .OnDelete(DeleteBehavior.NoAction)
+                  .HasConstraintName("FK_reschedule_requests_contract");
 
-            entity.HasOne(d => d.Parent).WithMany(p => p.RescheduleRequestParents)
-                .HasForeignKey(d => d.ParentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_reschedule_requests_parent");
+            entity.HasOne(d => d.Booking)
+                  .WithMany(p => p.RescheduleRequests)
+                  .HasForeignKey(d => d.BookingId)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("fk_reschedule_requests_booking");
 
-            entity.HasOne(d => d.RequestedTutor).WithMany(p => p.RescheduleRequestRequestedTutors)
-                .HasForeignKey(d => d.RequestedTutorId)
-                .HasConstraintName("fk_reschedule_requests_tutor");
+            entity.HasOne(d => d.Parent)
+                  .WithMany(p => p.RescheduleRequestParents)
+                  .HasForeignKey(d => d.ParentId)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("fk_reschedule_requests_parent");
 
-            entity.HasOne(d => d.Staff).WithMany(p => p.RescheduleRequestStaffs)
-                .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("fk_reschedule_requests_staff");
+            entity.HasOne(d => d.RequestedTutor)
+                  .WithMany(p => p.RescheduleRequestRequestedTutors)
+                  .HasForeignKey(d => d.RequestedTutorId)
+                  .HasConstraintName("fk_reschedule_requests_tutor");
+
+            entity.HasOne(d => d.Staff)
+                  .WithMany(p => p.RescheduleRequestStaffs)
+                  .HasForeignKey(d => d.StaffId)
+                  .HasConstraintName("fk_reschedule_requests_staff");
         });
 
         modelBuilder.Entity<Review>(entity =>
