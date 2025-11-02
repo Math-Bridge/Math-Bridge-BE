@@ -79,6 +79,8 @@ builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
 builder.Services.AddHttpClient<ZoomProvider>();
 builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<IRescheduleRequestRepository, RescheduleRequestRepository>();
 
 
 // === SERVICE REGISTRATIONS ===
@@ -93,6 +95,8 @@ builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
 
 
 // === CORE BUSINESS SERVICES ===
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IRescheduleService, RescheduleService>();
 builder.Services.AddScoped<IChildService, ChildService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
