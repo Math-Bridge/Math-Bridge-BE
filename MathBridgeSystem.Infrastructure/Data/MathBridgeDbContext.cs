@@ -62,6 +62,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<VideoConferenceSession> VideoConferenceSessions { get; set; }
+
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -225,6 +227,8 @@ public partial class MathBridgeDbContext : DbContext
             entity.HasKey(e => e.ContractId).HasName("PK__contract__F8D66423932B1126");
 
             entity.ToTable("contracts");
+
+            entity.HasIndex(e => e.VideoCallPlatform, "IX_contract_video_platform");
 
             entity.HasIndex(e => e.CenterId, "ix_contracts_center_id");
 
@@ -826,6 +830,8 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("sessions");
 
+            entity.HasIndex(e => e.VideoCallPlatform, "IX_session_video_platform");
+
             entity.HasIndex(e => e.ContractId, "ix_booking_sessions_contract_id");
 
             entity.HasIndex(e => e.Status, "ix_booking_sessions_status");
@@ -1266,6 +1272,63 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_users_roles");
+        });
+
+        modelBuilder.Entity<VideoConferenceSession>(entity =>
+        {
+            entity.HasKey(e => e.ConferenceId).HasName("PK__video_co__DC92030833EE47F6");
+
+            entity.ToTable("video_conference_sessions");
+
+            entity.HasIndex(e => e.BookingId, "IX_video_conference_booking");
+
+            entity.HasIndex(e => e.ContractId, "IX_video_conference_contract");
+
+            entity.HasIndex(e => e.Platform, "IX_video_conference_platform");
+
+            entity.Property(e => e.ConferenceId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("conference_id");
+            entity.Property(e => e.BookingId).HasColumnName("booking_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+            entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.MeetingCode)
+                .HasMaxLength(50)
+                .HasColumnName("meeting_code");
+            entity.Property(e => e.MeetingUri)
+                .HasMaxLength(500)
+                .HasColumnName("meeting_uri");
+            entity.Property(e => e.Platform)
+                .HasMaxLength(50)
+                .HasColumnName("platform");
+            entity.Property(e => e.SpaceId)
+                .HasMaxLength(255)
+                .HasColumnName("space_id");
+            entity.Property(e => e.SpaceName)
+                .HasMaxLength(500)
+                .HasColumnName("space_name");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.VideoConferenceSessions)
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_video_conference_booking");
+
+            entity.HasOne(d => d.Contract).WithMany(p => p.VideoConferenceSessions)
+                .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_video_conference_contract");
+
+            entity.HasOne(d => d.CreatedByUser).WithMany(p => p.VideoConferenceSessions)
+                .HasForeignKey(d => d.CreatedByUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_video_conference_creator");
         });
 
         modelBuilder.Entity<WalletTransaction>(entity =>

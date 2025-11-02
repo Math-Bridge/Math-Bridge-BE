@@ -103,8 +103,8 @@ namespace MathBridgeSystem.Presentation.Controllers
 
             try
             {
-                var jwtToken = await _authService.LoginAsync(request);
-                return Ok(new { token = jwtToken });
+                var result = await _authService.LoginAsync(request);
+                return Ok(new { token = result.Token, userId = result.UserId, role = result.Role, roleId = result.RoleId });
             }
             catch (Exception ex)
             {

@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "admin,staff")]
+        [Authorize(Roles = "admin,staff,parent")]
         public async Task<IActionResult> GetAllChildren()
         {
             try
