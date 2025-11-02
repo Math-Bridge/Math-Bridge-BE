@@ -76,4 +76,5 @@ public partial class Contract
     public virtual User? SubstituteTutor2 { get; set; }
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+    public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 }
