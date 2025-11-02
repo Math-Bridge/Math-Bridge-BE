@@ -14,27 +14,21 @@ namespace MathBridgeSystem.Application.Services
         private readonly ITutorCenterRepository _tutorCenterRepository;
         private readonly ITutorScheduleRepository _tutorScheduleRepository;
         private readonly IReviewRepository _reviewRepository;
-        private readonly ITestResultRepository _testResultRepository;
 
         public TutorService(
             IUserRepository userRepository,
             ITutorCenterRepository tutorCenterRepository,
             ITutorScheduleRepository tutorScheduleRepository,
-            IReviewRepository reviewRepository,
-            ITestResultRepository testResultRepository)
+            IReviewRepository reviewRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _tutorCenterRepository = tutorCenterRepository ?? throw new ArgumentNullException(nameof(tutorCenterRepository));
             _tutorScheduleRepository = tutorScheduleRepository ?? throw new ArgumentNullException(nameof(tutorScheduleRepository));
             _reviewRepository = reviewRepository ?? throw new ArgumentNullException(nameof(reviewRepository));
-            _testResultRepository = testResultRepository ?? throw new ArgumentNullException(nameof(testResultRepository));
         }
 
         public async Task<TutorDto> GetTutorByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
         {
-            if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != id))
-                throw new Exception("Unauthorized access");
-
             var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
                 throw new Exception("Tutor not found");
@@ -50,9 +44,6 @@ namespace MathBridgeSystem.Application.Services
 
             // Get reviews where user was reviewed
             var reviews = await _reviewRepository.GetByReviewedUserIdAsync(id);
-
-            // Get test results
-            var testResults = await _testResultRepository.GetByTutorIdAsync(id);
 
             // Build DTO
             var tutorDto = new TutorDto
@@ -139,25 +130,6 @@ namespace MathBridgeSystem.Application.Services
                 ReviewerName = r.User?.FullName ?? "Anonymous"
             }).ToList();
 
-            // Map TestResults
-            tutorDto.TestResults = testResults.Select(tr => new TestResultDetailDto
-            {
-                ResultId = tr.ResultId,
-                ChildId = tr.ChildId,
-                ChildName = tr.Child?.FullName ?? "Unknown",
-                TutorId = tr.TutorId,
-                TestName = tr.TestName,
-                TestType = tr.TestType,
-                Score = tr.Score,
-                MaxScore = tr.MaxScore,
-                Percentage = tr.Percentage,
-                DurationMinutes = tr.DurationMinutes,
-                NumberOfQuestions = tr.NumberOfQuestions,
-                CorrectAnswers = tr.CorrectAnswers,
-                TestDate = tr.TestDate,
-                CurriculumId = tr.CurriculumId
-            }).ToList();
-
             return tutorDto;
         }
 
@@ -176,31 +148,53 @@ namespace MathBridgeSystem.Application.Services
             if (user.Role?.RoleName != "tutor")
                 throw new Exception("User is not a tutor");
 
-            // Update user profile
+            // Update user profile (without location data)
             user.FullName = request.FullName ?? user.FullName;
-            user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
-            user.Gender = request.Gender ?? user.Gender;
-            user.City = request.City ?? user.City;
-            user.District = request.District ?? user.District;
-            user.FormattedAddress = request.FormattedAddress ?? user.FormattedAddress;
             
-            if (request.Latitude.HasValue)
-                user.Latitude = (double)request.Latitude.Value;
-            if (request.Longitude.HasValue)
-                user.Longitude = (double)request.Longitude.Value;
+            // Validate gender before updating - only update if provided and valid
+            if (!string.IsNullOrEmpty(request.Gender))
+            {
+                var validGenders = new[] { "Male", "Female", "Other" };
+                if (!validGenders.Contains(request.Gender))
+                    throw new Exception($"Invalid gender value. Allowed values are: {string.Join(", ", validGenders)}");
+                user.Gender = request.Gender;
+            }
 
             // Update TutorVerification if provided
             if (request.TutorVerification != null)
             {
-                if (user.TutorVerification == null)
-                    user.TutorVerification = new TutorVerification { UserId = id };
+                // Check if any field in TutorVerification has data
+                bool hasVerificationData = !string.IsNullOrEmpty(request.TutorVerification.University) ||
+                                          !string.IsNullOrEmpty(request.TutorVerification.Major) ||
+                                          !string.IsNullOrEmpty(request.TutorVerification.Bio) ||
+                                          request.TutorVerification.HourlyRate.HasValue;
 
-                user.TutorVerification.University = request.TutorVerification.University ?? user.TutorVerification.University;
-                user.TutorVerification.Major = request.TutorVerification.Major ?? user.TutorVerification.Major;
-                user.TutorVerification.Bio = request.TutorVerification.Bio ?? user.TutorVerification.Bio;
-                
-                if (request.TutorVerification.HourlyRate.HasValue)
-                    user.TutorVerification.HourlyRate = request.TutorVerification.HourlyRate.Value;
+                if (user.TutorVerification == null)
+                {
+                    // Only create new TutorVerification if there's actual data to save
+                    if (hasVerificationData)
+                    {
+                        user.TutorVerification = new TutorVerification
+                        {
+                            UserId = id,
+                            VerificationStatus = "Pending",
+                            University = request.TutorVerification.University,
+                            Major = request.TutorVerification.Major,
+                            Bio = request.TutorVerification.Bio,
+                            HourlyRate = request.TutorVerification.HourlyRate ?? 0
+                        };
+                    }
+                }
+                else
+                {
+                    // Update existing TutorVerification
+                    user.TutorVerification.University = request.TutorVerification.University ?? user.TutorVerification.University;
+                    user.TutorVerification.Major = request.TutorVerification.Major ?? user.TutorVerification.Major;
+                    user.TutorVerification.Bio = request.TutorVerification.Bio ?? user.TutorVerification.Bio;
+                    
+                    if (request.TutorVerification.HourlyRate.HasValue)
+                        user.TutorVerification.HourlyRate = request.TutorVerification.HourlyRate.Value;
+                }
             }
 
             await _userRepository.UpdateAsync(user);

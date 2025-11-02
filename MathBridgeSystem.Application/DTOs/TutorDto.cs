@@ -28,9 +28,6 @@ namespace MathBridgeSystem.Application.DTOs
 
         // Reviews
         public List<ReviewDetailDto> Reviews { get; set; }
-
-        // TestResults
-        public List<TestResultDetailDto> TestResults { get; set; }
     }
 
     public class TutorVerificationDto
@@ -94,34 +91,11 @@ namespace MathBridgeSystem.Application.DTOs
         public string ReviewerName { get; set; }
     }
 
-    public class TestResultDetailDto
-    {
-        public Guid ResultId { get; set; }
-        public Guid ChildId { get; set; }
-        public string ChildName { get; set; }
-        public Guid TutorId { get; set; }
-        public string TestName { get; set; }
-        public string TestType { get; set; }
-        public decimal Score { get; set; }
-        public decimal MaxScore { get; set; }
-        public decimal? Percentage { get; set; }
-        public int? DurationMinutes { get; set; }
-        public int? NumberOfQuestions { get; set; }
-        public int? CorrectAnswers { get; set; }
-        public DateTime TestDate { get; set; }
-        public Guid CurriculumId { get; set; }
-    }
-
     public class UpdateTutorRequest
     {
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
         public string Gender { get; set; }
-        public string City { get; set; }
-        public string District { get; set; }
-        public string FormattedAddress { get; set; }
-        public decimal? Latitude { get; set; }
-        public decimal? Longitude { get; set; }
 
         // TutorVerification updates
         public UpdateTutorVerificationRequest TutorVerification { get; set; }

@@ -8,62 +8,57 @@ using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Api.Controllers
 {
-    [Route("api/tutors")]
     [ApiController]
-    [Authorize]
-    public class TutorController : ControllerBase
+    [Route("api/[controller]")]
+    public class TutorsController : ControllerBase
     {
         private readonly ITutorService _tutorService;
 
-        public TutorController(ITutorService tutorService)
+        public TutorsController(ITutorService tutorService)
         {
             _tutorService = tutorService ?? throw new ArgumentNullException(nameof(tutorService));
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTutor(Guid id)
+        [Authorize]
+        public async Task<ActionResult<TutorDto>> GetTutor(Guid id)
         {
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
                 var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(currentUserRole))
-                    return Unauthorized(new { error = "Role not found in token" });
 
                 var tutor = await _tutorService.GetTutorByIdAsync(id, currentUserId, currentUserRole);
                 return Ok(tutor);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetTutor: {ex.ToString()}");
-
-                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while getting tutor" : ex.Message;
-                return StatusCode(500, new { error = errorMessage });
+                return BadRequest(new { message = ex.Message });
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTutor(Guid id, [FromBody] UpdateTutorRequest request)
+        [HttpPatch("{id}")]
+        [Authorize]
+        public async Task<ActionResult<Guid>> UpdateTutor(Guid id, [FromBody] UpdateTutorRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
-                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
-                var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(currentUserRole))
-                    return Unauthorized(new { error = "Role not found in token" });
+                if (request == null)
+                    return BadRequest(new { message = "Request body cannot be empty" });
 
-                var tutorId = await _tutorService.UpdateTutorAsync(id, request, currentUserId, currentUserRole);
-                return Ok(new { tutorId });
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+                var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                var result = await _tutorService.UpdateTutorAsync(id, request, currentUserId, currentUserRole);
+                return Ok(new { tutorId = result, message = "Tutor updated successfully" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateTutor: {ex.ToString()}");
-
-                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while updating tutor" : ex.Message;
-                return StatusCode(500, new { error = errorMessage });
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
