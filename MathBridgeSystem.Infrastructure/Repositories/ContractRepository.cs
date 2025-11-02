@@ -1,11 +1,10 @@
-﻿using MathBridgeSystem.Infrastructure.Data;
-using MathBridgeSystem.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Infrastructure.Repositories
@@ -77,25 +76,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Where(c => c.CenterId == centerId)
                 .ToListAsync();
         }
-    }
 
-    // public class MathProgramRepository : IMathProgramRepository
-    // {
-    //     private readonly MathBridgeDbContext _context;
-    //
-    //     public MathProgramRepository(MathBridgeDbContext context)
-    //     {
-    //         _context = context ?? throw new ArgumentNullException(nameof(context));
-    //     }
-    //
-    //     public async Task<MathProgram> GetByIdAsync(Guid id)
-    //     {
-    //         return await _context.MathPrograms.FirstOrDefaultAsync(p => p.ProgramId == id);
-    //     }
-    //
-    //     public async Task<bool> ExistsAsync(Guid id)
-    //     {
-    //         return await _context.MathPrograms.AnyAsync(p => p.ProgramId == id);
-    //     }
-    // }
+        public async Task<Contract?> GetByIdWithPackageAsync(Guid contractId)
+        {
+            return await _context.Contracts
+                .Include(c => c.Package)
+                .FirstOrDefaultAsync(c => c.ContractId == contractId);
+        }
+    }
 }
