@@ -5,7 +5,7 @@ namespace MathBridgeSystem.Application.Interfaces
     public interface IAuthService
     {
         Task<string> RegisterAsync(RegisterRequest request);
-        Task<string> LoginAsync(LoginRequest request);
+        Task<LoginResponse> LoginAsync(LoginRequest request);
         Task<string> GoogleLoginAsync(string googleToken);
         Task<Guid> VerifyEmailAsync(string oobCode);
         Task<string> ForgotPasswordAsync(ForgotPasswordRequest request);

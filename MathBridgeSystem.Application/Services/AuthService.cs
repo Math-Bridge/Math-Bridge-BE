@@ -139,7 +139,7 @@ namespace MathBridgeSystem.Application.Services
             return user.UserId;
         }
 
-        public async Task<string> LoginAsync(LoginRequest request)
+        public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -162,7 +162,13 @@ namespace MathBridgeSystem.Application.Services
 
             var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
             Console.WriteLine($"LoginAsync: JWT token generated for user: {user.UserId}");
-            return token;
+            return new LoginResponse
+            {
+                Token = token,
+                UserId = user.UserId,
+                Role = user.Role.RoleName,
+                RoleId = user.Role.RoleId
+            };
         }
 
         public async Task<string> GoogleLoginAsync(string googleToken)
