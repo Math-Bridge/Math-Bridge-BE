@@ -47,13 +47,40 @@ namespace MathBridgeSystem.Application.Services
             }
         }
 
-        private ServiceAccountCredential CreateCredential()
+        private ICredential CreateCredential()
         {
-            var credentialsPath = _configuration["GoogleMeet:OAuthCredentialsPath"] 
+            var credentialsPath = _configuration["GoogleMeet:OAuthCredentialsPath"]
                 ?? throw new ArgumentNullException("GoogleMeet:OAuthCredentialsPath");
+            var userEmail = _configuration["GoogleMeet:WorkspaceUserEmail"]
+                ?? throw new ArgumentNullException("GoogleMeet:WorkspaceUserEmail");
             
-            var credential = GoogleCredential.FromFile(credentialsPath);
-            return credential.CreateScoped(new[] { GmailService.Scope.GmailSend });
+            var googleCredential = GoogleCredential.FromFile(credentialsPath);
+            var originalCredential = googleCredential.UnderlyingCredential as ServiceAccountCredential;
+            
+            if (originalCredential == null)
+            {
+                throw new InvalidOperationException("The credential file does not contain a service account credential");
+            }
+            
+            var scopes = new[]
+            {
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.settings.sharing"
+            };
+            
+            var initializer = new ServiceAccountCredential.Initializer(
+                originalCredential.Id,
+                "https://oauth2.googleapis.com/token")
+            {
+                User = userEmail,
+                Key = originalCredential.Key,
+                KeyId = originalCredential.KeyId,
+                Scopes = scopes
+            };
+            
+            var delegatedCredential = new ServiceAccountCredential(initializer);
+            _logger.LogInformation($"Gmail service initialized with delegation to {userEmail}");
+            return delegatedCredential;
         }
 
         public async Task SendVerificationLinkAsync(string email, string link)
@@ -437,8 +464,8 @@ namespace MathBridgeSystem.Application.Services
 
         private string CreateRawMessage(string to, string subject, string htmlBody)
         {
-            var message = $"From: <{_fromEmail}>\r\n" +
-                         $"To: <{to}>\r\n" +
+            var message = $"From: {_fromEmail}\r\n" +
+                         $"To: {to}\r\n" +
                          $"Subject: {subject}\r\n" +
                          $"MIME-Version: 1.0\r\n" +
                          $"Content-Type: text/html; charset=utf-8\r\n" +
