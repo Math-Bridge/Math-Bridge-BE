@@ -90,6 +90,7 @@ builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
 builder.Services.AddScoped<IVideoConferenceService, VideoConferenceService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 
