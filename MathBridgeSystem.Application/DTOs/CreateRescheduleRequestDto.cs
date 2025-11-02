@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.DTOs
 {
-    internal class CreateRescheduleRequestDto
+    public class CreateRescheduleRequestDto
     {
+        public Guid BookingId { get; set; }
+        public DateOnly RequestedDate { get; set; }
+        public string RequestedTimeSlot { get; set; } = null!;
+        public Guid? RequestedTutorId { get; set; }
+        public string? Reason { get; set; }
     }
 }
