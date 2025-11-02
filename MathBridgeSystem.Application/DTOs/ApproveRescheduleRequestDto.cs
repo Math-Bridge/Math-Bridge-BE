@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.DTOs
 {
-    internal class ApproveRescheduleRequestDto
+    public class ApproveRescheduleRequestDto
     {
+        public Guid NewTutorId { get; set; } = Guid.Empty;
+        public string? Note { get; set; }
     }
 }
