@@ -155,7 +155,7 @@ namespace MathBridgeSystem.Application.Services
 
             
 
-            if (request.VideoCallPlatform != null && !new[] { "zoom", "google_meet" }.Contains(request.VideoCallPlatform))
+            if (request.VideoCallPlatform != null && !new[] { "zoom", "meet" }.Contains(request.VideoCallPlatform))
                 throw new Exception("Invalid video call platform");
 
             if (!request.StartTime.HasValue || !request.EndTime.HasValue)
