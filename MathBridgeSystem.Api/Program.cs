@@ -72,6 +72,8 @@ builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 
 
 // === SERVICE REGISTRATIONS ===
@@ -83,6 +85,7 @@ builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
+builder.Services.AddScoped<ITutorService, TutorService>();
 
 
 // === CORE BUSINESS SERVICES ===
