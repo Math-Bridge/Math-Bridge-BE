@@ -15,7 +15,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public ContractRepository(MathBridgeDbContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context;
         }
 
         public async Task AddAsync(Contract contract)
@@ -42,18 +42,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Contract>> GetByChildIdAsync(Guid childId)
-        {
-            return await _context.Contracts
-                .Include(c => c.Child)
-                .Include(c => c.Parent)
-                .Include(c => c.MainTutor)
-                .Include(c => c.Package)
-                .Include(c => c.Center)
-                .Where(c => c.ChildId == childId)
-                .ToListAsync();
-        }
-
         public async Task<Contract?> GetByIdAsync(Guid id)
         {
             return await _context.Contracts
@@ -63,18 +51,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.Package)
                 .Include(c => c.Center)
                 .FirstOrDefaultAsync(c => c.ContractId == id);
-        }
-
-        public async Task<List<Contract>> GetByCenterIdAsync(Guid centerId)
-        {
-            return await _context.Contracts
-                .Include(c => c.Child)
-                .Include(c => c.Parent)
-                .Include(c => c.MainTutor)
-                .Include(c => c.Package)
-                .Include(c => c.Center)
-                .Where(c => c.CenterId == centerId)
-                .ToListAsync();
         }
 
         public async Task<Contract?> GetByIdWithPackageAsync(Guid contractId)

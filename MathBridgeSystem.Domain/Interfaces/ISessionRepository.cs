@@ -10,6 +10,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task AddRangeAsync(IEnumerable<Session> sessions);
         Task<Session?> GetByIdAsync(Guid bookingId);
         Task UpdateAsync(Session session);
-        Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeSpan startTime, TimeSpan endTime);
+        Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeOnly startTime, TimeOnly endTime);
+        Task<List<Session>> GetByParentIdAsync(Guid parentId);
     }
 }

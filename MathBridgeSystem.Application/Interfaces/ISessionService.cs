@@ -1,0 +1,13 @@
+﻿using MathBridgeSystem.Application.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace MathBridgeSystem.Application.Interfaces
+{
+    public interface ISessionService
+    {
+        Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId);
+        Task<SessionDto?> GetSessionByIdAsync(Guid bookingId, Guid parentId);
+    }
+}

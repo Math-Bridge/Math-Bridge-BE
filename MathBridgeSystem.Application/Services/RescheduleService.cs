@@ -1,4 +1,5 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
+using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -80,14 +81,17 @@ namespace MathBridgeSystem.Application.Services
             var available = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, start, end);
             if (!available) throw new InvalidOperationException("Tutor not available.");
 
+            var sessionStart = request.RequestedDate.ToDateTime(start);
+            var sessionEnd = request.RequestedDate.ToDateTime(end);
+
             var newSession = new Session
             {
                 BookingId = Guid.NewGuid(),
                 ContractId = request.ContractId,
                 TutorId = finalTutorId,
                 SessionDate = request.RequestedDate,
-                StartTime = request.RequestedDate.ToDateTime(start),
-                EndTime = request.RequestedDate.ToDateTime(end),
+                StartTime = sessionStart,
+                EndTime = sessionEnd,
                 IsOnline = request.Booking.IsOnline,
                 VideoCallPlatform = request.Booking.VideoCallPlatform,
                 OfflineAddress = request.Booking.OfflineAddress,
@@ -97,7 +101,7 @@ namespace MathBridgeSystem.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _sessionRepo.AddAsync(newSession);
+            await _sessionRepo.AddRangeAsync(new[] { newSession });
 
             request.Booking.Status = "rescheduled";
             request.Booking.UpdatedAt = DateTime.UtcNow;
@@ -143,11 +147,11 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        private (TimeSpan start, TimeSpan end) ParseTimeSlot(string slot)
+        private (TimeOnly start, TimeOnly end) ParseTimeSlot(string slot)
         {
             var parts = slot.Split('-');
             if (parts.Length != 2) throw new ArgumentException("Invalid time slot format. Use 'HH:mm-HH:mm'");
-            return (TimeSpan.Parse(parts[0].Trim()), TimeSpan.Parse(parts[1].Trim()));
+            return (TimeOnly.Parse(parts[0].Trim()), TimeOnly.Parse(parts[1].Trim()));
         }
     }
 }

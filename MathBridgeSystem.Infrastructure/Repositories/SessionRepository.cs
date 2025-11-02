@@ -42,10 +42,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeSpan startTime, TimeSpan endTime)
+        public async Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
         {
-            var start = new DateTime(date.Year, date.Month, date.Day) + startTime;
-            var end = new DateTime(date.Year, date.Month, date.Day) + endTime;
+            var start = new DateTime(date.Year, date.Month, date.Day) + startTime.ToTimeSpan();
+            var end = new DateTime(date.Year, date.Month, date.Day) + endTime.ToTimeSpan();
 
             return !await _context.Sessions.AnyAsync(s =>
                 s.TutorId == tutorId &&
@@ -54,6 +54,18 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 ((s.StartTime >= start && s.StartTime < end) ||
                  (s.EndTime > start && s.EndTime <= end) ||
                  (s.StartTime <= start && s.EndTime >= end)));
+        }
+
+        public async Task<List<Session>> GetByParentIdAsync(Guid parentId)
+        {
+            return await _context.Sessions
+                .Include(s => s.Contract)
+                    .ThenInclude(c => c.Parent)
+                .Include(s => s.Tutor)
+                .Where(s => s.Contract.ParentId == parentId)
+                .OrderBy(s => s.SessionDate)
+                .ThenBy(s => s.StartTime)
+                .ToListAsync();
         }
     }
 }
