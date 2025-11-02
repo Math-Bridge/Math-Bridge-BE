@@ -15,5 +15,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<Contract>> GetByChildIdAsync(Guid childId);
         Task<Contract?> GetByIdAsync(Guid id);
         Task<List<Contract>> GetByCenterIdAsync(Guid centerId);
+        Task<Contract?> GetByIdWithPackageAsync(Guid contractId);
     }
 }
