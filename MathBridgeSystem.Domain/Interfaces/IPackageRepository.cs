@@ -1,9 +1,4 @@
 ﻿using MathBridgeSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Domain.Interfaces
 {
@@ -13,5 +8,9 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<PaymentPackage>> GetAllAsync();
         Task<PaymentPackage> GetByIdAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
+        Task<bool> ExistsCurriculumAsync(Guid curriculumId);
+        Task UpdateAsync(PaymentPackage package);
+        Task DeleteAsync(Guid id);
+        Task<bool> IsPackageInUseAsync(Guid packageId);
     }
 }

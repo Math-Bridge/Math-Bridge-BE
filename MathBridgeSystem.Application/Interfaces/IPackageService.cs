@@ -12,5 +12,7 @@ namespace MathBridgeSystem.Application.Interfaces
     {
         Task<Guid> CreatePackageAsync(CreatePackageRequest request);
         Task<List<PaymentPackageDto>> GetAllPackagesAsync();
+        Task<PaymentPackageDto> UpdatePackageAsync(Guid id, UpdatePackageRequest request);
+        Task DeletePackageAsync(Guid id);
     }
 }

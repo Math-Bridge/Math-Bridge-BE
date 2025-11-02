@@ -1,12 +1,7 @@
-﻿using MathBridgeSystem.Infrastructure.Data;
-using MathBridgeSystem.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Infrastructure.Repositories
 {
@@ -27,19 +22,43 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<List<PaymentPackage>> GetAllAsync()
         {
-            return await _context.PaymentPackages
-                .ToListAsync();
+            return await _context.PaymentPackages.ToListAsync();
         }
 
         public async Task<PaymentPackage> GetByIdAsync(Guid id)
         {
-            return await _context.PaymentPackages
-                .FirstOrDefaultAsync(p => p.PackageId == id);
+            return await _context.PaymentPackages.FirstOrDefaultAsync(p => p.PackageId == id);
         }
 
         public async Task<bool> ExistsAsync(Guid id)
         {
             return await _context.PaymentPackages.AnyAsync(p => p.PackageId == id);
+        }
+
+        public async Task<bool> ExistsCurriculumAsync(Guid curriculumId)
+        {
+            return await _context.Curricula.AnyAsync(c => c.CurriculumId == curriculumId);
+        }
+
+        public async Task UpdateAsync(PaymentPackage package)
+        {
+            _context.PaymentPackages.Update(package);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var package = await GetByIdAsync(id);
+            if (package != null)
+            {
+                _context.PaymentPackages.Remove(package);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<bool> IsPackageInUseAsync(Guid packageId)
+        {
+            return await _context.Contracts.AnyAsync(c => c.PackageId == packageId);
         }
     }
 }

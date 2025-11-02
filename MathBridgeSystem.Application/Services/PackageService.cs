@@ -2,17 +2,13 @@
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Services
 {
     public class PackageService : IPackageService
     {
         private readonly IPackageRepository _packageRepository;
+        private readonly string[] _validGrades = { "grade 9", "grade 10", "grade 11", "grade 12" };
 
         public PackageService(IPackageRepository packageRepository)
         {
@@ -20,8 +16,20 @@ namespace MathBridgeSystem.Application.Services
         }
 
         public async Task<Guid> CreatePackageAsync(CreatePackageRequest request)
-        {            if (!new[] { "grade 9", "grade 10", "grade 11", "grade 12" }.Contains(request.Grade))
-                throw new Exception("Invalid grade");
+        {
+            if (string.IsNullOrWhiteSpace(request.PackageName))
+                throw new ArgumentException("Package name is required.");
+
+            if (!_validGrades.Contains(request.Grade.ToLower()))
+                throw new ArgumentException("Invalid grade. Must be grade 9, 10, 11, or 12.");
+
+            if (request.Price <= 0)
+                throw new ArgumentException("Price must be greater than 0.");
+
+            // Kiểm tra Curriculum tồn tại
+            var curriculumExists = await _packageRepository.ExistsCurriculumAsync(request.CurriculumId);
+            if (!curriculumExists)
+                throw new KeyNotFoundException("Curriculum not found.");
 
             var package = new PaymentPackage
             {
@@ -34,7 +42,8 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = request.MaxReschedule,
                 DurationDays = request.DurationDays,
                 Description = request.Description,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                CurriculumId = request.CurriculumId
             };
 
             await _packageRepository.AddAsync(package);
@@ -56,6 +65,72 @@ namespace MathBridgeSystem.Application.Services
                 DurationDays = p.DurationDays,
                 Description = p.Description
             }).ToList();
+        }
+
+        public async Task<PaymentPackageDto> UpdatePackageAsync(Guid id, UpdatePackageRequest request)
+        {
+            var package = await _packageRepository.GetByIdAsync(id);
+            if (package == null)
+                throw new KeyNotFoundException("Package not found.");
+
+            if (!string.IsNullOrWhiteSpace(request.Grade) &&
+                !_validGrades.Contains(request.Grade.ToLower()))
+                throw new ArgumentException("Invalid grade.");
+
+            if (request.Price.HasValue && request.Price <= 0)
+                throw new ArgumentException("Price must be greater than 0.");
+
+            if (request.CurriculumId.HasValue)
+            {
+                var exists = await _packageRepository.ExistsCurriculumAsync(request.CurriculumId.Value);
+                if (!exists)
+                    throw new KeyNotFoundException("Curriculum not found.");
+            }
+
+            // Cập nhật từng field nếu có
+            if (!string.IsNullOrWhiteSpace(request.PackageName))
+                package.PackageName = request.PackageName;
+
+            if (!string.IsNullOrWhiteSpace(request.Grade))
+                package.Grade = request.Grade;
+
+            if (request.Price.HasValue) package.Price = request.Price.Value;
+            if (request.SessionCount.HasValue) package.SessionCount = request.SessionCount.Value;
+            if (request.SessionsPerWeek.HasValue) package.SessionsPerWeek = request.SessionsPerWeek.Value;
+            if (request.MaxReschedule.HasValue) package.MaxReschedule = request.MaxReschedule.Value;
+            if (request.DurationDays.HasValue) package.DurationDays = request.DurationDays.Value;
+            if (request.Description != null) package.Description = request.Description;
+            if (request.CurriculumId.HasValue) package.CurriculumId = request.CurriculumId.Value;
+
+            package.UpdatedDate = DateTime.UtcNow;
+
+            await _packageRepository.UpdateAsync(package);
+
+            return new PaymentPackageDto
+            {
+                PackageId = package.PackageId,
+                PackageName = package.PackageName,
+                Grade = package.Grade,
+                Price = package.Price,
+                SessionCount = package.SessionCount,
+                SessionsPerWeek = package.SessionsPerWeek,
+                MaxReschedule = package.MaxReschedule,
+                DurationDays = package.DurationDays,
+                Description = package.Description
+            };
+        }
+
+        public async Task DeletePackageAsync(Guid id)
+        {
+            var package = await _packageRepository.GetByIdAsync(id);
+            if (package == null)
+                throw new KeyNotFoundException("Package not found.");
+
+            var inUse = await _packageRepository.IsPackageInUseAsync(id);
+            if (inUse)
+                throw new InvalidOperationException("Cannot delete package because it is used in one or more contracts.");
+
+            await _packageRepository.DeleteAsync(id);
         }
     }
 }
