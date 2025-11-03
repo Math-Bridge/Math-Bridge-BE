@@ -15,11 +15,91 @@ namespace MathBridgeSystem.Infrastructure.Services
     {
         private readonly PublisherServiceApiClient _publisherClient;
         private readonly string _projectId;
+        private readonly IConfiguration _configuration;
 
         public GooglePubSubNotificationProvider(IConfiguration configuration)
         {
-            _publisherClient = PublisherServiceApiClient.Create();
+            _configuration = configuration;
             _projectId = configuration["GoogleMeet:ProjectId"] ?? throw new ArgumentNullException("GoogleMeet:ProjectId");
+            _publisherClient = CreatePublisherClientWithCredentials();
+        }
+
+        private PublisherServiceApiClient CreatePublisherClientWithCredentials()
+        {
+            try
+            {
+                var oauthJsonPath = _configuration["GoogleMeet:OAuthCredentialsPath"];
+                
+                if (string.IsNullOrEmpty(oauthJsonPath))
+                {
+                    Console.WriteLine("[WARNING] GoogleMeet:OAuthCredentialsPath not configured. Using default credentials.");
+                    return PublisherServiceApiClient.Create();
+                }
+
+                if (!System.IO.Path.IsPathRooted(oauthJsonPath))
+                {
+                    oauthJsonPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), oauthJsonPath);
+                }
+
+                Console.WriteLine($"[DEBUG] Checking if PubSub OAuth credentials file exists: {oauthJsonPath}");
+                if (!System.IO.File.Exists(oauthJsonPath))
+                {
+                    throw new System.IO.FileNotFoundException($"OAuth credentials file not found at: {oauthJsonPath}");
+                }
+
+                var googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(oauthJsonPath);
+                Console.WriteLine($"[DEBUG] PubSub credentials loaded successfully from {oauthJsonPath}");
+                
+                return new PublisherServiceApiClientBuilder
+                {
+                    GoogleCredential = googleCredential
+                }.Build();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Error loading PubSub credentials: {ex.Message}");
+                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                throw new InvalidOperationException($"Error loading PubSub credentials: {ex.Message}", ex);
+            }
+        }
+
+        private SubscriberServiceApiClient CreateSubscriberClientWithCredentials()
+        {
+            try
+            {
+                var oauthJsonPath = _configuration["GoogleMeet:OAuthCredentialsPath"];
+                
+                if (string.IsNullOrEmpty(oauthJsonPath))
+                {
+                    Console.WriteLine("[WARNING] GoogleMeet:OAuthCredentialsPath not configured. Using default credentials.");
+                    return SubscriberServiceApiClient.Create();
+                }
+
+                if (!System.IO.Path.IsPathRooted(oauthJsonPath))
+                {
+                    oauthJsonPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), oauthJsonPath);
+                }
+
+                Console.WriteLine($"[DEBUG] Checking if Subscriber OAuth credentials file exists: {oauthJsonPath}");
+                if (!System.IO.File.Exists(oauthJsonPath))
+                {
+                    throw new System.IO.FileNotFoundException($"OAuth credentials file not found at: {oauthJsonPath}");
+                }
+
+                var googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(oauthJsonPath);
+                Console.WriteLine($"[DEBUG] Subscriber credentials loaded successfully from {oauthJsonPath}");
+                
+                return new SubscriberServiceApiClientBuilder
+                {
+                    GoogleCredential = googleCredential
+                }.Build();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Error loading Subscriber credentials: {ex.Message}");
+                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                throw new InvalidOperationException($"Error loading Subscriber credentials: {ex.Message}", ex);
+            }
         }
 
         public async Task PublishNotificationAsync(NotificationResponseDto notification, string topicName)
@@ -89,29 +169,38 @@ namespace MathBridgeSystem.Infrastructure.Services
         {
             try
             {
+                Console.WriteLine($"[DEBUG] SubscribeAsync: Creating subscription '{subscriptionName}' for topic '{topicName}'");
+                
                 var topicPath = TopicName.FromProjectTopic(_projectId, topicName);
                 var subscriptionPath = SubscriptionName.FromProjectSubscription(_projectId, subscriptionName);
 
-                var subscriberServiceApiClient = SubscriberServiceApiClient.Create();
+                Console.WriteLine($"[DEBUG] SubscribeAsync: Topic path: {topicPath}, Subscription path: {subscriptionPath}");
+                var subscriberServiceApiClient = CreateSubscriberClientWithCredentials();
                 
                 try
                 {
+                    Console.WriteLine($"[DEBUG] SubscribeAsync: Attempting to get existing subscription");
                     await subscriberServiceApiClient.GetSubscriptionAsync(subscriptionPath);
+                    Console.WriteLine($"[DEBUG] SubscribeAsync: Subscription already exists");
                 }
-                catch (RpcException)
+                catch (RpcException rpcEx) when (rpcEx.StatusCode == StatusCode.NotFound)
                 {
+                    Console.WriteLine($"[DEBUG] SubscribeAsync: Subscription not found, creating new one");
                     var subscription = new Subscription
                     {
                         SubscriptionName = subscriptionPath,
                         TopicAsTopicName = topicPath
                     };
-                    await subscriberServiceApiClient.CreateSubscriptionAsync(subscription);
+                    var createdSub = await subscriberServiceApiClient.CreateSubscriptionAsync(subscription);
+                    Console.WriteLine($"[DEBUG] SubscribeAsync: Subscription created successfully: {createdSub.Name}");
                 }
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to subscribe to PubSub topic {topicName}", ex);
+                Console.WriteLine($"[ERROR] SubscribeAsync failed: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                throw new InvalidOperationException($"Failed to subscribe to PubSub topic {topicName}: {ex.Message}", ex);
             }
         }
+        }
     }
-}

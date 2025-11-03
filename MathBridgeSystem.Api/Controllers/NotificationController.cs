@@ -133,5 +133,284 @@ namespace MathBridgeSystem.Api.Controllers
                 writer.Dispose();
             }
         }
+
+        #region Testing Endpoints
+
+        [AllowAnonymous]
+        [HttpGet("test/health")]
+        public async Task<ActionResult> HealthCheck()
+        {
+            try
+            {
+                var pubSubProvider = HttpContext.RequestServices.GetService(typeof(IPubSubNotificationProvider)) as IPubSubNotificationProvider;
+                if (pubSubProvider == null)
+                {
+                    return StatusCode(500, new
+                    {
+                        status = "unhealthy",
+                        error = "PubSub provider not registered",
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+
+                var topicExists = await pubSubProvider.TopicExistsAsync("notifications-session-reminders");
+
+                return Ok(new
+                {
+                    status = topicExists ? "healthy" : "topic_not_found",
+                    topicExists = topicExists,
+                    projectId = HttpContext.RequestServices.GetService(typeof(IConfiguration)) is IConfiguration config ? config["GoogleMeet:ProjectId"] : "unknown",
+                    credentialsPath = HttpContext.RequestServices.GetService(typeof(IConfiguration)) is IConfiguration config2 ? config2["GoogleMeet:OAuthCredentialsPath"] : "unknown",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    status = "unhealthy",
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("test/publish")]
+        public async Task<ActionResult> TestPublishNotification([FromBody] CreateTestNotificationRequest request)
+        {
+            try
+            {
+                var pubSubProvider = HttpContext.RequestServices.GetService(typeof(IPubSubNotificationProvider)) as IPubSubNotificationProvider;
+                if (pubSubProvider == null)
+                {
+                    return StatusCode(500, new { error = "PubSub provider not registered" });
+                }
+
+                var testNotification = new NotificationResponseDto
+                {
+                    NotificationId = Guid.NewGuid(),
+                    UserId = request.UserId ?? Guid.NewGuid(),
+                    Title = request.Title ?? "Test Notification",
+                    Message = request.Message ?? "This is a test notification from Pub/Sub",
+                    NotificationType = request.NotificationType ?? "Test",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await pubSubProvider.PublishNotificationAsync(
+                    testNotification,
+                    request.TopicName ?? "notifications-session-reminders"
+                );
+
+                return Ok(new
+                {
+                    message = "Test notification published successfully",
+                    notification = testNotification,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] TestPublishNotification: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to publish test notification",
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("test/publish-batch")]
+        public async Task<ActionResult> TestPublishBatchNotifications([FromBody] CreateBatchTestNotificationsRequest request)
+        {
+            try
+            {
+                var pubSubProvider = HttpContext.RequestServices.GetService(typeof(IPubSubNotificationProvider)) as IPubSubNotificationProvider;
+                if (pubSubProvider == null)
+                {
+                    return StatusCode(500, new { error = "PubSub provider not registered" });
+                }
+
+                var notifications = new List<NotificationResponseDto>();
+                var count = request.Count ?? 5;
+
+                for (int i = 0; i < count; i++)
+                {
+                    notifications.Add(new NotificationResponseDto
+                    {
+                        NotificationId = Guid.NewGuid(),
+                        UserId = request.UserId ?? Guid.NewGuid(),
+                        Title = $"Batch Test Notification {i + 1}",
+                        Message = $"This is batch notification {i + 1} from Pub/Sub",
+                        NotificationType = "BatchTest",
+                        IsRead = false,
+                        CreatedDate = DateTime.UtcNow
+                    });
+                }
+
+                await pubSubProvider.PublishBatchNotificationsAsync(
+                    notifications,
+                    request.TopicName ?? "notifications-session-reminders"
+                );
+
+                return Ok(new
+                {
+                    message = $"Batch of {count} test notifications published successfully",
+                    notificationCount = count,
+                    notifications = notifications,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] TestPublishBatchNotifications: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to publish batch test notifications",
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("test/create-subscription")]
+        public async Task<ActionResult> TestCreateSubscription([FromBody] CreateTestSubscriptionRequest request)
+        {
+            try
+            {
+                var pubSubProvider = HttpContext.RequestServices.GetService(typeof(IPubSubNotificationProvider)) as IPubSubNotificationProvider;
+                if (pubSubProvider == null)
+                {
+                    return StatusCode(500, new { error = "PubSub provider not registered" });
+                }
+
+                var topicName = request.TopicName ?? "notifications-session-reminders";
+                var subscriptionName = request.SubscriptionName ?? $"test-subscription-{Guid.NewGuid().ToString().Substring(0, 8)}";
+
+                await pubSubProvider.SubscribeAsync(topicName, subscriptionName);
+
+                return Ok(new
+                {
+                    message = "Test subscription created successfully",
+                    topicName = topicName,
+                    subscriptionName = subscriptionName,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] TestCreateSubscription: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to create test subscription",
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("test/topic-exists")]
+        public async Task<ActionResult> TestTopicExists([FromQuery] string topicName = "notifications-session-reminders")
+        {
+            try
+            {
+                var pubSubProvider = HttpContext.RequestServices.GetService(typeof(IPubSubNotificationProvider)) as IPubSubNotificationProvider;
+                if (pubSubProvider == null)
+                {
+                    return StatusCode(500, new { error = "PubSub provider not registered" });
+                }
+
+                var exists = await pubSubProvider.TopicExistsAsync(topicName);
+
+                return Ok(new
+                {
+                    topicName = topicName,
+                    exists = exists,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] TestTopicExists: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to check topic existence",
+                    message = ex.Message
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("test/create-in-db")]
+        public async Task<ActionResult> TestCreateNotificationInDatabase([FromBody] CreateTestNotificationRequest request)
+        {
+            try
+            {
+                var testNotification = new NotificationResponseDto
+                {
+                    NotificationId = Guid.NewGuid(),
+                    UserId = request.UserId ?? Guid.NewGuid(),
+                    Title = request.Title ?? "Database Test Notification",
+                    Message = request.Message ?? "This notification was created directly in the database",
+                    NotificationType = request.NotificationType ?? "DatabaseTest",
+                    Status = "Created",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                // Note: CreateNotificationAsync requires proper implementation in INotificationService
+
+                return Ok(new
+                {
+                    message = "Test notification created in database successfully",
+                    notification = testNotification,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] TestCreateNotificationInDatabase: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to create notification in database",
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        #endregion
     }
+
+    #region Test Request Models
+
+    public class CreateTestNotificationRequest
+    {
+        public Guid? UserId { get; set; }
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public string NotificationType { get; set; }
+        public string TopicName { get; set; }
+    }
+
+    public class CreateBatchTestNotificationsRequest
+    {
+        public Guid? UserId { get; set; }
+        public int? Count { get; set; }
+        public string TopicName { get; set; }
+    }
+
+    public class CreateTestSubscriptionRequest
+    {
+        public string TopicName { get; set; }
+        public string SubscriptionName { get; set; }
+    }
+
+    #endregion
 }
