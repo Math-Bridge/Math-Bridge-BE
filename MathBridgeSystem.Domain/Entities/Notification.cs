@@ -25,9 +25,13 @@ public partial class Notification
 
     public DateTime? SentDate { get; set; }
 
+    public DateTime? ReadDate { get; set; }
+
     public virtual Session? Booking { get; set; }
 
     public virtual Contract? Contract { get; set; }
+
+    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
 
     public virtual User User { get; set; } = null!;
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MathBridgeSystem.Domain.Entities;
@@ -9,17 +9,17 @@ public partial class NotificationPreference
 
     public Guid UserId { get; set; }
 
-    public bool EnableSessionReminders { get; set; } = true;
+    public bool ReceiveEmailNotifications { get; set; }
 
-    public bool EnablePaymentNotifications { get; set; } = true;
+    public bool ReceiveSmsnotifications { get; set; }
 
-    public bool EnableBookingNotifications { get; set; } = true;
+    public bool ReceiveWebNotifications { get; set; }
 
-    public bool EnableEmailNotifications { get; set; } = true;
+    public bool ReceiveSessionReminders { get; set; }
 
-    public bool EnableWebNotifications { get; set; } = true;
+    public bool ReceiveContractUpdates { get; set; }
 
-    public bool EnableInAppNotifications { get; set; } = true;
+    public bool ReceivePaymentNotifications { get; set; }
 
     public DateTime CreatedDate { get; set; }
 

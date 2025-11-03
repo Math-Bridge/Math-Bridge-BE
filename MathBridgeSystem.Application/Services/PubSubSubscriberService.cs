@@ -11,7 +11,6 @@ namespace MathBridgeSystem.Infrastructure.Services
 {
     public class PubSubSubscriberService
     {
-        private readonly SubscriberServiceApiClient _subscriberClient;
         private readonly NotificationConnectionManager _connectionManager;
         private readonly string _projectId;
         private readonly ILogger<PubSubSubscriberService> _logger;
@@ -22,9 +21,8 @@ namespace MathBridgeSystem.Infrastructure.Services
             ILogger<PubSubSubscriberService> logger)
         {
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
-            _projectId = configuration["Firebase:ProjectId"] ?? throw new ArgumentNullException("Firebase:ProjectId");
+            _projectId = configuration["GoogleMeet:ProjectId"] ?? throw new ArgumentNullException("GoogleMeet:ProjectId");
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _subscriberClient = SubscriberServiceApiClient.Create();
         }
 
         public async Task ListenForNotificationsAsync(string subscriptionName, CancellationToken cancellationToken = default)
@@ -33,24 +31,22 @@ namespace MathBridgeSystem.Infrastructure.Services
             {
                 var subscriptionPath = SubscriptionName.FromProjectSubscription(_projectId, subscriptionName);
 
-                // Receive messages and handle them
-                var request = new StreamingPullRequest
-                {
-                    SubscriptionAsSubscriptionName = subscriptionPath,
-                    StreamingDeadlineSeconds = 60
-                };
+                // Create a SubscriberClient for simpler message pulling
+                var subscriberClient = await SubscriberClient.CreateAsync(subscriptionPath);
 
-                using (var call = _subscriberClient.StreamingPull(cancellationToken))
+                // Start listening for messages
+                await subscriberClient.StartAsync(async (message, ct) =>
                 {
-                    await call.RequestStream.WriteAsync(request);
-                    await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
-                    {
-                        foreach (var message in response.ReceivedMessages)
-                        {
-                            await HandleMessageAsync(message.Message, cancellationToken);
-                        }
-                    }
-                }
+                    await HandleMessageAsync(message, ct);
+                    return SubscriberClient.Reply.Ack;
+                });
+
+                // Keep the subscriber running
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Notification listener was cancelled.");
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MathBridgeSystem.Domain.Entities;
@@ -17,17 +17,13 @@ public partial class NotificationLog
 
     public string Status { get; set; } = null!;
 
-    public string? FailureReason { get; set; }
+    public string? ErrorMessage { get; set; }
 
     public DateTime CreatedDate { get; set; }
 
-    public DateTime? SentDate { get; set; }
-
-    public DateTime? DeliveredDate { get; set; }
+    public virtual Contract? Contract { get; set; }
 
     public virtual Notification Notification { get; set; } = null!;
-
-    public virtual Contract? Contract { get; set; }
 
     public virtual Session? Session { get; set; }
 }

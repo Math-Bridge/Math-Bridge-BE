@@ -73,7 +73,6 @@ builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-$1
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationLogRepository, NotificationLogRepository>();
 builder.Services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
@@ -88,7 +87,6 @@ builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
-$1
 
 // === NOTIFICATION SERVICES ===
 builder.Services.AddScoped<INotificationService, NotificationService>();

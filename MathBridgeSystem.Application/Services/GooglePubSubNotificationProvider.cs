@@ -2,6 +2,7 @@ using Google.Cloud.PubSub.V1;
 using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Grpc.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace MathBridgeSystem.Infrastructure.Services
         public GooglePubSubNotificationProvider(IConfiguration configuration)
         {
             _publisherClient = PublisherServiceApiClient.Create();
-            _projectId = configuration["Firebase:ProjectId"] ?? throw new ArgumentNullException("Firebase:ProjectId");
+            _projectId = configuration["GoogleMeet:ProjectId"] ?? throw new ArgumentNullException("GoogleMeet:ProjectId");
         }
 
         public async Task PublishNotificationAsync(NotificationResponseDto notification, string topicName)
@@ -78,7 +79,7 @@ namespace MathBridgeSystem.Infrastructure.Services
                 await _publisherClient.GetTopicAsync(topic);
                 return true;
             }
-            catch (Google.Api.Gax.RpcException)
+            catch (RpcException)
             {
                 return false;
             }
@@ -97,9 +98,14 @@ namespace MathBridgeSystem.Infrastructure.Services
                 {
                     await subscriberServiceApiClient.GetSubscriptionAsync(subscriptionPath);
                 }
-                catch (Google.Api.Gax.RpcException)
+                catch (RpcException)
                 {
-                    await subscriberServiceApiClient.CreateSubscriptionAsync(subscriptionPath, topicPath);
+                    var subscription = new Subscription
+                    {
+                        SubscriptionName = subscriptionPath,
+                        TopicAsTopicName = topicPath
+                    };
+                    await subscriberServiceApiClient.CreateSubscriptionAsync(subscription);
                 }
             }
             catch (Exception ex)

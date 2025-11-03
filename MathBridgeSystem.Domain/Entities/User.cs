@@ -73,6 +73,8 @@ public partial class User
 
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
+    public virtual NotificationPreference? NotificationPreference { get; set; }
+
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequestParents { get; set; } = new List<RescheduleRequest>();
@@ -102,6 +104,8 @@ public partial class User
     public virtual ICollection<Unit> UnitCreatedByNavigations { get; set; } = new List<Unit>();
 
     public virtual ICollection<Unit> UnitUpdatedByNavigations { get; set; } = new List<Unit>();
+
+    public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
 }
