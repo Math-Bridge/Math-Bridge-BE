@@ -10,6 +10,9 @@
 		<PackageReference Include="FirebaseDatabase.net" Version="5.0.0" />
 		<PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
 		<PackageReference Include="Google.Cloud.PubSub.V1" Version="3.29.0" />
+		<PackageReference Include="Google.Apis.Gmail.v1" Version="1.70.0.3833" />
+		<PackageReference Include="Google.Apps.Meet.V2" Version="1.0.0-beta05" />
+		<PackageReference Include="Google.Api.Gax.Grpc" Version="4.9.0" />
 		<PackageReference Include="MailKit" Version="4.13.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />

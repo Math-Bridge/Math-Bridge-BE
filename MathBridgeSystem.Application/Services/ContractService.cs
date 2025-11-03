@@ -1,12 +1,11 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿// MathBridgeSystem.Application.Services/ContractService.cs
+using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
-using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Services
@@ -14,161 +13,23 @@ namespace MathBridgeSystem.Application.Services
     public class ContractService : IContractService
     {
         private readonly IContractRepository _contractRepository;
-        private readonly IChildRepository _childRepository;
         private readonly IPackageRepository _packageRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly ICenterRepository _centerRepository;
-        private readonly ITutorCenterRepository _tutorCenterRepository;
-        private readonly ILocationService _locationService;
+        private readonly ISessionRepository _sessionRepository;
 
         public ContractService(
             IContractRepository contractRepository,
-            IChildRepository childRepository,
             IPackageRepository packageRepository,
-            IUserRepository userRepository,
-            ICenterRepository centerRepository,
-            ITutorCenterRepository tutorCenterRepository,
-            ILocationService locationService)
+            ISessionRepository sessionRepository)
         {
-            _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
-            _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
-            _packageRepository = packageRepository ?? throw new ArgumentNullException(nameof(packageRepository));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _centerRepository = centerRepository ?? throw new ArgumentNullException(nameof(centerRepository));
-            _tutorCenterRepository = tutorCenterRepository ?? throw new ArgumentNullException(nameof(tutorCenterRepository));
-            _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
-        }
-
-        private string FormatDaysOfWeek(byte? daysOfWeek)
-        {
-            if (!daysOfWeek.HasValue) return string.Empty;
-
-            var days = new List<string>();
-            var value = daysOfWeek.Value;
-
-            if ((value & 1) != 0) days.Add("Sun");
-            if ((value & 2) != 0) days.Add("Mon");
-            if ((value & 4) != 0) days.Add("Tue");
-            if ((value & 8) != 0) days.Add("Wed");
-            if ((value & 16) != 0) days.Add("Thu");
-            if ((value & 32) != 0) days.Add("Fri");
-            if ((value & 64) != 0) days.Add("Sat");
-
-            return string.Join(", ", days);
+            _contractRepository = contractRepository;
+            _packageRepository = packageRepository;
+            _sessionRepository = sessionRepository;
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
         {
-            var child = await _childRepository.GetByIdAsync(request.ChildId);
-            if (child == null || child.Status == "deleted")
-                throw new Exception("Child not found or deleted");
-
-            // VALIDATION QUAN TRỌNG: Kiểm tra CenterId
-            if (request.CenterId.HasValue)
-            {
-                // Nếu contract có CenterId, phải khớp với Child's CenterId hoặc Child chưa có Center
-                if (child.CenterId.HasValue && child.CenterId != request.CenterId)
-                {
-                    throw new Exception("Contract center does not match child's assigned center");
-                }
-
-                // Nếu child chưa có center, tự động assign
-                if (!child.CenterId.HasValue)
-                {
-                    var center = await _centerRepository.GetByIdAsync(request.CenterId.Value);
-                    if (center == null)
-                        throw new Exception("Center not found");
-
-                    child.CenterId = request.CenterId;
-                    await _childRepository.UpdateAsync(child);
-                }
-            }
-            else
-            {
-                // Nếu contract không có CenterId, sử dụng CenterId của child (nếu có)
-                if (child.CenterId.HasValue)
-                {
-                    request.CenterId = child.CenterId;
-                }
-                else
-                {
-                    // Cả contract và child đều không có center - có thể là online hoặc cần assign center
-                    if (!request.IsOnline)
-                    {
-                        throw new Exception("Offline contract requires a center assignment");
-                    }
-                }
-            }
-
-            var parent = await _userRepository.GetByIdAsync(request.ParentId);
-            if (parent == null || parent.RoleId != 3) // Assume 3 is 'parent'
-                throw new Exception("Invalid parent");
-
             var package = await _packageRepository.GetByIdAsync(request.PackageId);
-            if (package == null)
-                throw new Exception("Package not found");
-
-            var mainTutor = await _userRepository.GetByIdAsync(request.MainTutorId);
-            if (mainTutor == null || mainTutor.RoleId != 2) // Assume 2 is 'tutor'
-                throw new Exception("Invalid main tutor");
-
-            // Validate substitute tutors
-            if (request.SubstituteTutor1Id.HasValue)
-            {
-                var sub1 = await _userRepository.GetByIdAsync(request.SubstituteTutor1Id.Value);
-                if (sub1 == null || sub1.RoleId != 2)
-                    throw new Exception("Invalid substitute tutor 1");
-            }
-
-            if (request.SubstituteTutor2Id.HasValue)
-            {
-                var sub2 = await _userRepository.GetByIdAsync(request.SubstituteTutor2Id.Value);
-                if (sub2 == null || sub2.RoleId != 2)
-                    throw new Exception("Invalid substitute tutor 2");
-            }
-
-            // Validate tutor assignment to center (nếu có center)
-            if (request.CenterId.HasValue)
-            {
-                var tutorCenterExists = await _tutorCenterRepository.TutorIsAssignedToCenterAsync(
-                    request.MainTutorId, request.CenterId.Value);
-                if (!tutorCenterExists)
-                    throw new Exception($"Main tutor is not assigned to center {request.CenterId}");
-
-                // Check substitute tutors
-                if (request.SubstituteTutor1Id.HasValue)
-                {
-                    var sub1CenterExists = await _tutorCenterRepository.TutorIsAssignedToCenterAsync(
-                        request.SubstituteTutor1Id.Value, request.CenterId.Value);
-                    if (!sub1CenterExists)
-                        throw new Exception("Substitute tutor 1 is not assigned to the specified center");
-                }
-
-                if (request.SubstituteTutor2Id.HasValue)
-                {
-                    var sub2CenterExists = await _tutorCenterRepository.TutorIsAssignedToCenterAsync(
-                        request.SubstituteTutor2Id.Value, request.CenterId.Value);
-                    if (!sub2CenterExists)
-                        throw new Exception("Substitute tutor 2 is not assigned to the specified center");
-                }
-            }
-
-            
-
-            if (request.VideoCallPlatform != null && !new[] { "zoom", "google_meet" }.Contains(request.VideoCallPlatform))
-                throw new Exception("Invalid video call platform");
-
-            if (!request.StartTime.HasValue || !request.EndTime.HasValue)
-                throw new Exception("Start and end times are required");
-
-            if (request.EndTime.Value <= request.StartTime.Value)
-                throw new Exception("End time must be after start time");
-
-            if (request.StartTime.Value.Hour < 16 || request.EndTime.Value.Hour > 22)
-                throw new Exception("Time must be between 16:00 and 22:00");
-
-            if (!request.DaysOfWeeks.HasValue || request.DaysOfWeeks.Value < 1 || request.DaysOfWeeks.Value > 127)
-                throw new Exception("DaysOfWeeks must be between 1 and 127");
+            if (package == null) throw new Exception("Package not found");
 
             var contract = new Contract
             {
@@ -197,7 +58,60 @@ namespace MathBridgeSystem.Application.Services
             };
 
             await _contractRepository.AddAsync(contract);
+
+            var sessions = GenerateSessions(contract, request, package.SessionCount);
+            if (sessions.Count < package.SessionCount)
+                throw new InvalidOperationException($"Không đủ ngày để tạo {package.SessionCount} buổi học.");
+
+            await _sessionRepository.AddRangeAsync(sessions);
+
             return contract.ContractId;
+        }
+
+        private List<Session> GenerateSessions(Contract contract, CreateContractRequest request, int totalSessionsNeeded)
+        {
+            var sessions = new List<Session>();
+            var currentDate = request.StartDate;
+            var endDate = request.EndDate;
+            var startTime = new TimeOnly(request.StartTime!.Value.Hour, request.StartTime.Value.Minute);
+            var endTime = new TimeOnly(request.EndTime!.Value.Hour, request.EndTime.Value.Minute);
+
+            while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
+            {
+                if (IsDayOfWeekSelected(currentDate.DayOfWeek, request.DaysOfWeeks!.Value))
+                {
+                    var sessionStart = currentDate.ToDateTime(startTime);
+                    var sessionEnd = currentDate.ToDateTime(endTime);
+
+                    var session = new Session
+                    {
+                        BookingId = Guid.NewGuid(),
+                        ContractId = contract.ContractId,
+                        TutorId = (Guid)contract.MainTutorId,
+                        SessionDate = currentDate,
+                        StartTime = sessionStart,
+                        EndTime = sessionEnd,
+                        IsOnline = request.IsOnline,
+                        VideoCallPlatform = request.VideoCallPlatform,
+                        OfflineAddress = request.OfflineAddress,
+                        OfflineLatitude = request.OfflineLatitude,
+                        OfflineLongitude = request.OfflineLongitude,
+                        Status = "scheduled",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    sessions.Add(session);
+                }
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            return sessions;
+        }
+
+        private bool IsDayOfWeekSelected(DayOfWeek day, byte daysOfWeek)
+        {
+            return (daysOfWeek & (1 << ((int)day))) != 0;
         }
 
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)
@@ -223,6 +137,21 @@ namespace MathBridgeSystem.Application.Services
                 IsOnline = c.IsOnline,
                 Status = c.Status
             }).ToList();
+        }
+
+        private string FormatDaysOfWeek(byte? daysOfWeek)
+        {
+            if (!daysOfWeek.HasValue) return string.Empty;
+            var days = new List<string>();
+            var value = daysOfWeek.Value;
+            if ((value & 1) != 0) days.Add("Sun");
+            if ((value & 2) != 0) days.Add("Mon");
+            if ((value & 4) != 0) days.Add("Tue");
+            if ((value & 8) != 0) days.Add("Wed");
+            if ((value & 16) != 0) days.Add("Thu");
+            if ((value & 32) != 0) days.Add("Fri");
+            if ((value & 64) != 0) days.Add("Sat");
+            return string.Join(", ", days);
         }
     }
 }

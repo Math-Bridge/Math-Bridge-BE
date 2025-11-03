@@ -35,6 +35,8 @@ public partial class Contract
 
     public decimal MaxDistanceKm { get; set; }
 
+    public int RescheduleCount { get; set; }
+
     public string Status { get; set; } = null!;
 
     public DateTime CreatedDate { get; set; }
@@ -49,8 +51,6 @@ public partial class Contract
 
     public byte? DaysOfWeeks { get; set; }
 
-    public int? RescheduleCount { get; set; }
-
     public virtual Center? Center { get; set; }
 
     public virtual Child Child { get; set; } = null!;
@@ -59,8 +59,6 @@ public partial class Contract
 
     public virtual User? MainTutor { get; set; }
 
-    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
-
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual PaymentPackage Package { get; set; } = null!;
@@ -68,8 +66,6 @@ public partial class Contract
     public virtual User Parent { get; set; } = null!;
 
     public virtual ICollection<PayosTransaction> PayosTransactions { get; set; } = new List<PayosTransaction>();
-
-    public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 
     public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
 
@@ -82,4 +78,5 @@ public partial class Contract
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+    public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 }

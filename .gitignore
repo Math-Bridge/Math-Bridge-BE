@@ -32,4 +32,5 @@ MathBridgeSystem.Api/appsettings.json
 *.py
 ProjectOverview.md
 MathBridgeSystem.Api/oauth_credentials.json
+MathBridgeSystem.Api/GoogleMeetTokenCache/Google.Apis.Auth.OAuth2.Responses.TokenResponse-mathbridge-user
 MathBridgeSystem.Api/mathbridge-472209-0cb30f3ae46b.json
