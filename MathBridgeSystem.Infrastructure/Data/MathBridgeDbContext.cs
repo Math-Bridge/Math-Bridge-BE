@@ -25,10 +25,11 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<Contract> Contracts { get; set; }
 
     public virtual DbSet<Curriculum> Curricula { get; set; }
-
-    public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
-
+    
     public virtual DbSet<Notification> Notifications { get; set; }
+    public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
+    public virtual DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    public virtual DbSet<NotificationPreference> NotificationPreferences { get; set; }
 
     public virtual DbSet<PaymentGatewayConfig> PaymentGatewayConfigs { get; set; }
 

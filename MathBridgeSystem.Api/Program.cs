@@ -73,7 +73,10 @@ builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
+$1
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationLogRepository, NotificationLogRepository>();
+builder.Services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
 
 
 // === SERVICE REGISTRATIONS ===
@@ -85,7 +88,14 @@ builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
-builder.Services.AddScoped<ITutorService, TutorService>();
+$1
+
+// === NOTIFICATION SERVICES ===
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISessionReminderService, SessionReminderService>();
+builder.Services.AddSingleton<NotificationConnectionManager>();
+builder.Services.AddScoped<IPubSubNotificationProvider, GooglePubSubNotificationProvider>();
+builder.Services.AddScoped<PubSubSubscriberService>();
 
 
 // === CORE BUSINESS SERVICES ===
