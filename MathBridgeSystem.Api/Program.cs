@@ -56,7 +56,11 @@ builder.Services.AddDbContext<MathBridgeDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorNumbersToAdd: new List<int> { 10054, 10053, 1205 }
         )));
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 // HTTP Client for external services
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 
@@ -197,7 +201,6 @@ if (app.Environment.IsDevelopment())
         c.EnableDeepLinking();
     });
 }
-
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();

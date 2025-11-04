@@ -50,7 +50,8 @@ public class SePayRepository : ISePayRepository
 
     public async Task<SepayTransaction?> ExistsByCodeAsync(string code)
     {
-        return await _context.SepayTransactions.Include(s => s.WalletTransaction)
+        return await _context.SepayTransactions
+            .Include(s => s.WalletTransaction)
             .FirstOrDefaultAsync(s => s.Code == code);
     }
 
