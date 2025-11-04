@@ -101,7 +101,8 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISessionReminderService, SessionReminderService>();
 builder.Services.AddSingleton<NotificationConnectionManager>();
 builder.Services.AddScoped<IPubSubNotificationProvider, GooglePubSubNotificationProvider>();
-builder.Services.AddScoped<PubSubSubscriberService>();
+builder.Services.AddSingleton<PubSubSubscriberService>();
+builder.Services.AddHostedService<NotificationSubscriberBackgroundService>();
 builder.Services.AddHttpClient<MeetProvider>();
 builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
 
