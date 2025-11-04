@@ -113,17 +113,18 @@ namespace MathBridgeSystem.Application.Services
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)
         {
             var contracts = await _contractRepository.GetByParentIdAsync(parentId);
+
             return contracts.Select(c => new ContractDto
             {
                 ContractId = c.ContractId,
                 ChildId = c.ChildId,
-                ChildName = c.Child.FullName,
+                ChildName = c.Child?.FullName ?? "Unknown Child", 
                 PackageId = c.PackageId,
-                PackageName = c.Package.PackageName,
+                PackageName = c.Package?.PackageName ?? "Unknown Package", 
                 MainTutorId = c.MainTutorId,
-                MainTutorName = c.MainTutor.FullName,
+                MainTutorName = c.MainTutor?.FullName ?? "Not Assigned",
                 CenterId = c.CenterId,
-                CenterName = c.Center?.Name,
+                CenterName = c.Center?.Name ?? "No Center", 
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 StartTime = c.StartTime,

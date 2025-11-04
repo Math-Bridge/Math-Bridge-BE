@@ -10,7 +10,7 @@ namespace MathBridgeSystem.Application.DTOs
         public Guid PackageId { get; set; }
         public string PackageName { get; set; } = null!;
         public Guid? MainTutorId { get; set; }
-        public string MainTutorName { get; set; } = null!;
+        public string? MainTutorName { get; set; } = null!;
         public Guid? CenterId { get; set; }
         public string? CenterName { get; set; }
         public DateOnly StartDate { get; set; }

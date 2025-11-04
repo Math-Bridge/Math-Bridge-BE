@@ -61,7 +61,8 @@ namespace MathBridgeSystem.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                Console.WriteLine($"Error in GetContractsByParent: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, new { error = "Failed to retrieve contracts.", details = ex.Message });
             }
         }
 
