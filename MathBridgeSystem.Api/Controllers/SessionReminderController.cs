@@ -8,7 +8,7 @@ namespace MathBridgeSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [AllowAnonymous]
     public class SessionReminderController : ControllerBase
     {
         private readonly ISessionReminderService _sessionReminderService;

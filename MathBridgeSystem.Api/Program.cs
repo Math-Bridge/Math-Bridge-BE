@@ -80,6 +80,7 @@ builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IRescheduleRequestRepository, RescheduleRequestRepository>();
 
 
+
 // === SERVICE REGISTRATIONS ===
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -89,6 +90,7 @@ builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
+builder.Services.AddScoped<IVideoConferenceService, VideoConferenceService>();
 
 // === NOTIFICATION SERVICES ===
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -96,7 +98,12 @@ builder.Services.AddScoped<ISessionReminderService, SessionReminderService>();
 builder.Services.AddSingleton<NotificationConnectionManager>();
 builder.Services.AddScoped<IPubSubNotificationProvider, GooglePubSubNotificationProvider>();
 builder.Services.AddScoped<PubSubSubscriberService>();
+builder.Services.AddHttpClient<MeetProvider>();
+builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
 
+// Register ZoomProvider
+builder.Services.AddHttpClient<ZoomProvider>();
+builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
 
 // === CORE BUSINESS SERVICES ===
 builder.Services.AddScoped<ISessionService, SessionService>();

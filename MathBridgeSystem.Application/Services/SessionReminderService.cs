@@ -13,25 +13,61 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly INotificationService _notificationService;
         private readonly IPubSubNotificationProvider _pubSubProvider;
-        private const string REMINDERS_TOPIC = "session-reminders";
+        private readonly ISessionRepository _sessionRepository;
+        private const string REMINDERS_TOPIC = "notifications";
 
-        public SessionReminderService(INotificationService notificationService, IPubSubNotificationProvider pubSubProvider)
+        public SessionReminderService(INotificationService notificationService, IPubSubNotificationProvider pubSubProvider, ISessionRepository sessionRepository)
         {
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             _pubSubProvider = pubSubProvider ?? throw new ArgumentNullException(nameof(pubSubProvider));
+            _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         }
 
-        public async Task<List<SessionReminderDto>> GetSessionsForReminderAsync(int hoursBeforeSession = 24)
+        public async Task<List<SessionReminderDto>> GetSessionsForReminderAsync(int hoursBeforeSession)
         {
-            // This will be implemented after Session repository is available
-            // For now, return empty list
-            return await Task.FromResult(new List<SessionReminderDto>());
+            var now = DateTime.Now;
+            var startTime = now.AddHours(hoursBeforeSession).AddMinutes(-5);
+            var endTime = now.AddHours(hoursBeforeSession + 1).AddMinutes(5);
+
+            var sessions = await _sessionRepository.GetSessionsInTimeRangeAsync(startTime, endTime);
+            
+            var reminderDtos = sessions.Select(s => new SessionReminderDto
+            {
+                SessionId = s.BookingId,
+                ContractId = s.ContractId,
+                TutorId = s.TutorId,
+                ParentId = s.Contract.Parent.UserId,
+                ReminderType = hoursBeforeSession == 24 ? "24hr" : "1hr",
+                SessionStartTime = s.StartTime,
+                StudentName = s.Contract.Child.FullName,
+                TutorName = s.Tutor.FullName,
+                VideoCallPlatform = s.VideoCallPlatform
+            }).ToList();
+
+            return reminderDtos;
         }
 
         public async Task<List<SessionReminderDto>> GetUpcomingSessionsAsync(TimeSpan timeWindow)
         {
-            // This will be implemented after Session repository is available
-            return await Task.FromResult(new List<SessionReminderDto>());
+            var now = DateTime.UtcNow;
+            var endTime = now.Add(timeWindow);
+
+            var sessions = await _sessionRepository.GetSessionsInTimeRangeAsync(now, endTime);
+            
+            var reminderDtos = sessions.Select(s => new SessionReminderDto
+            {
+                SessionId = s.BookingId,
+                ContractId = s.ContractId,
+                TutorId = s.TutorId,
+                ParentId = s.Contract.Parent.UserId,
+                ReminderType = "upcoming",
+                SessionStartTime = s.StartTime,
+                StudentName = s.Contract.Child.FullName,
+                TutorName = s.Tutor.FullName,
+                VideoCallPlatform = s.VideoCallPlatform
+            }).ToList();
+
+            return reminderDtos;
         }
 
         public async Task CreateReminderNotificationsAsync(List<SessionReminderDto> sessions, string reminderType)
