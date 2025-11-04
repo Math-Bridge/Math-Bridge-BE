@@ -233,5 +233,30 @@ namespace MathBridgeSystem.Application.Services
             if ((value & 64) != 0) days.Add("Sat");
             return string.Join(", ", days);
         }
+        public async Task<List<ContractDto>> GetAllContractsAsync()
+        {
+            var contracts = await _contractRepository.GetAllWithDetailsAsync();
+
+            return contracts.Select(c => new ContractDto
+            {
+                ContractId = c.ContractId,
+                ChildId = c.ChildId,
+                ChildName = c.Child?.FullName ?? "Unknown Child",
+                PackageId = c.PackageId,
+                PackageName = c.Package?.PackageName ?? "Unknown Package",
+                MainTutorId = c.MainTutorId,
+                MainTutorName = c.MainTutor?.FullName ?? "Not Assigned",
+                CenterId = c.CenterId,
+                CenterName = c.Center?.Name ?? "No Center",
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                StartTime = c.StartTime,
+                EndTime = c.EndTime,
+                DaysOfWeeks = c.DaysOfWeeks,
+                DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
+                IsOnline = c.IsOnline,
+                Status = c.Status
+            }).ToList();
+        }
     }
 }
