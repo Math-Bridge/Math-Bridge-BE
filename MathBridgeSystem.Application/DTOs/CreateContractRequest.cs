@@ -1,27 +1,31 @@
-﻿// MathBridgeSystem.Application.DTOs/CreateContractRequest.cs
-using System;
+﻿using System.Text.Json.Serialization;
 
 namespace MathBridgeSystem.Application.DTOs
 {
     public class CreateContractRequest
     {
-        public Guid ParentId { get; set; }
-        public Guid ChildId { get; set; }
-        public Guid PackageId { get; set; }
-        public Guid MainTutorId { get; set; }
-        public Guid? SubstituteTutor1Id { get; set; }
-        public Guid? SubstituteTutor2Id { get; set; }
-        public Guid? CenterId { get; set; }
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
-        public byte? DaysOfWeeks { get; set; }
-        public TimeOnly? StartTime { get; set; }
-        public TimeOnly? EndTime { get; set; }
-        public bool IsOnline { get; set; }
-        public string? OfflineAddress { get; set; }
-        public decimal? OfflineLatitude { get; set; }
-        public decimal? OfflineLongitude { get; set; }
-        public string? VideoCallPlatform { get; set; }
-        public decimal MaxDistanceKm { get; set; }
+        [JsonPropertyName("parentId")] public Guid ParentId { get; set; }
+        [JsonPropertyName("childId")] public Guid ChildId { get; set; }
+        [JsonPropertyName("packageId")] public Guid PackageId { get; set; }
+
+        [JsonPropertyName("mainTutorId")]
+        public Guid? MainTutorId { get; set; }
+
+        [JsonPropertyName("substituteTutor1Id")] public Guid? SubstituteTutor1Id { get; set; }
+        [JsonPropertyName("substituteTutor2Id")] public Guid? SubstituteTutor2Id { get; set; }
+        [JsonPropertyName("centerId")] public Guid? CenterId { get; set; }
+
+        [JsonPropertyName("startDate")] public DateOnly StartDate { get; set; }
+        [JsonPropertyName("endDate")] public DateOnly EndDate { get; set; }
+        [JsonPropertyName("daysOfWeeks")] public byte? DaysOfWeeks { get; set; }
+        [JsonPropertyName("startTime")] public TimeOnly? StartTime { get; set; }
+        [JsonPropertyName("endTime")] public TimeOnly? EndTime { get; set; }
+        [JsonPropertyName("isOnline")] public bool IsOnline { get; set; }
+        [JsonPropertyName("offlineAddress")] public string? OfflineAddress { get; set; }
+        [JsonPropertyName("offlineLatitude")] public decimal? OfflineLatitude { get; set; }
+        [JsonPropertyName("offlineLongitude")] public decimal? OfflineLongitude { get; set; }
+        [JsonPropertyName("videoCallPlatform")] public string? VideoCallPlatform { get; set; }
+        [JsonPropertyName("maxDistanceKm")] public decimal MaxDistanceKm { get; set; }
+        [JsonPropertyName("status")] public string Status { get; set; } = null!;
     }
 }

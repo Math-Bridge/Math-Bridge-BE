@@ -67,5 +67,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
         }
+        public async Task<List<Session>> GetByContractIdAsync(Guid contractId)
+        {
+            return await _context.Sessions
+                .Where(s => s.ContractId == contractId)
+                .ToListAsync();
+        }
     }
 }

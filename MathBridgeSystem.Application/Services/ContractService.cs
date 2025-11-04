@@ -1,5 +1,4 @@
-﻿// MathBridgeSystem.Application.Services/ContractService.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -28,6 +27,13 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Status))
+                throw new ArgumentException("Status is required.");
+
+            var validStatuses = new[] { "pending", "active", "completed", "cancelled" };
+            if (!validStatuses.Contains(request.Status.ToLower()))
+                throw new ArgumentException("Invalid status.");
+
             var package = await _packageRepository.GetByIdAsync(request.PackageId);
             if (package == null) throw new Exception("Package not found");
 
@@ -53,65 +59,55 @@ namespace MathBridgeSystem.Application.Services
                 VideoCallPlatform = request.VideoCallPlatform,
                 MaxDistanceKm = request.MaxDistanceKm,
                 RescheduleCount = 0,
-                Status = "pending",
+                Status = request.Status.ToLower(),
                 CreatedDate = DateTime.UtcNow
             };
 
             await _contractRepository.AddAsync(contract);
 
-            var sessions = GenerateSessions(contract, request, package.SessionCount);
-            if (sessions.Count < package.SessionCount)
-                throw new InvalidOperationException($"Không đủ ngày để tạo {package.SessionCount} buổi học.");
+            if (contract.MainTutorId.HasValue && contract.Status != "cancelled")
+            {
+                var sessions = GenerateSessions(contract, request, package.SessionCount);
+                if (sessions.Count < package.SessionCount)
+                    throw new InvalidOperationException($"Not enough days to create {package.SessionCount} lessons.");
 
-            await _sessionRepository.AddRangeAsync(sessions);
+                await _sessionRepository.AddRangeAsync(sessions);
+            }
 
             return contract.ContractId;
         }
 
-        private List<Session> GenerateSessions(Contract contract, CreateContractRequest request, int totalSessionsNeeded)
+        public async Task<bool> UpdateContractStatusAsync(Guid contractId, UpdateContractStatusRequest request, Guid staffId)
         {
-            var sessions = new List<Session>();
-            var currentDate = request.StartDate;
-            var endDate = request.EndDate;
-            var startTime = new TimeOnly(request.StartTime!.Value.Hour, request.StartTime.Value.Minute);
-            var endTime = new TimeOnly(request.EndTime!.Value.Hour, request.EndTime.Value.Minute);
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract == null) throw new KeyNotFoundException("Contract not found.");
 
-            while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
+            var validNewStatuses = new[] { "active", "completed", "cancelled" };
+            if (!validNewStatuses.Contains(request.Status.ToLower()))
+                throw new ArgumentException("Invalid status. Use: active, completed, cancelled");
+
+            if (contract.Status == "cancelled" && request.Status.ToLower() != "cancelled")
+                throw new InvalidOperationException("Cannot reactivate a cancelled contract.");
+
+            contract.Status = request.Status.ToLower();
+            contract.UpdatedDate = DateTime.UtcNow;
+            await _contractRepository.UpdateAsync(contract);
+
+            if (request.Status.ToLower() == "cancelled")
             {
-                if (IsDayOfWeekSelected(currentDate.DayOfWeek, request.DaysOfWeeks!.Value))
+                var sessions = await _sessionRepository.GetByContractIdAsync(contractId);
+                foreach (var s in sessions)
                 {
-                    var sessionStart = currentDate.ToDateTime(startTime);
-                    var sessionEnd = currentDate.ToDateTime(endTime);
-
-                    var session = new Session
+                    if (s.Status == "scheduled" || s.Status == "rescheduled")
                     {
-                        BookingId = Guid.NewGuid(),
-                        ContractId = contract.ContractId,
-                        TutorId = (Guid)contract.MainTutorId,
-                        SessionDate = currentDate,
-                        StartTime = sessionStart,
-                        EndTime = sessionEnd,
-                        IsOnline = request.IsOnline,
-                        VideoCallPlatform = request.VideoCallPlatform,
-                        OfflineAddress = request.OfflineAddress,
-                        OfflineLatitude = request.OfflineLatitude,
-                        OfflineLongitude = request.OfflineLongitude,
-                        Status = "scheduled",
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    sessions.Add(session);
+                        s.Status = "cancelled";
+                        s.UpdatedAt = DateTime.UtcNow;
+                        await _sessionRepository.UpdateAsync(s);
+                    }
                 }
-
-                currentDate = currentDate.AddDays(1);
             }
 
-            return sessions;
-        }
-
-        private bool IsDayOfWeekSelected(DayOfWeek day, byte daysOfWeek)
-        {
-            return (daysOfWeek & (1 << ((int)day))) != 0;
+            return true;
         }
 
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)
@@ -137,6 +133,89 @@ namespace MathBridgeSystem.Application.Services
                 IsOnline = c.IsOnline,
                 Status = c.Status
             }).ToList();
+        }
+
+        public async Task<bool> AssignTutorsAsync(Guid contractId, AssignTutorToContractRequest request, Guid staffId)
+        {
+            var contract = await _contractRepository.GetByIdWithPackageAsync(contractId);
+            if (contract == null) throw new KeyNotFoundException("Contract not found.");
+            if (contract.MainTutorId.HasValue) throw new InvalidOperationException("Main tutor already assigned.");
+            if (contract.Status == "cancelled") throw new InvalidOperationException("Cannot assign tutors to cancelled contract.");
+
+            if (request.MainTutorId == Guid.Empty)
+                throw new ArgumentException("MainTutorId is required.");
+
+            contract.MainTutorId = request.MainTutorId;
+            contract.SubstituteTutor1Id = request.SubstituteTutor1Id;
+            contract.SubstituteTutor2Id = request.SubstituteTutor2Id;
+            contract.UpdatedDate = DateTime.UtcNow;
+
+            await _contractRepository.UpdateAsync(contract);
+
+            var createRequest = new CreateContractRequest
+            {
+                StartDate = contract.StartDate,
+                EndDate = contract.EndDate,
+                StartTime = contract.StartTime,
+                EndTime = contract.EndTime,
+                DaysOfWeeks = contract.DaysOfWeeks,
+                IsOnline = contract.IsOnline,
+                VideoCallPlatform = contract.VideoCallPlatform,
+                OfflineAddress = contract.OfflineAddress,
+                OfflineLatitude = contract.OfflineLatitude,
+                OfflineLongitude = contract.OfflineLongitude
+            };
+
+            var sessions = GenerateSessions(contract, createRequest, contract.Package.SessionCount);
+            await _sessionRepository.AddRangeAsync(sessions);
+
+            return true;
+        }
+
+        private List<Session> GenerateSessions(Contract contract, CreateContractRequest request, int totalSessionsNeeded)
+        {
+            if (!contract.MainTutorId.HasValue)
+                throw new InvalidOperationException("MainTutorId is required to generate sessions.");
+
+            var sessions = new List<Session>();
+            var currentDate = request.StartDate;
+            var endDate = request.EndDate;
+            var startTime = new TimeOnly(request.StartTime!.Value.Hour, request.StartTime.Value.Minute);
+            var endTime = new TimeOnly(request.EndTime!.Value.Hour, request.EndTime.Value.Minute);
+
+            while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
+            {
+                if (IsDayOfWeekSelected(currentDate.DayOfWeek, request.DaysOfWeeks!.Value))
+                {
+                    var sessionStart = currentDate.ToDateTime(startTime);
+                    var sessionEnd = currentDate.ToDateTime(endTime);
+
+                    sessions.Add(new Session
+                    {
+                        BookingId = Guid.NewGuid(),
+                        ContractId = contract.ContractId,
+                        TutorId = contract.MainTutorId.Value,
+                        SessionDate = currentDate,
+                        StartTime = sessionStart,
+                        EndTime = sessionEnd,
+                        IsOnline = request.IsOnline,
+                        VideoCallPlatform = request.VideoCallPlatform,
+                        OfflineAddress = request.OfflineAddress,
+                        OfflineLatitude = request.OfflineLatitude,
+                        OfflineLongitude = request.OfflineLongitude,
+                        Status = "scheduled",
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                currentDate = currentDate.AddDays(1);
+            }
+
+            return sessions;
+        }
+
+        private bool IsDayOfWeekSelected(DayOfWeek day, byte daysOfWeek)
+        {
+            return (daysOfWeek & (1 << ((int)day))) != 0;
         }
 
         private string FormatDaysOfWeek(byte? daysOfWeek)
