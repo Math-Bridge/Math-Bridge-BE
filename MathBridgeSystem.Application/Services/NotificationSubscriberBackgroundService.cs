@@ -10,7 +10,7 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly PubSubSubscriberService _pubSubSubscriberService;
         private readonly ILogger<NotificationSubscriberBackgroundService> _logger;
-        private const string SubscriptionName = "notifications-web-subscriber";
+        private const string SubscriptionName = "session";
 
         public NotificationSubscriberBackgroundService(
             PubSubSubscriberService pubSubSubscriberService,

@@ -110,17 +110,22 @@ namespace MathBridgeSystem.Api.Controllers
         {
             var userId = GetCurrentUserId();
             Response.ContentType = "text/event-stream";
+            Response.StatusCode = 200;
             Response.Headers.Add("Cache-Control", "no-cache");
             Response.Headers.Add("Connection", "keep-alive");
-            Response.Headers.Add("X-Accel-Buffering", "no");
 
-            var writer = new System.IO.StreamWriter(Response.Body);
+            var writer = new StreamWriter(Response.Body) { AutoFlush = false };
             _connectionManager.RegisterConnection(userId, writer);
 
             try
             {
-                // Keep connection open
-                await Task.Delay(Timeout.Infinite, HttpContext.RequestAborted);
+                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                {
+                    // Send keep-alive comment every 30 seconds
+                    await writer.WriteAsync(":keep-alive\n\n");
+                    await writer.FlushAsync();
+                    await Task.Delay(30000, HttpContext.RequestAborted);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -130,9 +135,11 @@ namespace MathBridgeSystem.Api.Controllers
             {
                 _connectionManager.UnregisterConnection(userId);
                 await writer.FlushAsync();
-                writer.Dispose();
+                await writer.DisposeAsync();
             }
         }
+
+
 
         #region Testing Endpoints
 
@@ -153,7 +160,7 @@ namespace MathBridgeSystem.Api.Controllers
                     });
                 }
 
-                var topicExists = await pubSubProvider.TopicExistsAsync("notifications-session-reminders");
+                var topicExists = await pubSubProvider.TopicExistsAsync("notifications");
 
                 return Ok(new
                 {
@@ -316,7 +323,7 @@ namespace MathBridgeSystem.Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("test/topic-exists")]
-        public async Task<ActionResult> TestTopicExists([FromQuery] string topicName = "notifications-session-reminders")
+        public async Task<ActionResult> TestTopicExists([FromQuery] string topicName = "notifications")
         {
             try
             {
