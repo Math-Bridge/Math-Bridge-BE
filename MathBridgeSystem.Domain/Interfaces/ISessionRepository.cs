@@ -12,5 +12,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task UpdateAsync(Session session);
         Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeOnly startTime, TimeOnly endTime);
         Task<List<Session>> GetByParentIdAsync(Guid parentId);
+        Task<List<Session>> GetByContractIdAsync(Guid contractId);
     }
 }
