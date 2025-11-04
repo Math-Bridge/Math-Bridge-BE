@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using MathBridgeSystem.Infrastructure.Services;
+using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize Firebase with error handling
@@ -124,8 +125,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
             ClockSkew = TimeSpan.Zero, // Disable clock skew to enforce exact token expiration
-            // Map JWT claims to ClaimTypes
-            NameClaimType = "sub", // Maps "sub" to ClaimTypes.NameIdentifier
+                                       // Map JWT claims to ClaimTypes
+            NameClaimType = ClaimTypes.NameIdentifier, // Maps "sub" to ClaimTypes.NameIdentifier
             RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         };
     });

@@ -18,13 +18,19 @@ namespace MathBridgeSystem.Application.DTOs
         public TimeOnly? StartTime { get; set; }
         public TimeOnly? EndTime { get; set; }
         public byte? DaysOfWeeks { get; set; }
-
-        /// <summary>
-        /// Human-readable display of selected days (e.g., "Mon, Wed, Fri")
-        /// </summary>
         public string DaysOfWeeksDisplay { get; set; } = null!;
-
         public bool IsOnline { get; set; }
+
+        // ONLY ONLINE
+        public string? VideoCallPlatform { get; set; }
+
+        //ONLY OFFLINE
+        public string? OfflineAddress { get; set; }
+        public decimal? OfflineLatitude { get; set; }
+        public decimal? OfflineLongitude { get; set; }
+        public decimal? MaxDistanceKm { get; set; } 
+
+        public int RescheduleCount { get; set; }
         public string Status { get; set; } = null!;
     }
 }

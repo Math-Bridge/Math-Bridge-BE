@@ -1,14 +1,13 @@
-﻿// MathBridgeSystem.Api.Controllers/ContractController.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace MathBridgeSystem.Api.Controllers
 {
     [Route("api/contracts")]
     [ApiController]
-    [Authorize(Roles = "parent")]
     public class ContractController : ControllerBase
     {
         private readonly IContractService _contractService;
@@ -18,7 +17,23 @@ namespace MathBridgeSystem.Api.Controllers
             _contractService = contractService ?? throw new ArgumentNullException(nameof(contractService));
         }
 
+        private Guid GetUserIdFromClaims()
+        {
+            var sub = User.FindFirst("sub")?.Value ??
+                      User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                      User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrWhiteSpace(sub))
+                throw new UnauthorizedAccessException("Missing user identifier in token.");
+
+            if (!Guid.TryParse(sub, out var userId))
+                throw new UnauthorizedAccessException("Invalid user identifier format.");
+
+            return userId;
+        }
+
         [HttpPost]
+        [Authorize(Roles = "parent")]
         public async Task<IActionResult> CreateContract([FromBody] CreateContractRequest request)
         {
             if (request == null || !ModelState.IsValid)
@@ -39,7 +54,7 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> UpdateStatus(Guid contractId, [FromBody] UpdateContractStatusRequest request)
         {
-            var staffId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var staffId = GetUserIdFromClaims(); 
             try
             {
                 await _contractService.UpdateContractStatusAsync(contractId, request, staffId);
@@ -52,8 +67,13 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet("parents/{parentId}")]
+        [Authorize(Roles = "parent")]
         public async Task<IActionResult> GetContractsByParent(Guid parentId)
         {
+            var userId = GetUserIdFromClaims();
+            if (parentId != userId)
+                return Forbid();
+
             try
             {
                 var contracts = await _contractService.GetContractsByParentAsync(parentId);
@@ -73,15 +93,33 @@ namespace MathBridgeSystem.Api.Controllers
             if (request == null)
                 return BadRequest(new { error = "Request body is required." });
 
-            var staffId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var staffId = GetUserIdFromClaims(); 
             try
             {
-                object value = await _contractService.AssignTutorsAsync(contractId, request, staffId);
+                await _contractService.AssignTutorsAsync(contractId, request, staffId);
                 return Ok(new { success = true, message = "Đã gán tutor và tạo buổi học." });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get all contracts (Staff & Admin only)
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetAllContracts()
+        {
+            try
+            {
+                var contracts = await _contractService.GetAllContractsAsync();
+                return Ok(contracts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to retrieve all contracts.", details = ex.Message });
             }
         }
     }

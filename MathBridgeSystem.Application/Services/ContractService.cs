@@ -37,6 +37,21 @@ namespace MathBridgeSystem.Application.Services
             var package = await _packageRepository.GetByIdAsync(request.PackageId);
             if (package == null) throw new Exception("Package not found");
 
+            // VALIDATE & ÉP KIỂU DaysOfWeeks: int? → byte?
+            byte? daysOfWeeksByte = null;
+            if (request.DaysOfWeeks.HasValue)
+            {
+                if (request.DaysOfWeeks < 0 || request.DaysOfWeeks > 127)
+                    throw new ArgumentOutOfRangeException("daysOfWeeks", "Bitmask must be between 0 and 127 (7 days).");
+
+                if (request.DaysOfWeeks == 0)
+                    throw new ArgumentException("At least one day of the week must be selected.");
+
+                daysOfWeeksByte = (byte)request.DaysOfWeeks.Value;
+            }
+
+            var maxDistanceKm = request.MaxDistanceKm ?? 15;
+
             var contract = new Contract
             {
                 ContractId = Guid.NewGuid(),
@@ -51,20 +66,21 @@ namespace MathBridgeSystem.Application.Services
                 EndDate = request.EndDate,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
-                DaysOfWeeks = request.DaysOfWeeks,
+                DaysOfWeeks = daysOfWeeksByte, 
                 IsOnline = request.IsOnline,
                 OfflineAddress = request.OfflineAddress,
                 OfflineLatitude = request.OfflineLatitude,
                 OfflineLongitude = request.OfflineLongitude,
                 VideoCallPlatform = request.VideoCallPlatform,
-                MaxDistanceKm = request.MaxDistanceKm,
-                RescheduleCount = 0,
+                MaxDistanceKm = maxDistanceKm,
+                RescheduleCount = package.MaxReschedule, 
                 Status = request.Status.ToLower(),
                 CreatedDate = DateTime.UtcNow
             };
 
             await _contractRepository.AddAsync(contract);
 
+            // Tạo buổi học
             if (contract.MainTutorId.HasValue && contract.Status != "cancelled")
             {
                 var sessions = GenerateSessions(contract, request, package.SessionCount);
@@ -113,18 +129,17 @@ namespace MathBridgeSystem.Application.Services
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)
         {
             var contracts = await _contractRepository.GetByParentIdAsync(parentId);
-
             return contracts.Select(c => new ContractDto
             {
                 ContractId = c.ContractId,
                 ChildId = c.ChildId,
-                ChildName = c.Child?.FullName ?? "Unknown Child", 
+                ChildName = c.Child?.FullName ?? "Unknown Child",
                 PackageId = c.PackageId,
-                PackageName = c.Package?.PackageName ?? "Unknown Package", 
+                PackageName = c.Package?.PackageName ?? "Unknown Package",
                 MainTutorId = c.MainTutorId,
                 MainTutorName = c.MainTutor?.FullName ?? "Not Assigned",
                 CenterId = c.CenterId,
-                CenterName = c.Center?.Name ?? "No Center", 
+                CenterName = c.Center?.Name ?? "No Center",
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 StartTime = c.StartTime,
@@ -132,6 +147,17 @@ namespace MathBridgeSystem.Application.Services
                 DaysOfWeeks = c.DaysOfWeeks,
                 DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
                 IsOnline = c.IsOnline,
+
+                // ONLY ONLINE
+                VideoCallPlatform = c.IsOnline ? c.VideoCallPlatform : null,
+
+                // ONLY OFFLINE
+                OfflineAddress = !c.IsOnline ? c.OfflineAddress : null,
+                OfflineLatitude = !c.IsOnline ? c.OfflineLatitude : null,
+                OfflineLongitude = !c.IsOnline ? c.OfflineLongitude : null,
+                MaxDistanceKm = !c.IsOnline ? c.MaxDistanceKm : null,
+
+                RescheduleCount = c.RescheduleCount ?? 0,
                 Status = c.Status
             }).ToList();
         }
@@ -181,15 +207,26 @@ namespace MathBridgeSystem.Application.Services
             var sessions = new List<Session>();
             var currentDate = request.StartDate;
             var endDate = request.EndDate;
-            var startTime = new TimeOnly(request.StartTime!.Value.Hour, request.StartTime.Value.Minute);
-            var endTime = new TimeOnly(request.EndTime!.Value.Hour, request.EndTime.Value.Minute);
+
+            // LẤY TỪ contract.DaysOfWeeks (byte?)
+            var daysOfWeeks = contract.DaysOfWeeks
+                ?? throw new ArgumentException("DaysOfWeeks is required to generate sessions.");
+
+            var startTime = request.StartTime
+                ?? throw new ArgumentException("StartTime is required.");
+            var endTime = request.EndTime
+                ?? throw new ArgumentException("EndTime is required.");
+
+            var sessionStartTime = new TimeOnly(startTime.Hour, startTime.Minute);
+            var sessionEndTime = new TimeOnly(endTime.Hour, endTime.Minute);
 
             while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
             {
-                if (IsDayOfWeekSelected(currentDate.DayOfWeek, request.DaysOfWeeks!.Value))
+                // SỬA: DÙNG daysOfWeeks trực tiếp (đã đảm bảo != null)
+                if (IsDayOfWeekSelected(currentDate.DayOfWeek, daysOfWeeks))
                 {
-                    var sessionStart = currentDate.ToDateTime(startTime);
-                    var sessionEnd = currentDate.ToDateTime(endTime);
+                    var sessionStart = currentDate.ToDateTime(sessionStartTime);
+                    var sessionEnd = currentDate.ToDateTime(sessionEndTime);
 
                     sessions.Add(new Session
                     {
@@ -213,7 +250,6 @@ namespace MathBridgeSystem.Application.Services
 
             return sessions;
         }
-
         private bool IsDayOfWeekSelected(DayOfWeek day, byte daysOfWeek)
         {
             return (daysOfWeek & (1 << ((int)day))) != 0;
@@ -221,22 +257,25 @@ namespace MathBridgeSystem.Application.Services
 
         private string FormatDaysOfWeek(byte? daysOfWeek)
         {
-            if (!daysOfWeek.HasValue) return string.Empty;
+            if (!daysOfWeek.HasValue || daysOfWeek == 0)
+                return "Do Not Have sessions";
+
             var days = new List<string>();
-            var value = daysOfWeek.Value;
-            if ((value & 1) != 0) days.Add("Sun");
-            if ((value & 2) != 0) days.Add("Mon");
-            if ((value & 4) != 0) days.Add("Tue");
-            if ((value & 8) != 0) days.Add("Wed");
-            if ((value & 16) != 0) days.Add("Thu");
-            if ((value & 32) != 0) days.Add("Fri");
-            if ((value & 64) != 0) days.Add("Sat");
+            var value = daysOfWeek.Value; 
+
+            if ((value & 1) != 0) days.Add("CN");
+            if ((value & 2) != 0) days.Add("T2");
+            if ((value & 4) != 0) days.Add("T3");
+            if ((value & 8) != 0) days.Add("T4");
+            if ((value & 16) != 0) days.Add("T5");
+            if ((value & 32) != 0) days.Add("T6");
+            if ((value & 64) != 0) days.Add("T7");
+
             return string.Join(", ", days);
         }
         public async Task<List<ContractDto>> GetAllContractsAsync()
         {
             var contracts = await _contractRepository.GetAllWithDetailsAsync();
-
             return contracts.Select(c => new ContractDto
             {
                 ContractId = c.ContractId,
@@ -255,6 +294,17 @@ namespace MathBridgeSystem.Application.Services
                 DaysOfWeeks = c.DaysOfWeeks,
                 DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
                 IsOnline = c.IsOnline,
+
+                // ONLY ONLINE
+                VideoCallPlatform = c.IsOnline ? c.VideoCallPlatform : null,
+
+                // ONLY OFFLINE
+                OfflineAddress = !c.IsOnline ? c.OfflineAddress : null,
+                OfflineLatitude = !c.IsOnline ? c.OfflineLatitude : null,
+                OfflineLongitude = !c.IsOnline ? c.OfflineLongitude : null,
+                MaxDistanceKm = !c.IsOnline ? c.MaxDistanceKm : null,
+
+                RescheduleCount = c.RescheduleCount ?? 0,
                 Status = c.Status
             }).ToList();
         }
