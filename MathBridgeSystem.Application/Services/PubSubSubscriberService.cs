@@ -106,7 +106,8 @@ namespace MathBridgeSystem.Infrastructure.Services
             try
             {
                 var messageText = message.Data.ToStringUtf8();
-                var notification = JsonSerializer.Deserialize<NotificationResponseDto>(messageText);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+var notification = JsonSerializer.Deserialize<NotificationResponseDto>(messageText, options);
 
                 if (notification != null)
                 {
