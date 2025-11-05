@@ -31,7 +31,5 @@ public partial class Notification
 
     public virtual Contract? Contract { get; set; }
 
-    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
-
     public virtual User User { get; set; } = null!;
 }

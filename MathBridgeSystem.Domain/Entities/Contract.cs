@@ -33,9 +33,7 @@ public partial class Contract
 
     public string? VideoCallPlatform { get; set; }
 
-    public decimal? MaxDistanceKm { get; set; } = 15;
-
-    public int? RescheduleCount { get; set; } = 0;
+    public decimal MaxDistanceKm { get; set; }
 
     public string Status { get; set; } = null!;
 
@@ -51,6 +49,8 @@ public partial class Contract
 
     public byte? DaysOfWeeks { get; set; }
 
+    public int? RescheduleCount { get; set; }
+
     public virtual Center? Center { get; set; }
 
     public virtual Child Child { get; set; } = null!;
@@ -58,8 +58,6 @@ public partial class Contract
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
     public virtual User? MainTutor { get; set; }
-
-    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 

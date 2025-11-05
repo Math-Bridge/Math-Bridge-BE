@@ -30,11 +30,7 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
-    public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
-
     public virtual DbSet<NotificationPreference> NotificationPreferences { get; set; }
-
-    public virtual DbSet<NotificationTemplate> NotificationTemplates { get; set; }
 
     public virtual DbSet<PaymentGatewayConfig> PaymentGatewayConfigs { get; set; }
 
@@ -451,34 +447,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("FK_Notifications_Users");
         });
 
-        modelBuilder.Entity<NotificationLog>(entity =>
-        {
-            entity.HasKey(e => e.LogId).HasName("PK__notifica__5E548648859683DA");
-
-            entity.ToTable("notification_logs");
-
-            entity.HasIndex(e => e.CreatedDate, "IX_NotificationLogs_CreatedDate");
-
-            entity.HasIndex(e => e.NotificationId, "IX_NotificationLogs_NotificationId");
-
-            entity.Property(e => e.LogId).ValueGeneratedNever();
-            entity.Property(e => e.Channel).HasMaxLength(50);
-            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getutcdate())");
-            entity.Property(e => e.Status).HasMaxLength(50);
-
-            entity.HasOne(d => d.Contract).WithMany(p => p.NotificationLogs)
-                .HasForeignKey(d => d.ContractId)
-                .HasConstraintName("FK_NotificationLogs_Contracts");
-
-            entity.HasOne(d => d.Notification).WithMany(p => p.NotificationLogs)
-                .HasForeignKey(d => d.NotificationId)
-                .HasConstraintName("FK_NotificationLogs_Notifications");
-
-            entity.HasOne(d => d.Session).WithMany(p => p.NotificationLogs)
-                .HasForeignKey(d => d.SessionId)
-                .HasConstraintName("FK_NotificationLogs_Sessions");
-        });
-
         modelBuilder.Entity<NotificationPreference>(entity =>
         {
             entity.HasKey(e => e.PreferenceId).HasName("PK__notifica__E228496F2755A4B2");
@@ -501,22 +469,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.HasOne(d => d.User).WithOne(p => p.NotificationPreference)
                 .HasForeignKey<NotificationPreference>(d => d.UserId)
                 .HasConstraintName("FK_NotificationPreferences_Users");
-        });
-
-        modelBuilder.Entity<NotificationTemplate>(entity =>
-        {
-            entity.HasKey(e => e.TemplateId).HasName("PK__notifica__F87ADD27EC18E6D7");
-
-            entity.ToTable("notification_templates");
-
-            entity.HasIndex(e => e.NotificationType, "IX_NotificationTemplates_NotificationType");
-
-            entity.Property(e => e.TemplateId).ValueGeneratedNever();
-            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getutcdate())");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.NotificationType).HasMaxLength(50);
-            entity.Property(e => e.Subject).HasMaxLength(255);
         });
 
         modelBuilder.Entity<PaymentGatewayConfig>(entity =>
