@@ -45,8 +45,8 @@ namespace MathBridgeSystem.Application.Services
             
             var dto = MapToDto(notification);
             
-            // Send immediately via SSE to connected users
-            await _connectionManager.SendNotificationAsync(notification.UserId, dto);
+            // Send immediately via SSE to connected users (maybe duplicate with  HandleMessageAsync)
+           // await _connectionManager.SendNotificationAsync(notification.UserId, dto);
             
             // Also publish to Pub/Sub if available (for multi-server scalability)
             if (_pubSubProvider != null)

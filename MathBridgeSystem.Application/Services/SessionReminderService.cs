@@ -72,24 +72,42 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task CreateReminderNotificationsAsync(List<SessionReminderDto> sessions, string reminderType)
         {
+            var notifications = new List<CreateNotificationRequest>();
+
             foreach (var session in sessions)
             {
                 var title = reminderType == "24hr" ? "Session Tomorrow" : "Session Starting Soon";
-                var message = $"Reminder: Your session with {session.TutorName} starts at {session.SessionStartTime:HH:mm}";
 
-                var request = new CreateNotificationRequest
+                // Parent/User notification
+                notifications.Add(new CreateNotificationRequest
                 {
                     UserId = session.ParentId,
                     ContractId = session.ContractId,
                     BookingId = session.SessionId,
                     Title = title,
-                    Message = message,
+                    Message = $"Reminder: Your session with {session.TutorName} starts at {session.SessionStartTime:HH:mm}",
                     NotificationType = reminderType == "24hr" ? "SessionReminder24hr" : "SessionReminder1hr"
-                };
+                });
 
-                await _notificationService.CreateNotificationAsync(request);
+                // Tutor notification
+                notifications.Add(new CreateNotificationRequest
+                {
+                    UserId = session.TutorId,
+                    ContractId = session.ContractId,
+                    BookingId = session.SessionId,
+                    Title = title,
+                    Message = $"Reminder: Your session with {session.StudentName} starts at {session.SessionStartTime:HH:mm}",
+                    NotificationType = reminderType == "24hr" ? "SessionReminder24hr" : "SessionReminder1hr"
+                });
+            }
+
+            // Create all at once
+            foreach (var notification in notifications)
+            {
+                await _notificationService.CreateNotificationAsync(notification);
             }
         }
+
 
         public async Task PublishRemindersToTopic(List<SessionReminderDto> sessions, string topic)
         {
@@ -122,14 +140,14 @@ namespace MathBridgeSystem.Application.Services
             if (sessions24hr.Any())
             {
                 await CreateReminderNotificationsAsync(sessions24hr, "24hr");
-                await PublishRemindersToTopic(sessions24hr, REMINDERS_TOPIC);
+               // await PublishRemindersToTopic(sessions24hr, REMINDERS_TOPIC);
             }
 
             var sessions1hr = await GetSessionsForReminderAsync(1);
             if (sessions1hr.Any())
             {
                 await CreateReminderNotificationsAsync(sessions1hr, "1hr");
-                await PublishRemindersToTopic(sessions1hr, REMINDERS_TOPIC);
+                //await PublishRemindersToTopic(sessions1hr, REMINDERS_TOPIC);
             }
         }
     }
