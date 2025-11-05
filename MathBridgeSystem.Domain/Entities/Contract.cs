@@ -33,7 +33,9 @@ public partial class Contract
 
     public string? VideoCallPlatform { get; set; }
 
-    public decimal MaxDistanceKm { get; set; }
+    public decimal? MaxDistanceKm { get; set; } = 15;
+
+    public int? RescheduleCount { get; set; } = 0;
 
     public string Status { get; set; } = null!;
 
@@ -48,8 +50,6 @@ public partial class Contract
     public TimeOnly? EndTime { get; set; }
 
     public byte? DaysOfWeeks { get; set; }
-
-    public int? RescheduleCount { get; set; }
 
     public virtual Center? Center { get; set; }
 
