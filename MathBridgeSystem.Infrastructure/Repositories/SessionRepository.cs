@@ -73,5 +73,17 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Where(s => s.ContractId == contractId)
                 .ToListAsync();
         }
+        public async Task<List<Session>> GetSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime)
+        {
+            return await _context.Sessions
+                .Include(s => s.Contract)
+                .ThenInclude(c => c.Parent)
+                .Include(s => s.Contract)
+                .ThenInclude(c => c.Child)
+                .Include(s => s.Tutor)
+                .Where(s => s.StartTime >= startTime && s.StartTime <= endTime && s.Status == "scheduled")
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+        }
     }
 }

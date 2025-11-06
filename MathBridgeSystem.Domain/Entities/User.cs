@@ -73,6 +73,8 @@ public partial class User
 
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
+    public virtual NotificationPreference? NotificationPreference { get; set; }
+
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequestParents { get; set; } = new List<RescheduleRequest>();

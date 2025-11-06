@@ -30,6 +30,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
+    public virtual DbSet<NotificationPreference> NotificationPreferences { get; set; }
+
     public virtual DbSet<PaymentGatewayConfig> PaymentGatewayConfigs { get; set; }
 
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
@@ -413,52 +415,60 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__E059842F41695738");
+            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__20CF2E122466ECC3");
 
             entity.ToTable("notifications");
 
-            entity.HasIndex(e => e.BookingId, "ix_notifications_booking_id");
+            entity.HasIndex(e => e.CreatedDate, "IX_Notifications_CreatedDate");
 
-            entity.HasIndex(e => e.ContractId, "ix_notifications_contract_id");
+            entity.HasIndex(e => e.Status, "IX_Notifications_Status");
 
-            entity.HasIndex(e => e.UserId, "ix_notifications_user_id");
+            entity.HasIndex(e => e.UserId, "IX_Notifications_UserId");
 
-            entity.Property(e => e.NotificationId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("notification_id");
-            entity.Property(e => e.BookingId).HasColumnName("booking_id");
-            entity.Property(e => e.ContractId).HasColumnName("contract_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Message).HasColumnName("message");
-            entity.Property(e => e.NotificationType)
-                .HasMaxLength(50)
-                .HasColumnName("notification_type");
-            entity.Property(e => e.SentDate)
-                .HasColumnType("datetime")
-                .HasColumnName("sent_date");
+            entity.Property(e => e.NotificationId).ValueGeneratedNever();
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getutcdate())");
+            entity.Property(e => e.NotificationType).HasMaxLength(50);
             entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasColumnName("status");
-            entity.Property(e => e.Title)
-                .HasMaxLength(255)
-                .HasColumnName("title");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+                .HasMaxLength(50)
+                .HasDefaultValue("Pending");
+            entity.Property(e => e.Title).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("fk_notifications_booking");
+                .HasConstraintName("FK_Notifications_Bookings");
 
             entity.HasOne(d => d.Contract).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.ContractId)
-                .HasConstraintName("fk_notifications_contract");
+                .HasConstraintName("FK_Notifications_Contracts");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_notifications_user");
+                .HasConstraintName("FK_Notifications_Users");
+        });
+
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasKey(e => e.PreferenceId).HasName("PK__notifica__E228496F2755A4B2");
+
+            entity.ToTable("notification_preferences");
+
+            entity.HasIndex(e => e.UserId, "IX_NotificationPreferences_UserId");
+
+            entity.HasIndex(e => e.UserId, "UQ__notifica__1788CC4D3B12E62B").IsUnique();
+
+            entity.Property(e => e.PreferenceId).ValueGeneratedNever();
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getutcdate())");
+            entity.Property(e => e.ReceiveContractUpdates).HasDefaultValue(true);
+            entity.Property(e => e.ReceiveEmailNotifications).HasDefaultValue(true);
+            entity.Property(e => e.ReceivePaymentNotifications).HasDefaultValue(true);
+            entity.Property(e => e.ReceiveSessionReminders).HasDefaultValue(true);
+            entity.Property(e => e.ReceiveSmsnotifications).HasColumnName("ReceiveSMSNotifications");
+            entity.Property(e => e.ReceiveWebNotifications).HasDefaultValue(true);
+
+            entity.HasOne(d => d.User).WithOne(p => p.NotificationPreference)
+                .HasForeignKey<NotificationPreference>(d => d.UserId)
+                .HasConstraintName("FK_NotificationPreferences_Users");
         });
 
         modelBuilder.Entity<PaymentGatewayConfig>(entity =>
@@ -604,15 +614,21 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("reschedule_requests");
 
+            entity.HasIndex(e => new { e.BookingId, e.ContractId }, "IX_reschedule_requests_booking_contract");
+
+            entity.HasIndex(e => e.ContractId, "IX_reschedule_requests_contract_id");
+
             entity.HasIndex(e => e.BookingId, "ix_reschedule_requests_booking_id");
+
             entity.HasIndex(e => e.ParentId, "ix_reschedule_requests_parent_id");
-            entity.HasIndex(e => e.ContractId, "IX_reschedule_requests_contract_id"); // THÊM INDEX
 
             entity.Property(e => e.RequestId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("request_id");
             entity.Property(e => e.BookingId).HasColumnName("booking_id");
-            entity.Property(e => e.ContractId).HasColumnName("contract_id"); // THÊM
+            entity.Property(e => e.ContractId)
+                .HasComment("FK to contracts. One contract has many reschedule requests (1-N).")
+                .HasColumnName("contract_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
@@ -634,33 +650,28 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("status");
 
-            entity.HasOne(d => d.Contract)
-                  .WithMany(p => p.RescheduleRequests)
-                  .HasForeignKey(d => d.ContractId)
-                  .OnDelete(DeleteBehavior.NoAction)
-                  .HasConstraintName("FK_reschedule_requests_contract");
+            entity.HasOne(d => d.Booking).WithMany(p => p.RescheduleRequests)
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_reschedule_requests_booking");
 
-            entity.HasOne(d => d.Booking)
-                  .WithMany(p => p.RescheduleRequests)
-                  .HasForeignKey(d => d.BookingId)
-                  .OnDelete(DeleteBehavior.ClientSetNull)
-                  .HasConstraintName("fk_reschedule_requests_booking");
+            entity.HasOne(d => d.Contract).WithMany(p => p.RescheduleRequests)
+                .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_reschedule_requests_contract");
 
-            entity.HasOne(d => d.Parent)
-                  .WithMany(p => p.RescheduleRequestParents)
-                  .HasForeignKey(d => d.ParentId)
-                  .OnDelete(DeleteBehavior.ClientSetNull)
-                  .HasConstraintName("fk_reschedule_requests_parent");
+            entity.HasOne(d => d.Parent).WithMany(p => p.RescheduleRequestParents)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_reschedule_requests_parent");
 
-            entity.HasOne(d => d.RequestedTutor)
-                  .WithMany(p => p.RescheduleRequestRequestedTutors)
-                  .HasForeignKey(d => d.RequestedTutorId)
-                  .HasConstraintName("fk_reschedule_requests_tutor");
+            entity.HasOne(d => d.RequestedTutor).WithMany(p => p.RescheduleRequestRequestedTutors)
+                .HasForeignKey(d => d.RequestedTutorId)
+                .HasConstraintName("fk_reschedule_requests_tutor");
 
-            entity.HasOne(d => d.Staff)
-                  .WithMany(p => p.RescheduleRequestStaffs)
-                  .HasForeignKey(d => d.StaffId)
-                  .HasConstraintName("fk_reschedule_requests_staff");
+            entity.HasOne(d => d.Staff).WithMany(p => p.RescheduleRequestStaffs)
+                .HasForeignKey(d => d.StaffId)
+                .HasConstraintName("fk_reschedule_requests_staff");
         });
 
         modelBuilder.Entity<Review>(entity =>

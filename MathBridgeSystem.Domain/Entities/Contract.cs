@@ -33,9 +33,7 @@ public partial class Contract
 
     public string? VideoCallPlatform { get; set; }
 
-    public decimal? MaxDistanceKm { get; set; } = 15;
-
-    public int? RescheduleCount { get; set; } = 0;
+    public decimal MaxDistanceKm { get; set; }
 
     public string Status { get; set; } = null!;
 
@@ -50,6 +48,8 @@ public partial class Contract
     public TimeOnly? EndTime { get; set; }
 
     public byte? DaysOfWeeks { get; set; }
+
+    public int? RescheduleCount { get; set; }
 
     public virtual Center? Center { get; set; }
 
@@ -67,6 +67,8 @@ public partial class Contract
 
     public virtual ICollection<PayosTransaction> PayosTransactions { get; set; } = new List<PayosTransaction>();
 
+    public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
+
     public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
 
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
@@ -78,5 +80,4 @@ public partial class Contract
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
-    public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 }
