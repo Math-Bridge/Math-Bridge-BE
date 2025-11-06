@@ -85,5 +85,16 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
         }
+        public async Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId)
+        {
+            return await _context.Sessions
+                .Include(s => s.Contract)
+                    .ThenInclude(c => c.Parent)
+                .Include(s => s.Tutor)
+                .Where(s => s.Contract.ChildId == childId && s.Contract.ParentId == parentId)
+                .OrderBy(s => s.SessionDate)
+                .ThenBy(s => s.StartTime)
+                .ToListAsync();
+        }
     }
 }
