@@ -61,5 +61,20 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<List<TutorDto>>> GetAllTutors()
+        {
+            try
+            {
+                var tutors = await _tutorService.GetAllTutorsAsync();
+                return Ok(tutors);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
