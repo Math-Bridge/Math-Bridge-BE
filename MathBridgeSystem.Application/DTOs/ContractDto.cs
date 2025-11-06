@@ -9,6 +9,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string ChildName { get; set; } = null!;
         public Guid PackageId { get; set; }
         public string PackageName { get; set; } = null!;
+        public decimal Price { get; set; }
         public Guid? MainTutorId { get; set; }
         public string? MainTutorName { get; set; } = null!;
         public Guid? CenterId { get; set; }
