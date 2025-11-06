@@ -2,8 +2,7 @@
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace MathBridgeSystem.Api.Controllers
 {
@@ -16,13 +15,25 @@ namespace MathBridgeSystem.Api.Controllers
 
         public SessionController(ISessionService sessionService)
         {
-            _sessionService = sessionService;
+            _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        }
+
+        private Guid GetUserId()
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                         ?? User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                throw new UnauthorizedAccessException("Missing or invalid user ID in token.");
+
+            return userId;
         }
 
         [HttpGet("parent")]
         public async Task<IActionResult> GetSessionsByParent()
         {
-            var parentId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var parentId = GetUserId();
+
             try
             {
                 var sessions = await _sessionService.GetSessionsByParentAsync(parentId);
@@ -37,7 +48,8 @@ namespace MathBridgeSystem.Api.Controllers
         [HttpGet("{bookingId}")]
         public async Task<IActionResult> GetSessionById(Guid bookingId)
         {
-            var parentId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var parentId = GetUserId();
+
             try
             {
                 var session = await _sessionService.GetSessionByIdAsync(bookingId, parentId);
