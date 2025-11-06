@@ -157,10 +157,10 @@
           }
         }
       },
-      "Google.Api.CommonProtos/2.16.0": {
+      "Google.Api.CommonProtos/2.17.0": {
         "type": "package",
         "dependencies": {
-          "Google.Protobuf": "[3.28.2, 4.0.0)"
+          "Google.Protobuf": "[3.31.1, 4.0.0]"
         },
         "compile": {
           "lib/netstandard2.0/Google.Api.CommonProtos.dll": {
@@ -176,12 +176,12 @@
           "build/_._": {}
         }
       },
-      "Google.Api.Gax/4.9.0": {
+      "Google.Api.Gax/4.12.1": {
         "type": "package",
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "6.0.0",
-          "Newtonsoft.Json": "13.0.3",
-          "System.Diagnostics.DiagnosticSource": "6.0.1"
+          "Newtonsoft.Json": "13.0.4",
+          "System.Diagnostics.DiagnosticSource": "6.0.2"
         },
         "compile": {
           "lib/netstandard2.0/Google.Api.Gax.dll": {
@@ -194,15 +194,15 @@
           }
         }
       },
-      "Google.Api.Gax.Grpc/4.9.0": {
+      "Google.Api.Gax.Grpc/4.12.1": {
         "type": "package",
         "dependencies": {
-          "Google.Api.CommonProtos": "2.16.0",
-          "Google.Api.Gax": "4.9.0",
-          "Google.Apis.Auth": "1.68.0",
-          "Grpc.Auth": "2.66.0",
-          "Grpc.Core.Api": "2.66.0",
-          "Grpc.Net.Client": "2.66.0",
+          "Google.Api.CommonProtos": "2.17.0",
+          "Google.Api.Gax": "4.12.1",
+          "Google.Apis.Auth": "1.72.0",
+          "Grpc.Auth": "[2.71.0, 3.0.0)",
+          "Grpc.Core.Api": "[2.71.0, 3.0.0)",
+          "Grpc.Net.Client": "[2.71.0, 3.0.0)",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
         },
         "compile": {
@@ -334,7 +334,40 @@
           }
         }
       },
-      "Google.Protobuf/3.28.2": {
+      "Google.Cloud.Iam.V1/3.4.0": {
+        "type": "package",
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "[4.9.0, 5.0.0)"
+        },
+        "compile": {
+          "lib/netstandard2.0/Google.Cloud.Iam.V1.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Cloud.Iam.V1.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Google.Cloud.PubSub.V1/3.29.0": {
+        "type": "package",
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "[4.12.1, 5.0.0)",
+          "Google.Cloud.Iam.V1": "[3.4.0, 4.0.0)"
+        },
+        "compile": {
+          "lib/netstandard2.0/Google.Cloud.PubSub.V1.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Cloud.PubSub.V1.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Google.Protobuf/3.31.1": {
         "type": "package",
         "compile": {
           "lib/net5.0/Google.Protobuf.dll": {
@@ -347,11 +380,11 @@
           }
         }
       },
-      "Grpc.Auth/2.66.0": {
+      "Grpc.Auth/2.71.0": {
         "type": "package",
         "dependencies": {
-          "Google.Apis.Auth": "1.68.0",
-          "Grpc.Core.Api": "2.66.0"
+          "Google.Apis.Auth": "1.69.0",
+          "Grpc.Core.Api": "2.71.0"
         },
         "compile": {
           "lib/netstandard2.0/Grpc.Auth.dll": {
@@ -364,7 +397,7 @@
           }
         }
       },
-      "Grpc.Core.Api/2.66.0": {
+      "Grpc.Core.Api/2.71.0": {
         "type": "package",
         "compile": {
           "lib/netstandard2.1/Grpc.Core.Api.dll": {
@@ -377,10 +410,10 @@
           }
         }
       },
-      "Grpc.Net.Client/2.66.0": {
+      "Grpc.Net.Client/2.71.0": {
         "type": "package",
         "dependencies": {
-          "Grpc.Net.Common": "2.66.0",
+          "Grpc.Net.Common": "2.71.0",
           "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
         },
         "compile": {
@@ -394,10 +427,10 @@
           }
         }
       },
-      "Grpc.Net.Common/2.66.0": {
+      "Grpc.Net.Common/2.71.0": {
         "type": "package",
         "dependencies": {
-          "Grpc.Core.Api": "2.66.0"
+          "Grpc.Core.Api": "2.71.0"
         },
         "compile": {
           "lib/net8.0/Grpc.Net.Common.dll": {
@@ -4335,6 +4368,7 @@
           "FirebaseAdmin": "3.2.0",
           "FirebaseStorage.net": "1.0.3",
           "Google.Apis.Auth": "1.72.0",
+          "Google.Cloud.PubSub.V1": "3.29.0",
           "MathBridgeSystem.Application": "1.0.0",
           "MathBridgeSystem.Domain": "1.0.0",
           "Microsoft.AspNetCore.Identity": "2.3.1",
@@ -4359,9 +4393,12 @@
         "dependencies": {
           "FirebaseAdmin": "3.2.0",
           "FirebaseDatabase.net": "5.0.0",
-          "Google.Api.Gax.Grpc": "4.9.0",
+          "FirebaseStorage.net": "1.0.3",
+          "Google.Api.Gax.Grpc": "4.12.1",
+          "Google.Apis.Auth": "1.72.0",
           "Google.Apis.Gmail.v1": "1.70.0.3833",
           "Google.Apps.Meet.V2": "1.0.0-beta05",
+          "Google.Cloud.PubSub.V1": "3.29.0",
           "MailKit": "4.13.0",
           "MathBridgeSystem.Infrastructure": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.14",
@@ -4656,10 +4693,10 @@
         "lib/netstandard2.1/FluentAssertions.xml"
       ]
     },
-    "Google.Api.CommonProtos/2.16.0": {
-      "sha512": "37MuZrE9AAqHAdYgFLoTHydAiXDRriQZGVKEg6fr6ASnrY5GtauYXnQrGk5x2K3NmYzEXe+wkpaPVmxjb3NKjg==",
+    "Google.Api.CommonProtos/2.17.0": {
+      "sha512": "elfQPknFr495hm7vdy6ZlgyQh6yzZq9TU7sS35L/Fj/fqjM/mUGau9gVJLhvQEtUlPjtR80hpn/m9HvBMyCXIw==",
       "type": "package",
-      "path": "google.api.commonprotos/2.16.0",
+      "path": "google.api.commonprotos/2.17.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -4722,7 +4759,7 @@
         "content/protos/google/type/postal_address.proto",
         "content/protos/google/type/quaternion.proto",
         "content/protos/google/type/timeofday.proto",
-        "google.api.commonprotos.2.16.0.nupkg.sha512",
+        "google.api.commonprotos.2.17.0.nupkg.sha512",
         "google.api.commonprotos.nuspec",
         "lib/net461/Google.Api.CommonProtos.dll",
         "lib/net461/Google.Api.CommonProtos.pdb",
@@ -4732,16 +4769,16 @@
         "lib/netstandard2.0/Google.Api.CommonProtos.xml"
       ]
     },
-    "Google.Api.Gax/4.9.0": {
-      "sha512": "fjHHYcQ99u0ztqwT537rvVtJMdDy6G2VHBZ+F1cBjDGYNVZfrpk40DMQ/OpUGToT9ZGHVirhh3eJ73bw2ANVPQ==",
+    "Google.Api.Gax/4.12.1": {
+      "sha512": "G62dRNOv5DolfRviT6CCrL2a5nZ/CWWdRzhADkGnpCkYSOc3QnH5xxRvZiOKuHU8weJ/pAqAqrj7+T9IWdlu2Q==",
       "type": "package",
-      "path": "google.api.gax/4.9.0",
+      "path": "google.api.gax/4.12.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
         "NuGetIcon.png",
-        "google.api.gax.4.9.0.nupkg.sha512",
+        "google.api.gax.4.12.1.nupkg.sha512",
         "google.api.gax.nuspec",
         "lib/net462/Google.Api.Gax.dll",
         "lib/net462/Google.Api.Gax.pdb",
@@ -4751,16 +4788,16 @@
         "lib/netstandard2.0/Google.Api.Gax.xml"
       ]
     },
-    "Google.Api.Gax.Grpc/4.9.0": {
-      "sha512": "ToCx/0cs+wJ9j7vzKRcPAKneJVZrz/s9JhW9QsFx1dar9WzTxawQZ8xTjyieSy8tY0UiYCL1qYkn/iRrklYnSA==",
+    "Google.Api.Gax.Grpc/4.12.1": {
+      "sha512": "W3LjuitOWxWyvbwqeHvpgp0LdshEiTnw/pneDAfAhQ02VgU2gVEzSXfGNPsvL8hDPBXjngR/fWNme8Kungwwkw==",
       "type": "package",
-      "path": "google.api.gax.grpc/4.9.0",
+      "path": "google.api.gax.grpc/4.12.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
         "NuGetIcon.png",
-        "google.api.gax.grpc.4.9.0.nupkg.sha512",
+        "google.api.gax.grpc.4.12.1.nupkg.sha512",
         "google.api.gax.grpc.nuspec",
         "lib/net462/Google.Api.Gax.Grpc.dll",
         "lib/net462/Google.Api.Gax.Grpc.pdb",
@@ -4918,14 +4955,52 @@
         "lib/netstandard2.0/Google.Apps.Meet.V2.xml"
       ]
     },
-    "Google.Protobuf/3.28.2": {
-      "sha512": "Z86ZKAB+v1B/m0LTM+EVamvZlYw/g3VND3/Gs4M/+aDIxa2JE9YPKjDxTpf0gv2sh26hrve3eI03brxBmzn92g==",
+    "Google.Cloud.Iam.V1/3.4.0": {
+      "sha512": "MBs/hyBOiTWZ+v9UHrXjWIxgeJo5q6PI2kmA0HMG3wrL4xIsctZLdM6KQjic8tc3kMnKlPb6gcInN8xQjFiM3g==",
       "type": "package",
-      "path": "google.protobuf/3.28.2",
+      "path": "google.cloud.iam.v1/3.4.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "google.protobuf.3.28.2.nupkg.sha512",
+        "LICENSE",
+        "NuGetIcon.png",
+        "google.cloud.iam.v1.3.4.0.nupkg.sha512",
+        "google.cloud.iam.v1.nuspec",
+        "lib/net462/Google.Cloud.Iam.V1.dll",
+        "lib/net462/Google.Cloud.Iam.V1.pdb",
+        "lib/net462/Google.Cloud.Iam.V1.xml",
+        "lib/netstandard2.0/Google.Cloud.Iam.V1.dll",
+        "lib/netstandard2.0/Google.Cloud.Iam.V1.pdb",
+        "lib/netstandard2.0/Google.Cloud.Iam.V1.xml"
+      ]
+    },
+    "Google.Cloud.PubSub.V1/3.29.0": {
+      "sha512": "SZviFjZ/kFZbnXVh17nuQAMxd74A5hnVraIC8nuynOl5JxGJADU3M8stkQGglTMeQpoMeN/Cc6oSWoJc86BU4Q==",
+      "type": "package",
+      "path": "google.cloud.pubsub.v1/3.29.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "NuGetIcon.png",
+        "google.cloud.pubsub.v1.3.29.0.nupkg.sha512",
+        "google.cloud.pubsub.v1.nuspec",
+        "lib/net462/Google.Cloud.PubSub.V1.dll",
+        "lib/net462/Google.Cloud.PubSub.V1.pdb",
+        "lib/net462/Google.Cloud.PubSub.V1.xml",
+        "lib/netstandard2.0/Google.Cloud.PubSub.V1.dll",
+        "lib/netstandard2.0/Google.Cloud.PubSub.V1.pdb",
+        "lib/netstandard2.0/Google.Cloud.PubSub.V1.xml"
+      ]
+    },
+    "Google.Protobuf/3.31.1": {
+      "sha512": "gSnJbUmGiOTdWddPhqzrEscHq9Ls6sqRDPB9WptckyjTUyx70JOOAaDLkFff8gManZNN3hllQ4aQInnQyq/Z/A==",
+      "type": "package",
+      "path": "google.protobuf/3.31.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "google.protobuf.3.31.1.nupkg.sha512",
         "google.protobuf.nuspec",
         "lib/net45/Google.Protobuf.dll",
         "lib/net45/Google.Protobuf.pdb",
@@ -4941,15 +5016,15 @@
         "lib/netstandard2.0/Google.Protobuf.xml"
       ]
     },
-    "Grpc.Auth/2.66.0": {
-      "sha512": "FRQlhMAcHf0GjAXIfhN6RydfZncLLXNNTOtpLL1bt57kp59vu40faW+dr6Vwl7ef/IUFfF38aiB5jvhAA/9Aow==",
+    "Grpc.Auth/2.71.0": {
+      "sha512": "t2aGh/pMgqmc3GimtYfC7VcgVY/VSbk6SLH+61wewsgK45tzxxD9nYYItT5bpLn7fbebirmHXfgJcVKIArd0cg==",
       "type": "package",
-      "path": "grpc.auth/2.66.0",
+      "path": "grpc.auth/2.71.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "grpc.auth.2.66.0.nupkg.sha512",
+        "grpc.auth.2.71.0.nupkg.sha512",
         "grpc.auth.nuspec",
         "lib/net462/Grpc.Auth.dll",
         "lib/net462/Grpc.Auth.pdb",
@@ -4960,15 +5035,15 @@
         "packageIcon.png"
       ]
     },
-    "Grpc.Core.Api/2.66.0": {
-      "sha512": "HsjsQVAHe4hqP4t4rpUnmq+MZvPdyrlPsWF4T5fbMvyP3o/lMV+KVJfDlaNH8+v0aGQTVT3EsDFufbhaWb52cw==",
+    "Grpc.Core.Api/2.71.0": {
+      "sha512": "QquqUC37yxsDzd1QaDRsH2+uuznWPTS8CVE2Yzwl3CvU4geTNkolQXoVN812M2IwT6zpv3jsZRc9ExJFNFslTg==",
       "type": "package",
-      "path": "grpc.core.api/2.66.0",
+      "path": "grpc.core.api/2.71.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "grpc.core.api.2.66.0.nupkg.sha512",
+        "grpc.core.api.2.71.0.nupkg.sha512",
         "grpc.core.api.nuspec",
         "lib/net462/Grpc.Core.Api.dll",
         "lib/net462/Grpc.Core.Api.pdb",
@@ -4982,15 +5057,15 @@
         "packageIcon.png"
       ]
     },
-    "Grpc.Net.Client/2.66.0": {
-      "sha512": "GwkSsssXFgN9+M2U+UQWdErf61sn1iqgP+2NRBlDXATcP9vlxda0wySxd/eIL8U522+SnyFNUXlvQ5tAzGk9cA==",
+    "Grpc.Net.Client/2.71.0": {
+      "sha512": "U1vr20r5ngoT9nlb7wejF28EKN+taMhJsV9XtK9MkiepTZwnKxxiarriiMfCHuDAfPUm9XUjFMn/RIuJ4YY61w==",
       "type": "package",
-      "path": "grpc.net.client/2.66.0",
+      "path": "grpc.net.client/2.71.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "grpc.net.client.2.66.0.nupkg.sha512",
+        "grpc.net.client.2.71.0.nupkg.sha512",
         "grpc.net.client.nuspec",
         "lib/net462/Grpc.Net.Client.dll",
         "lib/net462/Grpc.Net.Client.pdb",
@@ -5013,14 +5088,14 @@
         "packageIcon.png"
       ]
     },
-    "Grpc.Net.Common/2.66.0": {
-      "sha512": "YJpQpIvpo0HKlsG6SHwaieyji08qfv0DdEDIewCAA0egQY08637sHOj1netLGUhzBEsCqlGC3e92TZ2uqhxnvw==",
+    "Grpc.Net.Common/2.71.0": {
+      "sha512": "v0c8R97TwRYwNXlC8GyRXwYTCNufpDfUtj9la+wUrZFzVWkFJuNAltU+c0yI3zu0jl54k7en6u2WKgZgd57r2Q==",
       "type": "package",
-      "path": "grpc.net.common/2.66.0",
+      "path": "grpc.net.common/2.71.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "grpc.net.common.2.66.0.nupkg.sha512",
+        "grpc.net.common.2.71.0.nupkg.sha512",
         "grpc.net.common.nuspec",
         "lib/net6.0/Grpc.Net.Common.dll",
         "lib/net6.0/Grpc.Net.Common.pdb",
@@ -12327,23 +12402,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\nguye\\.nuget\\packages\\": {},
+    "C:\\Users\\huyh6\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Test\\MathBridgeSystem.Test.csproj",
+      "projectUniqueName": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Test\\MathBridgeSystem.Test.csproj",
       "projectName": "MathBridgeSystem.Test",
-      "projectPath": "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Test\\MathBridgeSystem.Test.csproj",
-      "packagesPath": "C:\\Users\\nguye\\.nuget\\packages\\",
-      "outputPath": "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Test\\obj\\",
+      "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Test\\MathBridgeSystem.Test.csproj",
+      "packagesPath": "C:\\Users\\huyh6\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Test\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\nguye\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\huyh6\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -12359,11 +12434,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj": {
-              "projectPath": "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj"
+            "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj": {
+              "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Api\\MathBridgeSystem.Api.csproj"
             },
-            "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj": {
-              "projectPath": "D:\\DoAn\\DoAn2\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj"
+            "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj": {
+              "projectPath": "C:\\Users\\huyh6\\OneDrive\\Desktop\\DoAn\\Math-Bridge-BE\\MathBridgeSystem.Application\\MathBridgeSystem.Application.csproj"
             }
           }
         }
@@ -12378,7 +12453,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -12431,7 +12506,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
