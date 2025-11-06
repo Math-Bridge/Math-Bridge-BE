@@ -1,3 +1,5 @@
+using MathBridgeSystem.Application.DTOs.TutorVerification;
+
 namespace MathBridgeSystem.Application.DTOs
 {
     public class TutorDto
@@ -97,15 +99,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string PhoneNumber { get; set; }
         public string Gender { get; set; }
 
-        // TutorVerification updates
+        // TutorVerification updates - using the standalone DTO from TutorVerification folder
         public UpdateTutorVerificationRequest TutorVerification { get; set; }
-    }
-
-    public class UpdateTutorVerificationRequest
-    {
-        public string University { get; set; }
-        public string Major { get; set; }
-        public decimal? HourlyRate { get; set; }
-        public string Bio { get; set; }
     }
 }

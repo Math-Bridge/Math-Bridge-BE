@@ -23,5 +23,7 @@ public partial class TutorVerification
 
     public DateTime CreatedDate { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual User User { get; set; } = null!;
 }
