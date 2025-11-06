@@ -55,5 +55,22 @@ namespace MathBridgeSystem.Application.Services
                 Status = session.Status
             };
         }
+        public async Task<List<SessionDto>> GetSessionsByChildIdAsync(Guid childId, Guid parentId)
+        {
+            var sessions = await _sessionRepository.GetByChildIdAsync(childId, parentId);
+            return sessions.Select(s => new SessionDto
+            {
+                BookingId = s.BookingId,
+                ContractId = s.ContractId,
+                SessionDate = s.SessionDate,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                TutorName = s.Tutor.FullName,
+                IsOnline = s.IsOnline,
+                VideoCallPlatform = s.VideoCallPlatform,
+                OfflineAddress = s.OfflineAddress,
+                Status = s.Status
+            }).ToList();
+        }
     }
 }
