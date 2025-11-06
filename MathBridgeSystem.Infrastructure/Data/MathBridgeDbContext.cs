@@ -1126,6 +1126,9 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.HourlyRate)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("hourly_rate");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasColumnName("is_deleted");
             entity.Property(e => e.Major)
                 .HasMaxLength(255)
                 .HasColumnName("major");
