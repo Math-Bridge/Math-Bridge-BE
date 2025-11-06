@@ -61,5 +61,20 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+        [HttpGet("child/{childId}")]
+        public async Task<IActionResult> GetSessionsByChildId(Guid childId)
+        {
+            var parentId = GetUserId();
+
+            try
+            {
+                var sessions = await _sessionService.GetSessionsByChildIdAsync(childId, parentId);
+                return Ok(sessions);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
