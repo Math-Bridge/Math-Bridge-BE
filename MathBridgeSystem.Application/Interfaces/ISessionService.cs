@@ -10,5 +10,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId);
         Task<SessionDto?> GetSessionByIdAsync(Guid bookingId, Guid parentId);
         Task<List<SessionDto>> GetSessionsByChildIdAsync(Guid childId, Guid parentId);
+        Task<List<SessionDto>> GetSessionsByMainTutorIdAsync(Guid tutorId);
+        Task<List<SessionDto>> GetSessionsBySubstituteTutorIdAsync(Guid tutorId);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,36 @@ namespace MathBridgeSystem.Application.Services
                 VideoCallPlatform = s.VideoCallPlatform,
                 OfflineAddress = s.OfflineAddress,
                 Status = s.Status
+            }).ToList();
+        }
+        public async Task<List<SessionDto>> GetSessionsByMainTutorIdAsync(Guid tutorId)
+        {
+            var sessions = await _sessionRepository.GetByMainTutorIdAsync(tutorId);
+            return MapSessionsToDto(sessions);
+        }
+
+        public async Task<List<SessionDto>> GetSessionsBySubstituteTutorIdAsync(Guid tutorId)
+        {
+            var sessions = await _sessionRepository.GetBySubstituteTutorIdAsync(tutorId);
+            return MapSessionsToDto(sessions);
+        }
+
+        private List<SessionDto> MapSessionsToDto(List<Session> sessions)
+        {
+            return sessions.Select(s => new SessionDto
+            {
+                BookingId = s.BookingId,
+                ContractId = s.ContractId,
+                SessionDate = s.SessionDate,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                TutorName = s.Tutor.FullName,
+                IsOnline = s.IsOnline,
+                VideoCallPlatform = s.VideoCallPlatform,
+                OfflineAddress = s.OfflineAddress,
+                Status = s.Status,
+                ChildName = s.Contract.Child.FullName,
+                PackageName = s.Contract.Package.PackageName
             }).ToList();
         }
     }
