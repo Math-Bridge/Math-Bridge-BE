@@ -22,6 +22,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
                 .FirstOrDefaultAsync(u => u.UserId == id);
         }
 
@@ -29,6 +30,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
@@ -83,7 +85,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.TutorVerification)
                 .Include(u => u.TutorCenters)
                     .ThenInclude(tc => tc.Center)
-                .Where(u => u.RoleId == 2) // Assuming 2 is tutor role
+                .Where(u => u.RoleId == 2)
                 .Where(u => u.Status == "active")
                 .ToListAsync();
         }
@@ -108,7 +110,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.TutorVerification)
                 .Include(u => u.TutorCenters)
                     .ThenInclude(tc => tc.Center)
-                .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2); // Ensure it's a tutor
+                .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2);
         }
     }
 }

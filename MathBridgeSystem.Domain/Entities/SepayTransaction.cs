@@ -9,11 +9,11 @@ public partial class SepayTransaction
 
     public Guid? WalletTransactionId { get; set; }
 
-    public string? Gateway { get; set; } = null!;
+    public string? Gateway { get; set; }
 
     public DateTime TransactionDate { get; set; }
 
-    public string? AccountNumber { get; set; } = null!;
+    public string? AccountNumber { get; set; }
 
     public string? SubAccount { get; set; }
 
@@ -27,7 +27,7 @@ public partial class SepayTransaction
 
     public string Content { get; set; } = null!;
 
-    public string? ReferenceNumber { get; set; } = null!;
+    public string? ReferenceNumber { get; set; }
 
     public string? Description { get; set; }
 

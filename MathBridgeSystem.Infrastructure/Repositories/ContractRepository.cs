@@ -59,5 +59,35 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.Package)
                 .FirstOrDefaultAsync(c => c.ContractId == contractId);
         }
+        public async Task<List<Contract>> GetAllWithDetailsAsync()
+        {
+            return await _context.Contracts
+                .Include(c => c.Child)
+                .Include(c => c.Parent)
+                .Include(c => c.MainTutor)
+                .Include(c => c.Package)
+                .Include(c => c.Center)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<Contract>> GetByParentPhoneNumberAsync(string phoneNumber)
+        {
+            return await _context.Contracts
+                .Include(c => c.Child)
+                .Include(c => c.Parent)
+                .Include(c => c.MainTutor)
+                .Include(c => c.SubstituteTutor1)
+                .Include(c => c.SubstituteTutor2)
+                .Include(c => c.Package)
+                .Include(c => c.Center)
+                .Include(c => c.Sessions)
+                .Include(c => c.RescheduleRequests)
+                .Include(c => c.WalletTransactions)
+                .Where(c => c.Parent.PhoneNumber == phoneNumber.Trim())
+                .Where(c => c.Child.Status != "deleted")
+                .OrderByDescending(c => c.CreatedDate)
+                .ToListAsync();
+        }
     }
 }

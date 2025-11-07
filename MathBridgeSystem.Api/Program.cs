@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using MathBridgeSystem.Infrastructure.Services;
+using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize Firebase with error handling
@@ -75,16 +76,14 @@ builder.Services.AddScoped<ICenterRepository, CenterRepository>();
 builder.Services.AddScoped<ITutorCenterRepository, TutorCenterRepository>();
 builder.Services.AddScoped<ITutorScheduleRepository, TutorScheduleRepository>();
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
-// Register GoogleMeetProvider
-builder.Services.AddHttpClient<MeetProvider>();
-builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
-
-// Register ZoomProvider
-builder.Services.AddHttpClient<ZoomProvider>();
-builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
 builder.Services.AddScoped<ICurriculumRepository, CurriculumRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IRescheduleRequestRepository, RescheduleRequestRepository>();
+builder.Services.AddScoped<ITutorVerificationRepository, TutorVerificationRepository>();
+
 
 
 // === SERVICE REGISTRATIONS ===
@@ -96,7 +95,23 @@ builder.Services.AddScoped<ISePayService, SePayService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITutorScheduleService, TutorScheduleService>();
+builder.Services.AddScoped<IVideoConferenceService, VideoConferenceService>();
+builder.Services.AddScoped<ITutorVerificationService, TutorVerificationService>();
+builder.Services.AddScoped<ITutorService, TutorService>();
 
+// === NOTIFICATION SERVICES ===
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISessionReminderService, SessionReminderService>();
+builder.Services.AddSingleton<NotificationConnectionManager>();
+builder.Services.AddScoped<IPubSubNotificationProvider, GooglePubSubNotificationProvider>();
+builder.Services.AddSingleton<PubSubSubscriberService>();
+builder.Services.AddHostedService<NotificationSubscriberBackgroundService>();
+builder.Services.AddHttpClient<MeetProvider>();
+builder.Services.AddScoped<IVideoConferenceProvider, MeetProvider>();
+
+// Register ZoomProvider
+builder.Services.AddHttpClient<ZoomProvider>();
+builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
 
 // === CORE BUSINESS SERVICES ===
 builder.Services.AddScoped<ISessionService, SessionService>();
@@ -106,6 +121,7 @@ builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<ICenterService, CenterService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
+builder.Services.AddScoped<ICurriculumService, CurriculumService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
@@ -124,8 +140,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
             ClockSkew = TimeSpan.Zero, // Disable clock skew to enforce exact token expiration
-            // Map JWT claims to ClaimTypes
-            NameClaimType = "sub", // Maps "sub" to ClaimTypes.NameIdentifier
+                                       // Map JWT claims to ClaimTypes
+            NameClaimType = ClaimTypes.NameIdentifier, // Maps "sub" to ClaimTypes.NameIdentifier
             RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         };
     });
@@ -137,7 +153,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech","http://localhost:5173")
+        policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech", "http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });

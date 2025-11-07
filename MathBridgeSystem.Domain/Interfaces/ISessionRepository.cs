@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Domain.Interfaces
+
 {
     public interface ISessionRepository
     {
@@ -13,5 +14,9 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeOnly startTime, TimeOnly endTime);
         Task<List<Session>> GetByParentIdAsync(Guid parentId);
         Task<List<Session>> GetByContractIdAsync(Guid contractId);
+        Task<List<Session>> GetSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime);
+        Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId);
+        Task<List<Session>> GetByMainTutorIdAsync(Guid tutorId);
+        Task<List<Session>> GetBySubstituteTutorIdAsync(Guid tutorId);
     }
 }
