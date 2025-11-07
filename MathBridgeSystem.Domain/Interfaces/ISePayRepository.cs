@@ -36,6 +36,13 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<SepayTransaction?> GetByOrderReferenceAsync(string orderReference);
 
         /// <summary>
+        /// Get SePay transaction by SePay code
+        /// </summary>
+        /// <param name="code">SePay transaction code</param>
+        /// <returns>SePay transaction or null</returns>
+        Task<SepayTransaction?> GetByCodeAsync(string code);
+
+        /// <summary>
         /// Check if SePay transaction already exists by SePay code
         /// </summary>
         /// <param name="code">SePay transaction code</param>

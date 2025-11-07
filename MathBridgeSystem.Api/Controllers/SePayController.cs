@@ -74,6 +74,50 @@ public class SePayController : ControllerBase
     }
 
     /// <summary>
+    /// Create direct contract payment request with QR code
+    /// </summary>
+    /// <param name="contractId">Contract ID</param>
+    /// <param name="packageId">Payment package ID</param>
+    /// <returns>Payment response with QR code information</returns>
+    [HttpPost("create-contract-payment")]
+    [Authorize]
+    public async Task<ActionResult<SePayPaymentResponseDto>> CreateContractPayment([FromQuery] Guid contractId)
+    {
+        try
+        {
+            // Get user ID from JWT token
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid user authentication" });
+            }
+
+            // Validate request parameters
+            if (contractId == Guid.Empty )
+            {
+                return BadRequest(new { message = "Contract ID is required" });
+            }
+
+            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            _logger.LogInformation("Direct contract payment created successfully for contract {ContractId}, user {UserId}", 
+                contractId, userId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}", contractId);
+            return StatusCode(500, new { message = "An error occurred while creating contract payment request" });
+        }
+    }
+
+    /// <summary>
     /// SePay webhook endpoint for receiving payment notifications
     /// </summary>
     /// <param name="webhookData">Webhook payload from SePay</param>
