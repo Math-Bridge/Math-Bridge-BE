@@ -122,5 +122,35 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve all contracts.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Get all contracts linked to parent phone number (Staff & Admin only)
+        /// </summary>
+        [HttpGet("by-phone/{phoneNumber}")]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetContractsByParentPhone(string phoneNumber)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(phoneNumber))
+                    return BadRequest(new { error = "Phone number cannot be empty." });
+
+                var contracts = await _contractService.GetContractsByParentPhoneAsync(phoneNumber);
+                
+                if (contracts == null || contracts.Count == 0)
+                    return NotFound(new { message = "No contracts found for this phone number." });
+
+                return Ok(contracts);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetContractsByParentPhone: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, new { error = "Failed to retrieve contracts.", details = ex.Message });
+            }
+        }
     }
 }

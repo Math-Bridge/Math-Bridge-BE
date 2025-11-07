@@ -12,5 +12,8 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<ContractDto>> GetAllContractsAsync();
         Task<bool> UpdateContractStatusAsync(Guid contractId, UpdateContractStatusRequest request, Guid staffId);
         Task<bool> AssignTutorsAsync(Guid contractId, AssignTutorToContractRequest request, Guid staffId);
+        Task<List<ContractDto>> GetContractsByParentPhoneAsync(string phoneNumber);
     }
+
+
 }

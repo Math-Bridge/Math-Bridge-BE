@@ -310,5 +310,42 @@ namespace MathBridgeSystem.Application.Services
                 Status = c.Status
             }).ToList();
         }
+
+        public async Task<List<ContractDto>> GetContractsByParentPhoneAsync(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new ArgumentException("Phone number cannot be empty.");
+
+            var normalizedPhone = phoneNumber.Trim();
+            var contracts = await _contractRepository.GetByParentPhoneNumberAsync(normalizedPhone);
+
+            return contracts.Select(c => new ContractDto
+            {
+                ContractId = c.ContractId,
+                ChildId = c.ChildId,
+                ChildName = c.Child?.FullName ?? "Unknown Child",
+                PackageId = c.PackageId,
+                PackageName = c.Package?.PackageName ?? "Unknown Package",
+                Price = c.Package?.Price ?? 0,
+                MainTutorId = c.MainTutorId,
+                MainTutorName = c.MainTutor?.FullName ?? "Not Assigned",
+                CenterId = c.CenterId,
+                CenterName = c.Center?.Name ?? "No Center",
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                StartTime = c.StartTime,
+                EndTime = c.EndTime,
+                DaysOfWeeks = c.DaysOfWeeks,
+                DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
+                IsOnline = c.IsOnline,
+                VideoCallPlatform = c.IsOnline ? c.VideoCallPlatform : null,
+                OfflineAddress = !c.IsOnline ? c.OfflineAddress : null,
+                OfflineLatitude = !c.IsOnline ? c.OfflineLatitude : null,
+                OfflineLongitude = !c.IsOnline ? c.OfflineLongitude : null,
+                MaxDistanceKm = !c.IsOnline ? c.MaxDistanceKm : null,
+                RescheduleCount = c.RescheduleCount ?? 0,
+                Status = c.Status
+            }).ToList();
+        }
     }
 }

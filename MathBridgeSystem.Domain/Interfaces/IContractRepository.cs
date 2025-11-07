@@ -13,5 +13,8 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<Contract?> GetByIdAsync(Guid id);
         Task<Contract?> GetByIdWithPackageAsync(Guid contractId);
         Task<List<Contract>> GetAllWithDetailsAsync();
+        Task<List<Contract>> GetByParentPhoneNumberAsync(string phoneNumber);
     }
+
+        
 }
