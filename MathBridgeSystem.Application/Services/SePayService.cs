@@ -17,6 +17,8 @@ public class SePayService : ISePayService
     private readonly ISePayRepository _sePayRepository;
     private readonly IWalletTransactionRepository _walletTransactionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IContractRepository _contractRepository;
+    private readonly IPackageRepository _packageRepository;
     private readonly IConfiguration _configuration;
     private readonly ILogger<SePayService> _logger;
 
@@ -31,12 +33,16 @@ public class SePayService : ISePayService
         ISePayRepository sePayRepository,
         IWalletTransactionRepository walletTransactionRepository,
         IUserRepository userRepository,
+        IContractRepository contractRepository,
+        IPackageRepository packageRepository,
         IConfiguration configuration,
         ILogger<SePayService> logger)
     {
         _sePayRepository = sePayRepository;
         _walletTransactionRepository = walletTransactionRepository;
         _userRepository = userRepository;
+        _contractRepository = contractRepository;
+        _packageRepository = packageRepository;
         _configuration = configuration;
         _logger = logger;
 
@@ -146,6 +152,16 @@ public class SePayService : ISePayService
         try
         {
             _logger.LogInformation("Processing SePay webhook for transaction {Code}", webhookData.Code);
+
+            // Check for contract payment
+            if (!string.IsNullOrEmpty(webhookData.Code))
+            {
+                var contractTransaction = await _sePayRepository.GetByCodeAsync(webhookData.Code);
+                if (contractTransaction?.ContractId != null && contractTransaction.ContractId != Guid.Empty)
+                {
+                    return await ProcessContractPaymentWebhookAsync(contractTransaction.ContractId, webhookData);
+                }
+            }
 
             // Check if we've already processed this transaction
             var existingTransaction = await _sePayRepository.ExistsByCodeAsync(webhookData.Code);
@@ -317,6 +333,93 @@ public class SePayService : ISePayService
         }
     }
 
+    public async Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userid)
+    {
+        try
+        {
+            
+
+            // Validate contract exists and user is owner
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+
+
+            if (contract == null)
+            {
+                return new SePayPaymentResponseDto
+                {
+                    Success = false,
+                    Message = "Contract not found"
+                };
+            }
+            _logger.LogInformation("Creating direct contract payment for contract {ContractId}, user {UserId}, package {PackageId}", 
+                contractId, contract.ParentId, contract.PackageId);
+            if (contract.ParentId != userid)
+            {
+                return new SePayPaymentResponseDto
+                {
+                    Success = false,
+                    Message = "User is not authorized for this contract"
+                };
+            }
+
+            // Get payment package and validate price
+            var package = await _packageRepository.GetByIdAsync(contract.PackageId);
+            if (package == null)
+            {
+                return new SePayPaymentResponseDto
+                {
+                    Success = false,
+                    Message = "Payment package not found"
+                };
+            }
+
+            // Generate order reference
+            var orderReference = $"{_orderReferencePrefix}{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+            // Create SepayTransaction with ContractId (NO WalletTransaction)
+            var sePayTransaction = new SepayTransaction
+            {
+                SepayTransactionId = Guid.NewGuid(),
+                ContractId = contractId,
+                OrderReference = orderReference,
+                TransferAmount = package.Price,
+                TransferType = "in",
+                Code = orderReference,
+                Content = orderReference + "-Contract Payment",
+                Description = $"Direct payment for contract {contractId}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _sePayRepository.AddAsync(sePayTransaction);
+
+            // Generate QR code for payment
+            var qrCodeUrl = GenerateQrCodeUrl(package.Price, orderReference);
+
+            _logger.LogInformation("Created direct contract payment transaction {SepayTransactionId} for contract {ContractId}", 
+                sePayTransaction.SepayTransactionId, contractId);
+
+            return new SePayPaymentResponseDto
+            {
+                Success = true,
+                Message = "Contract payment request created successfully",
+                QrCodeUrl = qrCodeUrl,
+                OrderReference = orderReference,
+                Amount = package.Price,
+                BankInfo = $"{_accountName} - {_accountNumber} - {_bankCode}",
+                TransferContent = orderReference
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}", contractId);
+            return new SePayPaymentResponseDto
+            {
+                Success = false,
+                Message = "An error occurred while creating payment request"
+            };
+        }
+    }
+
     public async Task<SePayPaymentResponseDto?> GetPaymentDetailsAsync(Guid walletTransactionId)
     {
         try
@@ -345,6 +448,95 @@ public class SePayService : ISePayService
         {
             _logger.LogError(ex, "Error getting payment details for transaction {TransactionId}", walletTransactionId);
             return null;
+        }
+    }
+
+    private async Task<SePayWebhookResultDto> ProcessContractPaymentWebhookAsync(Guid? contractId, SePayWebhookRequestDto webhookData)
+    {
+        try
+        {
+            _logger.LogInformation("Processing contract payment webhook for contract {ContractId}", contractId);
+            if (contractId == null || contractId == Guid.Empty)
+            {
+                _logger.LogWarning("Invalid contract ID in webhook data");
+                return new SePayWebhookResultDto
+                {
+                    Success = false,
+                    Message = "Invalid contract ID"
+                };
+            }
+            Guid cid = contractId.Value;
+            // Validate contract exists
+            var contract = await _contractRepository.GetByIdAsync(cid);
+            if (contract == null)
+            {
+                _logger.LogWarning("Contract not found: {ContractId}", contractId);
+                return new SePayWebhookResultDto
+                {
+                    Success = false,
+                    Message = "Contract not found"
+                };
+            }
+
+            // Get SePay transaction
+            var sePayTransaction = await _sePayRepository.GetByCodeAsync(webhookData.Code);
+            if (sePayTransaction == null)
+            {
+                _logger.LogWarning("SePay transaction not found for code: {Code}", webhookData.Code);
+                return new SePayWebhookResultDto
+                {
+                    Success = false,
+                    Message = "Transaction not found"
+                };
+            }
+
+            // Verify amount matches
+            if (webhookData.TransferAmount != sePayTransaction.TransferAmount)
+            {
+                _logger.LogWarning("Amount mismatch for contract {ContractId}: webhook {WebhookAmount}, transaction {TransactionAmount}", 
+                    contractId, webhookData.TransferAmount, sePayTransaction.TransferAmount);
+                return new SePayWebhookResultDto
+                {
+                    Success = false,
+                    Message = "Transaction amount does not match"
+                };
+            }
+
+            // Update SepayTransaction with webhook data
+            sePayTransaction.Gateway = webhookData.Gateway;
+            sePayTransaction.TransactionDate = webhookData.TransactionDate;
+            sePayTransaction.AccountNumber = webhookData.AccountNumber;
+            sePayTransaction.SubAccount = webhookData.SubAccount;
+            sePayTransaction.TransferType = webhookData.TransferType;
+            sePayTransaction.Accumulated = webhookData.Accumulated;
+            sePayTransaction.Code = webhookData.Code;
+            sePayTransaction.Content = webhookData.Content;
+            sePayTransaction.ReferenceNumber = webhookData.ReferenceCode;
+            sePayTransaction.Description = webhookData.Description;
+
+            await _sePayRepository.UpdateAsync(sePayTransaction);
+
+            // Update contract status to Active
+            contract.Status = "Active";
+            await _contractRepository.UpdateAsync(contract);
+
+            _logger.LogInformation("Successfully processed contract payment webhook for contract {ContractId}, updated status to Active", contractId);
+
+            return new SePayWebhookResultDto
+            {
+                Success = true,
+                Message = "Contract payment webhook processed successfully",
+                OrderReference = sePayTransaction.OrderReference
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing contract payment webhook for contract {ContractId}", contractId);
+            return new SePayWebhookResultDto
+            {
+                Success = false,
+                Message = "An error occurred while processing contract payment webhook"
+            };
         }
     }
 

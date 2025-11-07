@@ -55,6 +55,14 @@ public class SePayRepository : ISePayRepository
             .FirstOrDefaultAsync(s => s.Code == code);
     }
 
+    public async Task<SepayTransaction?> GetByCodeAsync(string code)
+    {
+        return await _context.SepayTransactions
+            .Include(s => s.WalletTransaction)
+            .Include(s => s.Contract)
+            .FirstOrDefaultAsync(s => s.Code == code);
+    }
+
     public async Task<IEnumerable<SepayTransaction>> GetByUserIdAsync(Guid userId, int pageNumber = 1, int pageSize = 10)
     {
         var skip = (pageNumber - 1) * pageSize;
