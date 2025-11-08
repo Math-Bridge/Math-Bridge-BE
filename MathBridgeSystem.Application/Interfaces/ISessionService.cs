@@ -15,5 +15,6 @@ namespace MathBridgeSystem.Application.Interfaces
 
         Task<bool> UpdateSessionStatusAsync(Guid bookingId, string newStatus, Guid tutorId);
         Task<SessionDto?> GetSessionForTutorCheckAsync(Guid bookingId, Guid tutorId);
+        Task<SessionDto?> GetSessionByBookingIdAsync(Guid bookingId, Guid userId, string role);
     }
 }

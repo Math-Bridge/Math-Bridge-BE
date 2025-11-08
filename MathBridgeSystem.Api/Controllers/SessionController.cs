@@ -51,13 +51,15 @@ namespace MathBridgeSystem.Api.Controllers
         public async Task<IActionResult> GetSessionById(Guid bookingId)
         {
             var userId = GetUserId();
+            var role = User.IsInRole("staff") ? "staff" :
+                       User.IsInRole("tutor") ? "tutor" : "parent";
+
             try
             {
-                var session = IsStaff
-                    ? (await _sessionService.GetSessionsByTutorIdAsync(userId)).FirstOrDefault(s => s.BookingId == bookingId)
-                    : await _sessionService.GetSessionByIdAsync(bookingId, userId);
+                var session = await _sessionService.GetSessionByBookingIdAsync(bookingId, userId, role);
+                if (session == null)
+                    return NotFound();
 
-                if (session == null) return NotFound();
                 return Ok(session);
             }
             catch (Exception ex)
