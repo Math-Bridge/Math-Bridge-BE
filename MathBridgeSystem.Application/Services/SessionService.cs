@@ -164,5 +164,19 @@ namespace MathBridgeSystem.Application.Services
                 Status = session.Status
             };
         }
+        public async Task<SessionDto?> GetSessionByBookingIdAsync(Guid bookingId, Guid userId, string role)
+        {
+            var session = await _sessionRepository.GetByIdAsync(bookingId);
+            if (session == null)
+                return null;
+
+            if (role == "parent" && session.Contract.ParentId != userId)
+                return null;
+            if (role == "tutor" && session.TutorId != userId)
+                return null;
+            // staff: được xem tất cả
+
+            return MapSessionToDto(session);
+        }
     }
 }
