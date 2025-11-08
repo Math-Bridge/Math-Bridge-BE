@@ -21,10 +21,8 @@ namespace MathBridgeSystem.Api.Controllers
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                          ?? User.FindFirst("sub")?.Value;
-
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 throw new UnauthorizedAccessException("Missing or invalid user ID in token.");
-
             return userId;
         }
 
@@ -49,13 +47,16 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet("{bookingId}")]
-        [Authorize(Roles = "parent")]
+        [Authorize(Roles = "parent,tutor,staff")]
         public async Task<IActionResult> GetSessionById(Guid bookingId)
         {
-            var parentId = GetUserId();
+            var userId = GetUserId();
             try
             {
-                var session = await _sessionService.GetSessionByIdAsync(bookingId, parentId);
+                var session = IsStaff
+                    ? (await _sessionService.GetSessionsByTutorIdAsync(userId)).FirstOrDefault(s => s.BookingId == bookingId)
+                    : await _sessionService.GetSessionByIdAsync(bookingId, userId);
+
                 if (session == null) return NotFound();
                 return Ok(session);
             }
@@ -81,23 +82,20 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
-        // === TUTOR APIs (MAIN) ===
-        [HttpGet("tutor/main")]
+        // === TUTOR API (TẤT CẢ BUỔI MÌNH DẠY) ===
+        [HttpGet("tutor")]
         [Authorize(Roles = "staff,tutor")]
-        public async Task<IActionResult> GetSessionsByMainTutor([FromQuery] Guid? tutorId)
+        public async Task<IActionResult> GetSessionsByTutor([FromQuery] Guid? tutorId)
         {
             var currentUserId = GetUserId();
 
-         
             if (IsStaff && !tutorId.HasValue)
                 return BadRequest(new { error = "tutorId is required for staff." });
 
-         
             if (IsTutor && !IsStaff)
             {
                 if (tutorId.HasValue && tutorId != currentUserId)
-                    return Forbid("Tutor can only view their own main schedule.");
-
+                    return Forbid("Tutor can only view their own schedule.");
                 tutorId = currentUserId;
             }
 
@@ -105,7 +103,7 @@ namespace MathBridgeSystem.Api.Controllers
 
             try
             {
-                var sessions = await _sessionService.GetSessionsByMainTutorIdAsync(targetTutorId);
+                var sessions = await _sessionService.GetSessionsByTutorIdAsync(targetTutorId);
                 return Ok(sessions);
             }
             catch (Exception ex)
@@ -114,38 +112,6 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
-        // === TUTOR APIs (SUBSTITUTE) ===
-        [HttpGet("tutor/substitute")]
-        [Authorize(Roles = "staff,tutor")]
-        public async Task<IActionResult> GetSessionsBySubstituteTutor([FromQuery] Guid? tutorId)
-        {
-            var currentUserId = GetUserId();
-
-            // STAFF: BẮT BUỘC TRUYỀN tutorId
-            if (IsStaff && !tutorId.HasValue)
-                return BadRequest(new { error = "tutorId is required for staff." });
-
-            // TUTOR: Chỉ được xem chính mình
-            if (IsTutor && !IsStaff)
-            {
-                if (tutorId.HasValue && tutorId != currentUserId)
-                    return Forbid("Tutor can only view their own substitute schedule.");
-
-                tutorId = currentUserId;
-            }
-
-            var targetTutorId = tutorId ?? currentUserId;
-
-            try
-            {
-                var sessions = await _sessionService.GetSessionsBySubstituteTutorIdAsync(targetTutorId);
-                return Ok(sessions);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
         [HttpPut("{bookingId}/status")]
         [Authorize(Roles = "tutor,staff")]
         public async Task<IActionResult> UpdateSessionStatus(Guid bookingId, [FromBody] UpdateSessionStatusRequest request)
@@ -157,10 +123,8 @@ namespace MathBridgeSystem.Api.Controllers
 
             try
             {
-                // Staff bỏ qua kiểm tra quyền tutor
                 if (!IsStaff)
                 {
-                    // GỌI SERVICE ĐỂ KIỂM TRA
                     var session = await _sessionService.GetSessionForTutorCheckAsync(bookingId, userId);
                     if (session == null)
                         return Forbid("You can only update your own sessions.");
