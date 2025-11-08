@@ -42,7 +42,9 @@ namespace MathBridgeSystem.Application.Services
             var (start, end) = ParseTimeSlot(dto.RequestedTimeSlot);
             if (dto.RequestedTutorId.HasValue)
             {
-                var available = await _sessionRepo.IsTutorAvailableAsync(dto.RequestedTutorId.Value, dto.RequestedDate, start, end);
+                var startDateTime = dto.RequestedDate.ToDateTime(start);
+                var endDateTime = dto.RequestedDate.ToDateTime(end);
+                var available = await _sessionRepo.IsTutorAvailableAsync(dto.RequestedTutorId.Value, dto.RequestedDate, startDateTime, endDateTime);
                 if (!available) throw new InvalidOperationException("Tutor not available.");
             }
 
@@ -78,7 +80,9 @@ namespace MathBridgeSystem.Application.Services
             var (start, end) = ParseTimeSlot(request.RequestedTimeSlot);
             var finalTutorId = dto.NewTutorId != Guid.Empty ? dto.NewTutorId : (request.RequestedTutorId ?? request.Booking.TutorId);
 
-            var available = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, start, end);
+            var startDateTime = request.RequestedDate.ToDateTime(start);
+            var endDateTime = request.RequestedDate.ToDateTime(end);
+            var available = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDateTime, endDateTime);
             if (!available) throw new InvalidOperationException("Tutor not available.");
 
             var sessionStart = request.RequestedDate.ToDateTime(start);

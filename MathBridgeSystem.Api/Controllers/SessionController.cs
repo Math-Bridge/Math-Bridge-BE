@@ -112,6 +112,49 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
+
+        [HttpPut("{bookingId}/tutor")]
+        [Authorize(Roles = "staff")]
+        public async Task<IActionResult> UpdateSessionTutor(Guid bookingId, [FromBody] UpdateSessionTutorRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetUserId();
+
+            try
+            {
+                var success = await _sessionService.UpdateSessionTutorAsync(bookingId, request.NewTutorId, userId);
+                return Ok(new
+                {
+                    success,
+                    message = "Session tutor updated successfully.",
+                    bookingId,
+                    newTutorId = request.NewTutorId
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
+            }
+        }
+
         [HttpPut("{bookingId}/status")]
         [Authorize(Roles = "tutor,staff")]
         public async Task<IActionResult> UpdateSessionStatus(Guid bookingId, [FromBody] UpdateSessionStatusRequest request)
