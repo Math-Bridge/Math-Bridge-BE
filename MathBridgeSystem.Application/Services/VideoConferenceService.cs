@@ -39,7 +39,9 @@ public class VideoConferenceService : IVideoConferenceService
         // Get the appropriate provider
         if (!_providers.TryGetValue(request.Platform, out var provider))
             throw new Exception($"Video conference provider '{request.Platform}' not found");
-
+        var meeting= await _context.VideoConferenceSessions.FirstOrDefaultAsync(vc => vc.BookingId == request.BookingId);
+        if (meeting != null)
+            return await GetVideoConferenceAsync(meeting.ConferenceId);
         // Create meeting via provider
         var creationResult = await provider.CreateMeetingAsync( );
 
