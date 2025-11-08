@@ -103,5 +103,42 @@ namespace MathBridgeSystem.Application.Services
                 PackageName = s.Contract.Package.PackageName
             }).ToList();
         }
+        public async Task<bool> UpdateSessionStatusAsync(Guid bookingId, string newStatus, Guid tutorId)
+        {
+            var session = await _sessionRepository.GetByIdAsync(bookingId);
+            if (session == null)
+                throw new KeyNotFoundException("Session not found.");
+
+            if (session.TutorId != tutorId)
+                throw new UnauthorizedAccessException("You are not the tutor of this session.");
+
+            var currentStatus = session.Status.ToLower();
+            var normalizedNewStatus = newStatus.ToLower();
+
+            if (currentStatus != "processing")
+                throw new InvalidOperationException($"Session must be in 'processing' status to update. Current: {currentStatus}");
+
+            if (normalizedNewStatus != "completed" && normalizedNewStatus != "cancelled")
+                throw new ArgumentException("Status must be 'completed' or 'cancelled'");
+
+            session.Status = normalizedNewStatus;
+            session.UpdatedAt = DateTime.UtcNow;
+
+            await _sessionRepository.UpdateAsync(session);
+            return true;
+        }
+        public async Task<SessionDto?> GetSessionForTutorCheckAsync(Guid bookingId, Guid tutorId)
+        {
+            var session = await _sessionRepository.GetByIdAsync(bookingId);
+            if (session == null || session.TutorId != tutorId)
+                return null;
+
+            return new SessionDto
+            {
+                BookingId = session.BookingId,
+                TutorName = session.Tutor.FullName,
+                Status = session.Status
+            };
+        }
     }
 }

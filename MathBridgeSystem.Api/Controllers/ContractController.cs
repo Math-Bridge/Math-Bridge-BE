@@ -122,5 +122,32 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve all contracts.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Staff completes a contract (all sessions must be done)
+        /// </summary>
+        [HttpPut("{contractId}/complete")]
+        [Authorize(Roles = "staff")]
+        public async Task<IActionResult> CompleteContract(Guid contractId)
+        {
+            var staffId = GetUserIdFromClaims();
+            try
+            {
+                var success = await _contractService.CompleteContractAsync(contractId, staffId);
+                return Ok(new { success, message = "Contract completed successfully." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Contract not found." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
+            }
+        }
     }
 }

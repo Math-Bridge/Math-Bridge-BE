@@ -146,5 +146,53 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+        [HttpPut("{bookingId}/status")]
+        [Authorize(Roles = "tutor,staff")]
+        public async Task<IActionResult> UpdateSessionStatus(Guid bookingId, [FromBody] UpdateSessionStatusRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetUserId();
+
+            try
+            {
+                // Staff bỏ qua kiểm tra quyền tutor
+                if (!IsStaff)
+                {
+                    // GỌI SERVICE ĐỂ KIỂM TRA
+                    var session = await _sessionService.GetSessionForTutorCheckAsync(bookingId, userId);
+                    if (session == null)
+                        return Forbid("You can only update your own sessions.");
+                }
+
+                var success = await _sessionService.UpdateSessionStatusAsync(bookingId, request.Status, userId);
+                return Ok(new
+                {
+                    success,
+                    message = $"Session status updated to '{request.Status}'."
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Session not found." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
+            }
+        }
     }
 }

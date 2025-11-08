@@ -310,5 +310,24 @@ namespace MathBridgeSystem.Application.Services
                 Status = c.Status
             }).ToList();
         }
+        public async Task<bool> CompleteContractAsync(Guid contractId, Guid staffId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract == null)
+                throw new KeyNotFoundException("Contract not found.");
+
+            if (contract.Status != "active")
+                throw new InvalidOperationException("Only active contracts can be completed.");
+
+            var sessions = await _sessionRepository.GetByContractIdAsync(contractId);
+            if (sessions.Any(s => s.Status != "completed"))
+                throw new InvalidOperationException("All sessions must be completed before completing the contract.");
+
+            contract.Status = "completed";
+            contract.UpdatedDate = DateTime.UtcNow;
+
+            await _contractRepository.UpdateAsync(contract);
+            return true;
+        }
     }
 }
