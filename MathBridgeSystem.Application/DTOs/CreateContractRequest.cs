@@ -29,6 +29,6 @@ namespace MathBridgeSystem.Application.DTOs
 
         [JsonPropertyName("maxDistanceKm")] public decimal? MaxDistanceKm { get; set; } = 15;
 
-        [JsonPropertyName("status")] public string Status { get; set; } = "pending";
+        [JsonPropertyName("status")] public string Status { get; set; } = "unpaid";
     }
 }

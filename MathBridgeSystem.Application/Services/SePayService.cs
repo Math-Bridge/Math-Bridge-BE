@@ -517,7 +517,7 @@ public class SePayService : ISePayService
             await _sePayRepository.UpdateAsync(sePayTransaction);
 
             // Update contract status to Active
-            contract.Status = "Active";
+            contract.Status = "Pending";
             await _contractRepository.UpdateAsync(contract);
 
             _logger.LogInformation("Successfully processed contract payment webhook for contract {ContractId}, updated status to Active", contractId);
