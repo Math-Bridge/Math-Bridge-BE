@@ -12,5 +12,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<SessionDto>> GetSessionsByChildIdAsync(Guid childId, Guid parentId);
         Task<List<SessionDto>> GetSessionsByMainTutorIdAsync(Guid tutorId);
         Task<List<SessionDto>> GetSessionsBySubstituteTutorIdAsync(Guid tutorId);
+        Task<bool> UpdateSessionStatusAsync(Guid bookingId, string newStatus, Guid tutorId);
     }
 }
