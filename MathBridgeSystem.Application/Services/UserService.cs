@@ -137,5 +137,68 @@ namespace MathBridgeSystem.Application.Services
             await _userRepository.UpdateAsync(user);
             return user.UserId;
         }
+
+        public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, DeductWalletRequest request, Guid currentUserId, string currentUserRole)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            // Authorization check: only the parent themselves or admin can deduct from wallet
+            if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != parentId))
+                throw new Exception("Unauthorized access");
+
+            // Get the parent user
+            var parent = await _userRepository.GetByIdAsync(parentId);
+            if (parent == null || parent.Role.RoleName != "parent")
+                throw new Exception("Invalid parent user");
+
+            // Get the contract with package details
+            var contract = await _userRepository.GetContractWithPackageAsync(request.ContractId);
+            if (contract == null)
+                throw new Exception("Contract not found");
+
+            // Verify the contract belongs to the parent
+            if (contract.ParentId != parentId)
+                throw new Exception("Contract does not belong to this parent");
+
+            // Get the package price
+            decimal packagePrice = contract.Package.Price;
+
+            // Check if parent has sufficient balance
+            if (parent.WalletBalance < packagePrice)
+                throw new Exception($"Insufficient wallet balance. Required: {packagePrice:N2}, Available: {parent.WalletBalance:N2}");
+
+            // Create wallet transaction
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid(),
+                ParentId = parentId,
+                ContractId = request.ContractId,
+                Amount = packagePrice,
+                TransactionType = "withdrawal",
+                Description = $"Payment for contract {request.ContractId} - Package: {contract.Package.PackageName}",
+                TransactionDate = DateTime.UtcNow,
+                Status = "completed",
+                PaymentMethod = "wallet",
+                PaymentGateway = "internal"
+            };
+
+            // Deduct from parent's wallet balance
+            parent.WalletBalance -= packagePrice;
+
+            // Save transaction and update user balance
+            await _walletTransactionRepository.AddAsync(transaction);
+            await _userRepository.UpdateAsync(parent);
+
+            return new DeductWalletResponse
+            {
+                TransactionId = transaction.TransactionId,
+                AmountDeducted = packagePrice,
+                NewWalletBalance = parent.WalletBalance,
+                TransactionStatus = transaction.Status,
+                TransactionDate = transaction.TransactionDate,
+                Message = "Wallet deduction successful"
+            };
+        }
     }
 }

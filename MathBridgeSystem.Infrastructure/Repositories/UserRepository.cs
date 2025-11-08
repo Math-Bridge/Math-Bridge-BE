@@ -112,5 +112,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     .ThenInclude(tc => tc.Center)
                 .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2);
         }
+
+        public async Task<Contract?> GetContractWithPackageAsync(Guid Id)
+        {
+            return await _context.Contracts
+                .Include(c => c.Package)
+                .FirstOrDefaultAsync(c => c.ContractId == Id);
+        }
     }
 }
