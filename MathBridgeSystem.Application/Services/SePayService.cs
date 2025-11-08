@@ -341,8 +341,7 @@ public class SePayService : ISePayService
 
             // Validate contract exists and user is owner
             var contract = await _contractRepository.GetByIdAsync(contractId);
-
-
+            
             if (contract == null)
             {
                 return new SePayPaymentResponseDto
@@ -373,6 +372,8 @@ public class SePayService : ISePayService
                 };
             }
 
+            contract.Status = "unpaid";
+            await _contractRepository.UpdateAsync(contract);
             // Generate order reference
             var orderReference = $"{_orderReferencePrefix}{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
 
