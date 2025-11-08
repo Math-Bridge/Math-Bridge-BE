@@ -18,6 +18,18 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             _context = context;
         }
 
+        private IQueryable<Session> WithFullIncludes()
+        {
+            return _context.Sessions
+                .Include(s => s.Contract)
+                    .ThenInclude(c => c.Parent)
+                .Include(s => s.Contract)
+                    .ThenInclude(c => c.Child)
+                .Include(s => s.Contract)
+                    .ThenInclude(c => c.Package)
+                .Include(s => s.Tutor);
+        }
+
         public async Task AddRangeAsync(IEnumerable<Session> sessions)
         {
             _context.Sessions.AddRange(sessions);
@@ -26,12 +38,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<Session?> GetByIdAsync(Guid bookingId)
         {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Parent)
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Package)
-                .Include(s => s.Tutor)
+            return await WithFullIncludes()
                 .FirstOrDefaultAsync(s => s.BookingId == bookingId);
         }
 
@@ -58,68 +65,42 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<List<Session>> GetByParentIdAsync(Guid parentId)
         {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Parent)
-                .Include(s => s.Tutor)
+            return await WithFullIncludes()
                 .Where(s => s.Contract.ParentId == parentId)
                 .OrderBy(s => s.SessionDate)
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
         }
+
         public async Task<List<Session>> GetByContractIdAsync(Guid contractId)
         {
-            return await _context.Sessions
+            return await WithFullIncludes()
                 .Where(s => s.ContractId == contractId)
                 .ToListAsync();
         }
+
         public async Task<List<Session>> GetSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime)
         {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                .ThenInclude(c => c.Parent)
-                .Include(s => s.Contract)
-                .ThenInclude(c => c.Child)
-                .Include(s => s.Tutor)
+            return await WithFullIncludes()
                 .Where(s => s.StartTime >= startTime && s.StartTime <= endTime && s.Status == "scheduled")
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
         }
+
         public async Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId)
         {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Parent)
-                .Include(s => s.Tutor)
+            return await WithFullIncludes()
                 .Where(s => s.Contract.ChildId == childId && s.Contract.ParentId == parentId)
                 .OrderBy(s => s.SessionDate)
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
         }
-        public async Task<List<Session>> GetByMainTutorIdAsync(Guid tutorId)
-        {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Child)
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Package)
-                .Include(s => s.Tutor)
-                .Where(s => s.Contract.MainTutorId == tutorId)
-                .OrderBy(s => s.SessionDate)
-                .ThenBy(s => s.StartTime)
-                .ToListAsync();
-        }
 
-        public async Task<List<Session>> GetBySubstituteTutorIdAsync(Guid tutorId)
+        // MỚI: LẤY THEO TUTOR ĐANG DẠY (Session.TutorId)
+        public async Task<List<Session>> GetByTutorIdAsync(Guid tutorId)
         {
-            return await _context.Sessions
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Child)
-                .Include(s => s.Contract)
-                    .ThenInclude(c => c.Package)
-                .Include(s => s.Tutor)
-                .Where(s => s.Contract.SubstituteTutor1Id == tutorId ||
-                            s.Contract.SubstituteTutor2Id == tutorId)
+            return await WithFullIncludes()
+                .Where(s => s.TutorId == tutorId)
                 .OrderBy(s => s.SessionDate)
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
