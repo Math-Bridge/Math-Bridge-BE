@@ -69,6 +69,65 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+
+        public async Task<bool> UpdateSessionTutorAsync(Guid bookingId, Guid newTutorId, Guid requesterId)
+        {
+            // Get the session with contract details
+            var session = await _sessionRepository.GetByIdAsync(bookingId);
+            if (session == null)
+                throw new KeyNotFoundException("Session not found.");
+
+            // Get the contract to check available tutors
+            var contract = session.Contract;
+            if (contract == null)
+                throw new InvalidOperationException("Session contract not found.");
+            
+            // Validate that the new tutor is one of the 3 tutors from the contract
+            var validTutorIds = new List<Guid?> 
+            { 
+                contract.MainTutorId, 
+                contract.SubstituteTutor1Id, 
+                contract.SubstituteTutor2Id 
+            }.Where(id => id.HasValue).Select(id => id.Value).ToList();
+
+            if (!validTutorIds.Contains(newTutorId))
+            {
+                throw new ArgumentException(
+                    "The selected tutor is not assigned to this contract. " +
+                    "Only the main tutor or substitute tutors can be assigned to sessions.");
+            }
+
+            // Check if the session is in a status that allows tutor changes
+            var currentStatus = session.Status.ToLower();
+            if (currentStatus == "completed" || currentStatus == "cancelled")
+            {
+                throw new InvalidOperationException(
+                    $"Cannot update tutor for a session with status '{currentStatus}'. " +
+                    "Only pending or processing sessions can have tutor changes.");
+            }
+
+            // Check if the new tutor is available at the session time
+            var isAvailable = await _sessionRepository.IsTutorAvailableAsync(
+                newTutorId, 
+                session.SessionDate, 
+                session.StartTime, 
+                session.EndTime);
+
+            if (!isAvailable)
+            {
+                throw new InvalidOperationException(
+                    "The selected tutor is not available at the scheduled session time. " +
+                    "Please choose another tutor or reschedule the session.");
+            }
+
+            // Update the tutor
+            session.TutorId = newTutorId;
+            session.UpdatedAt = DateTime.UtcNow;
+            
+            await _sessionRepository.UpdateAsync(session);
+            return true;
+        }
+
         public async Task<bool> UpdateSessionStatusAsync(Guid bookingId, string newStatus, Guid tutorId)
         {
             var session = await _sessionRepository.GetByIdAsync(bookingId);

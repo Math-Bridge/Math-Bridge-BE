@@ -49,10 +49,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+        public async Task<bool> IsTutorAvailableAsync(Guid tutorId, DateOnly date, DateTime startTime, DateTime endTime)
         {
-            var start = new DateTime(date.Year, date.Month, date.Day) + startTime.ToTimeSpan();
-            var end = new DateTime(date.Year, date.Month, date.Day) + endTime.ToTimeSpan();
+            var start = new DateTime(date.Year, date.Month, date.Day) + startTime.TimeOfDay;
+            var end = new DateTime(date.Year, date.Month, date.Day) + endTime.TimeOfDay;
 
             return !await _context.Sessions.AnyAsync(s =>
                 s.TutorId == tutorId &&
