@@ -113,11 +113,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.UserId == tutorId && u.RoleId == 2);
         }
 
-        public async Task<Contract?> GetContractWithPackageAsync(Guid contractId)
+        public async Task<Contract?> GetContractWithPackageAsync(Guid Id)
         {
             return await _context.Contracts
                 .Include(c => c.Package)
-                .FirstOrDefaultAsync(c => c.ContractId == contractId);
+                .FirstOrDefaultAsync(c => c.ContractId == Id);
         }
     }
 }

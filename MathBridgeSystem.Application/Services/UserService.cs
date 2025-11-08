@@ -175,7 +175,7 @@ namespace MathBridgeSystem.Application.Services
                 ParentId = parentId,
                 ContractId = request.ContractId,
                 Amount = packagePrice,
-                TransactionType = "debit",
+                TransactionType = "withdrawal",
                 Description = $"Payment for contract {request.ContractId} - Package: {contract.Package.PackageName}",
                 TransactionDate = DateTime.UtcNow,
                 Status = "completed",

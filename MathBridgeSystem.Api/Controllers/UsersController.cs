@@ -89,9 +89,10 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
-        [HttpPost("{id}/wallet/deduct")]
-        public async Task<IActionResult> DeductWallet(Guid id, [FromBody] DeductWalletRequest request)
+        [HttpPost("/wallet/deduct")]
+        public async Task<IActionResult> DeductWallet([FromBody] DeductWalletRequest request)
         {
+            var id = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
