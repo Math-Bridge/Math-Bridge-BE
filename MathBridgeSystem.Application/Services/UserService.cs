@@ -138,10 +138,8 @@ namespace MathBridgeSystem.Application.Services
             return user.UserId;
         }
 
-        public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, DeductWalletRequest request, Guid currentUserId, string currentUserRole)
+        public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid id, Guid currentUserId, string currentUserRole)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
 
             // Authorization check: only the parent themselves or admin can deduct from wallet
             if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != parentId))
@@ -153,7 +151,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Invalid parent user");
 
             // Get the contract with package details
-            var contract = await _userRepository.GetContractWithPackageAsync(request.ContractId);
+            var contract = await _userRepository.GetContractWithPackageAsync(id);
             if (contract == null)
                 throw new Exception("Contract not found");
 
@@ -173,10 +171,10 @@ namespace MathBridgeSystem.Application.Services
             {
                 TransactionId = Guid.NewGuid(),
                 ParentId = parentId,
-                ContractId = request.ContractId,
+                ContractId = id,
                 Amount = packagePrice,
                 TransactionType = "withdrawal",
-                Description = $"Payment for contract {request.ContractId} - Package: {contract.Package.PackageName}",
+                Description = $"Payment for contract {id} - Package: {contract.Package.PackageName}",
                 TransactionDate = DateTime.UtcNow,
                 Status = "completed",
                 PaymentMethod = "wallet",

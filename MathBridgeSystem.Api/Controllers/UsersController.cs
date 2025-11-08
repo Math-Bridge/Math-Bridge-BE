@@ -89,10 +89,10 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
-        [HttpPost("/wallet/deduct")]
-        public async Task<IActionResult> DeductWallet([FromBody] DeductWalletRequest request)
+        [HttpPost("{id}/wallet/deduct")]
+        public async Task<IActionResult> DeductWallet(Guid id)
         {
-            var id = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+            var uid = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -103,7 +103,7 @@ namespace MathBridgeSystem.Api.Controllers
                 if (string.IsNullOrEmpty(currentUserRole))
                     return Unauthorized(new { error = "Role not found in token" });
 
-                var result = await _userService.DeductWalletAsync(id, request, currentUserId, currentUserRole);
+                var result = await _userService.DeductWalletAsync(uid, id, currentUserId, currentUserRole);
                 return Ok(result);
             }
             catch (Exception ex)
