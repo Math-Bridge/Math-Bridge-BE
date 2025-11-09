@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using MathBridgeSystem.Infrastructure.Services;
 using System.Security.Claims;
+using QuestPDF.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize Firebase with error handling
@@ -205,6 +206,7 @@ if (app.Environment.IsDevelopment())
         c.EnableDeepLinking();
     });
 }
+QuestPDF.Settings.License = LicenseType.Community;
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();

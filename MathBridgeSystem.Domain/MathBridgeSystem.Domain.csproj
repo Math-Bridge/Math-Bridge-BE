@@ -7,5 +7,6 @@
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+		<PackageReference Include="QuestPDF" Version="2025.7.4" />
 	</ItemGroup>
 </Project>

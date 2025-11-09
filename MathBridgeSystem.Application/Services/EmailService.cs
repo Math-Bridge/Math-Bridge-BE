@@ -482,5 +482,101 @@ namespace MathBridgeSystem.Application.Services
                 .Replace("/", "_")
                 .Replace("=", "");
         }
+        public async Task SendContractConfirmationAsync(
+    string email,
+    string parentName,
+    Guid contractId,
+    byte[] pdfBytes,
+    string pdfFileName = "MathBridge_Contract.pdf")
+        {
+            try
+            {
+                var subject = "Your MathBridge Tutoring Contract is Active!";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px; }}
+        .content {{ padding: 20px; background-color: #f9f9f9; border-radius: 8px; margin-top: 20px; }}
+        .button {{ display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #777; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Contract Activated Successfully!</h2>
+        </div>
+        <div class='content'>
+            <p>Dear <strong>{parentName}</strong>,</p>
+            <p>We're excited to confirm that your tutoring contract has been <strong>activated</strong>!</p>
+            <p>Your child is now officially enrolled in the MathBridge learning program.</p>
+            <p><strong>Contract ID:</strong> {contractId}</p>
+            <p>Please find your official contract attached as a PDF. You can download and save it for your records.</p>
+            <p style='text-align: center; margin: 25px 0;'>
+                <a href='#' class='button'>View Contract in Browser</a>
+            </p>
+            <p>If you have any questions, our support team is always here to help.</p>
+            <p>Thank you for trusting MathBridge with your child's education!</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridge System. All rights reserved.</p>
+            <p>Email: <a href='mailto:{_fromEmail}'>{_fromEmail}</a></p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailWithAttachmentAsync(email, subject, htmlBody, pdfBytes, pdfFileName);
+                _logger.LogInformation($"Contract confirmation email sent to {email} with PDF attachment.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send contract confirmation to {email}");
+                throw;
+            }
+        }
+
+        private async Task SendEmailWithAttachmentAsync(string to, string subject, string htmlBody, byte[] attachmentBytes, string attachmentName)
+        {
+            try
+            {
+                var message = new Message();
+                var boundary = $"--boundary_{Guid.NewGuid()}";
+
+                var content = new StringBuilder();
+                content.AppendLine($"From: {_fromEmail}");
+                content.AppendLine($"To: {to}");
+                content.AppendLine($"Subject: {subject}");
+                content.AppendLine("MIME-Version: 1.0");
+                content.AppendLine($"Content-Type: multipart/mixed; boundary=\"{boundary}\"");
+                content.AppendLine();
+                content.AppendLine($"--{boundary}");
+                content.AppendLine("Content-Type: text/html; charset=UTF-8");
+                content.AppendLine();
+                content.AppendLine(htmlBody);
+                content.AppendLine();
+                content.AppendLine($"--{boundary}");
+                content.AppendLine($"Content-Type: application/pdf; name=\"{attachmentName}\"");
+                content.AppendLine("Content-Transfer-Encoding: base64");
+                content.AppendLine($"Content-Disposition: attachment; filename=\"{attachmentName}\"");
+                content.AppendLine();
+                content.AppendLine(Convert.ToBase64String(attachmentBytes));
+                content.AppendLine($"--{boundary}--");
+
+                message.Raw = Base64UrlEncode(content.ToString());
+                var result = await _gmailService.Users.Messages.Send(message, "me").ExecuteAsync();
+                _logger.LogInformation($"Email with attachment sent. Message ID: {result.Id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send email with attachment to {to}");
+                throw;
+            }
+        }
     }
 }

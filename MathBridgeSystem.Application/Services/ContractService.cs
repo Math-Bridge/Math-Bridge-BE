@@ -14,15 +14,18 @@ namespace MathBridgeSystem.Application.Services
         private readonly IContractRepository _contractRepository;
         private readonly IPackageRepository _packageRepository;
         private readonly ISessionRepository _sessionRepository;
+        private readonly IEmailService _emailService;
 
         public ContractService(
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
-            ISessionRepository sessionRepository)
+            ISessionRepository sessionRepository,
+            IEmailService emailService)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
             _sessionRepository = sessionRepository;
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); 
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -105,9 +108,34 @@ namespace MathBridgeSystem.Application.Services
             if (contract.Status == "cancelled" && request.Status.ToLower() != "cancelled")
                 throw new InvalidOperationException("Cannot reactivate a cancelled contract.");
 
+            var oldStatus = contract.Status;
             contract.Status = request.Status.ToLower();
             contract.UpdatedDate = DateTime.UtcNow;
             await _contractRepository.UpdateAsync(contract);
+
+            // GỬI EMAIL KHI CHUYỂN SANG "active"
+            if (request.Status.ToLower() == "active" && oldStatus != "active")
+            {
+                var fullContract = await _contractRepository.GetByIdAsync(contractId);
+                if (fullContract == null) throw new KeyNotFoundException("Contract not found.");
+
+                var parent = fullContract.Parent;
+                var child = fullContract.Child;
+                var package = fullContract.Package;
+                var mainTutor = fullContract.MainTutor;
+                var center = fullContract.Center;
+
+                var pdfBytes = ContractPdfGenerator.GenerateContractPdf(
+                    fullContract, child, parent, package, mainTutor, center);
+
+                await _emailService.SendContractConfirmationAsync(
+                    email: parent.Email,
+                    parentName: parent.FullName,
+                    contractId: contract.ContractId,
+                    pdfBytes: pdfBytes,
+                    pdfFileName: $"MathBridge_Contract_{contract.ContractId}.pdf"
+                );
+            }
 
             if (request.Status.ToLower() == "cancelled")
             {
