@@ -207,6 +207,46 @@ namespace MathBridgeSystem.Application.Services
             }).ToList();
         }
 
+        public async Task<ContractDto> GetContractByIdAsync(Guid contractId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract == null)
+                throw new KeyNotFoundException("Contract not found.");
+
+            return new ContractDto
+            {
+                ContractId = contract.ContractId,
+                ChildId = contract.ChildId,
+                ChildName = contract.Child?.FullName ?? "Unknown Child",
+                PackageId = contract.PackageId,
+                PackageName = contract.Package?.PackageName ?? "Unknown Package",
+                Price = contract.Package?.Price ?? 0,
+                MainTutorId = contract.MainTutorId,
+                MainTutorName = contract.MainTutor?.FullName ?? "Not Assigned",
+                CenterId = contract.CenterId,
+                CenterName = contract.Center?.Name ?? "No Center",
+                StartDate = contract.StartDate,
+                EndDate = contract.EndDate,
+                StartTime = contract.StartTime,
+                EndTime = contract.EndTime,
+                DaysOfWeeks = contract.DaysOfWeeks,
+                DaysOfWeeksDisplay = FormatDaysOfWeek(contract.DaysOfWeeks),
+                IsOnline = contract.IsOnline,
+
+                // ONLY ONLINE
+                VideoCallPlatform = contract.IsOnline ? contract.VideoCallPlatform : null,
+
+                // ONLY OFFLINE
+                OfflineAddress = !contract.IsOnline ? contract.OfflineAddress : null,
+                OfflineLatitude = !contract.IsOnline ? contract.OfflineLatitude : null,
+                OfflineLongitude = !contract.IsOnline ? contract.OfflineLongitude : null,
+                MaxDistanceKm = !contract.IsOnline ? contract.MaxDistanceKm : null,
+
+                RescheduleCount = contract.RescheduleCount ?? 0,
+                Status = contract.Status
+            };
+        }
+
         public async Task<bool> AssignTutorsAsync(Guid contractId, AssignTutorToContractRequest request, Guid staffId)
         {
             var contract = await _contractRepository.GetByIdWithPackageAsync(contractId);

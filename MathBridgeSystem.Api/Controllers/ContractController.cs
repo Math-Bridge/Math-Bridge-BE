@@ -124,6 +124,28 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         /// <summary>
+        /// Get contract by ID (Staff & Admin only)
+        /// </summary>
+        [HttpGet("{contractId}")]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetContractById(Guid contractId)
+        {
+            try
+            {
+                var contract = await _contractService.GetContractByIdAsync(contractId);
+                return Ok(contract);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Contract not found." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to retrieve contract.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Get all contracts linked to parent phone number (Staff & Admin only)
         /// </summary>
         [HttpGet("by-phone/{phoneNumber}")]
