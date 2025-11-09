@@ -127,7 +127,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// Get contract by ID (Staff & Admin only)
         /// </summary>
         [HttpGet("{contractId}")]
-        [Authorize(Roles = "admin,staff")]
+        [Authorize(Roles = "admin,staff,parent")]
         public async Task<IActionResult> GetContractById(Guid contractId)
         {
             try
