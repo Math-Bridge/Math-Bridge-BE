@@ -119,11 +119,27 @@ namespace MathBridgeSystem.Application.Services
                 var fullContract = await _contractRepository.GetByIdAsync(contractId);
                 if (fullContract == null) throw new KeyNotFoundException("Contract not found.");
 
+                // Validate all required entities are present
+                if (fullContract.Parent == null)
+                    throw new InvalidOperationException("Cannot send email: Parent information is missing.");
+                
+                if (string.IsNullOrWhiteSpace(fullContract.Parent.Email))
+                    throw new InvalidOperationException("Cannot send email: Parent email is missing.");
+
+                if (fullContract.Child == null)
+                    throw new InvalidOperationException("Cannot send email: Child information is missing.");
+
+                if (fullContract.Package == null)
+                    throw new InvalidOperationException("Cannot send email: Package information is missing.");
+
+                if (fullContract.MainTutor == null)
+                    throw new InvalidOperationException("Cannot send email: Main tutor information is missing.");
+
                 var parent = fullContract.Parent;
                 var child = fullContract.Child;
                 var package = fullContract.Package;
                 var mainTutor = fullContract.MainTutor;
-                var center = fullContract.Center;
+                var center = fullContract.Center; // Center can be null
 
                 var pdfBytes = ContractPdfGenerator.GenerateContractPdf(
                     fullContract, child, parent, package, mainTutor, center);
@@ -396,3 +412,4 @@ namespace MathBridgeSystem.Application.Services
         }
     }
 }
+
