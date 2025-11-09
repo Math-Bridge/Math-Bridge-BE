@@ -14,5 +14,11 @@ namespace MathBridgeSystem.Application.Interfaces
         Task SendProgressReportAsync(string email, string studentName, string reportPeriod, string reportUrl);
         Task SendRefundConfirmationAsync(string email, string studentName, string refundAmount, string refundDate);
         Task SendContractCancelledAsync(string email, string studentName, string reason, string cancellationDate);
+        Task SendContractConfirmationAsync(
+    string email,
+    string parentName,
+    Guid contractId,
+    byte[] pdfBytes,
+    string pdfFileName = "MathBridge_Contract.pdf");
     }
 }
