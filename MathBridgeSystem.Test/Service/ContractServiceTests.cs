@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -13,6 +14,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IContractRepository> _contractRepositoryMock;
         private readonly Mock<IPackageRepository> _packageRepositoryMock;
         private readonly Mock<ISessionRepository> _sessionRepositoryMock;
+        private readonly Mock<IEmailService>   _emailServiceMock;
         private readonly ContractService _contractService;
 
         public ContractServiceTests()
@@ -23,7 +25,8 @@ namespace MathBridgeSystem.Tests.Services
             _contractService = new ContractService(
                 _contractRepositoryMock.Object,
                 _packageRepositoryMock.Object,
-                _sessionRepositoryMock.Object
+                _sessionRepositoryMock.Object,
+                _emailServiceMock.Object
             );
         }
 
