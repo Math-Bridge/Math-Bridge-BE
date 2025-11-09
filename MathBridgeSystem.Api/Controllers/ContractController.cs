@@ -67,7 +67,7 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet("parents/{parentId}")]
-        [Authorize(Roles = "parent")]
+        [Authorize(Roles = "parent,staff")]
         public async Task<IActionResult> GetContractsByParent(Guid parentId)
         {
             var userId = GetUserIdFromClaims();
