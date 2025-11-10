@@ -44,8 +44,7 @@ namespace MathBridgeSystem.Tests.Services
                 _tokenServiceMock.Object,
                 _googleAuthServiceMock.Object,
                 _emailServiceMock.Object,
-                _memoryCache,
-                googleMapsService = Mock.Of<IGoogleMapsService>()
+                _memoryCache
             );
         }
 

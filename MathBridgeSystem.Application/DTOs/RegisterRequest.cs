@@ -31,8 +31,5 @@ namespace MathBridgeSystem.Application.DTOs
         [Required(ErrorMessage = "RoleId is required")]
         [Range(1, int.MaxValue, ErrorMessage = "RoleId must be a positive integer")]
         public int RoleId { get; set; }
-        [Required(ErrorMessage = "Address is required")]
-        [StringLength(500, ErrorMessage = "Address must be less than 500 characters")]
-        public string Address { get; set; }
     }
 }
