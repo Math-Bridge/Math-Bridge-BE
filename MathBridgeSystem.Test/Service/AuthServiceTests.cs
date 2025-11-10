@@ -29,6 +29,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly IMemoryCache _memoryCache;
         private readonly AuthService _authService;
+        private readonly IGoogleMapsService _googleMapsService;
 
         public AuthServiceTests()
         {
@@ -37,13 +38,14 @@ namespace MathBridgeSystem.Tests.Services
             _googleAuthServiceMock = new Mock<IGoogleAuthService>();
             _emailServiceMock = new Mock<IEmailService>();
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-
+            IGoogleMapsService googleMapsService;
             _authService = new AuthService(
                 _userRepositoryMock.Object,
                 _tokenServiceMock.Object,
                 _googleAuthServiceMock.Object,
                 _emailServiceMock.Object,
-                _memoryCache
+                _memoryCache,
+                googleMapsService = Mock.Of<IGoogleMapsService>()
             );
         }
 

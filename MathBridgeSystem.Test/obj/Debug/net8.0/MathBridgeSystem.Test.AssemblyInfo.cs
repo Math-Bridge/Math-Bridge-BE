@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MathBridgeSystem.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c30d412968a7a52e9af54d5bf335c69c0b01d603")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e52b7b4fdbc7b1ecc738dca9d3f6b3296b61350")]
 [assembly: System.Reflection.AssemblyProductAttribute("MathBridgeSystem.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MathBridgeSystem.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
