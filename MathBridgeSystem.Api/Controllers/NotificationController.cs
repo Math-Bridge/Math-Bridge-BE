@@ -2,6 +2,7 @@ using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -109,12 +110,20 @@ namespace MathBridgeSystem.Api.Controllers
         public async Task SubscribeToNotifications()
         {
             var userId = GetCurrentUserId();
+
             Response.ContentType = "text/event-stream";
             Response.StatusCode = 200;
             Response.Headers.Add("Cache-Control", "no-cache");
             Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers.Add("X-Accel-Buffering", "no");
 
-            var writer = new StreamWriter(Response.Body) { AutoFlush = false };
+            // Disable ASP.NET Core's internal buffering
+            HttpContext.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
+
+            // Start the response to commit headers
+            await Response.StartAsync();
+
+            var writer = new StreamWriter(Response.Body) { AutoFlush = true };
             _connectionManager.RegisterConnection(userId, writer);
 
             try
@@ -123,7 +132,6 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     // Send keep-alive comment every 30 seconds
                     await writer.WriteAsync(":keep-alive\n\n");
-                    await writer.FlushAsync();
                     await Task.Delay(30000, HttpContext.RequestAborted);
                 }
             }
@@ -134,10 +142,10 @@ namespace MathBridgeSystem.Api.Controllers
             finally
             {
                 _connectionManager.UnregisterConnection(userId);
-                await writer.FlushAsync();
                 await writer.DisposeAsync();
             }
         }
+
 
 
 
