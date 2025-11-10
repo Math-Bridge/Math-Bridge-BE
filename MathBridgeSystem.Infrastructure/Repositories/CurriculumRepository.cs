@@ -92,6 +92,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.Curricula.AnyAsync(c => c.CurriculumCode.ToLower() == code.ToLower());
         }
 
+        public async Task<bool> ExistsAsync(Guid curriculumId)
+        {
+            return await _context.Curricula.AnyAsync(c => c.CurriculumId == curriculumId);
+        }
+
         // Related Data Methods
         public async Task<int> GetSchoolsCountAsync(Guid curriculumId)
         {

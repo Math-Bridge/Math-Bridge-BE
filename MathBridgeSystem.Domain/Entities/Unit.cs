@@ -15,7 +15,7 @@ public partial class Unit
 
     public int UnitOrder { get; set; }
 
-    public decimal? Credit { get; set; }
+    public byte? Credit { get; set; }
 
     public string? LearningObjectives { get; set; }
 

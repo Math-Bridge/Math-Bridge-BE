@@ -37,7 +37,10 @@ namespace MathBridgeSystem.Application.Services
                 Gender = user.Gender,
                 WalletBalance = user.WalletBalance,
                 RoleId = user.RoleId,
-                Status = user.Status
+                Status = user.Status,
+                FormattedAddress = user.FormattedAddress,
+                placeId = user.GooglePlaceId
+
             };
         }
 

@@ -10,5 +10,7 @@
         public decimal WalletBalance { get; set; }
         public int RoleId { get; set; }
         public string Status { get; set; }
+        public string FormattedAddress { get; set; }
+        public string placeId { get; set; }
     }
 }

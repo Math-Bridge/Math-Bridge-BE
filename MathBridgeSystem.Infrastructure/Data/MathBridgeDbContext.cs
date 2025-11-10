@@ -1166,9 +1166,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.Credit)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("credit");
+            entity.Property(e => e.Credit).HasColumnName("credit");
             entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
             entity.Property(e => e.IsActive)
                 .HasDefaultValue(true)
