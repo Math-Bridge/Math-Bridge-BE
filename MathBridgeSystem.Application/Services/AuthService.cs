@@ -18,8 +18,9 @@ namespace MathBridgeSystem.Application.Services
         private readonly IEmailService _emailService;
         private readonly IMemoryCache _cache;
         private readonly FirebaseAuth _firebaseAuth;
+        private readonly IGoogleMapsService _googleMapsService;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService, IGoogleAuthService googleAuthService, IEmailService emailService, IMemoryCache cache)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IGoogleAuthService googleAuthService, IEmailService emailService, IMemoryCache cache, IGoogleMapsService googleMapsService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
@@ -27,27 +28,23 @@ namespace MathBridgeSystem.Application.Services
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _firebaseAuth = FirebaseAuth.DefaultInstance;
+            _googleMapsService = googleMapsService;
         }
 
         public async Task<string> RegisterAsync(RegisterRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
+            if (request == null) throw new ArgumentNullException(nameof(request));
             if (await _userRepository.EmailExistsAsync(request.Email))
                 throw new Exception("Email already exists");
 
-            // Hardcode RoleId to 3 (parent role) for regular registrations
             const int parentRoleId = 3;
             var roleExists = await _userRepository.RoleExistsAsync(parentRoleId);
-            if (!roleExists)
-                throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
+            if (!roleExists) throw new Exception($"Parent role (ID: {parentRoleId}) not found");
 
-            // Generate OOB code
             var oobCode = Guid.NewGuid().ToString();
             var cacheEntryOptions = new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15) // Increase expiration time to 15 minutes
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
             };
 
             var cachedRequest = new
@@ -57,11 +54,12 @@ namespace MathBridgeSystem.Application.Services
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 request.PhoneNumber,
                 request.Gender,
-                RoleId = parentRoleId
+                RoleId = parentRoleId,
+                Address = request.Address
             };
+
             _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
 
-            // Generate verification link with oobCode (sửa để đúng route API)
             var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
 
             try
@@ -81,26 +79,16 @@ namespace MathBridgeSystem.Application.Services
         public async Task<Guid> VerifyEmailAsync(string oobCode)
         {
             if (string.IsNullOrEmpty(oobCode))
-            {
-                Console.WriteLine("VerifyEmailAsync: OobCode is null or empty");
                 throw new ArgumentException("Invalid verification code");
-            }
 
             if (!_cache.TryGetValue(oobCode, out var cachedRequest) || cachedRequest == null)
-            {
-                Console.WriteLine($"VerifyEmailAsync: Invalid or expired oobCode: {oobCode}");
                 throw new Exception("Invalid or expired verification code");
-            }
 
             var request = (dynamic)cachedRequest;
             var email = request.Email;
 
-            // Check duplicate email
             if (await _userRepository.EmailExistsAsync(email))
-            {
-                Console.WriteLine($"VerifyEmailAsync: Email already registered: {email}");
                 throw new Exception("Email already registered");
-            }
 
             var user = new User
             {
@@ -114,14 +102,16 @@ namespace MathBridgeSystem.Application.Services
                 WalletBalance = 0.00m,
                 CreatedDate = DateTime.UtcNow,
                 LastActive = DateTime.UtcNow,
-                Status = "active"
+                Status = "active",
+                FormattedAddress = request.Address,
+                LocationUpdatedDate = DateTime.UtcNow
             };
 
             try
             {
                 await _userRepository.AddAsync(user);
-                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
-                var firebaseUser = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
+
+                await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
                 {
                     Email = request.Email,
                     Disabled = false
@@ -134,8 +124,6 @@ namespace MathBridgeSystem.Application.Services
             }
 
             _cache.Remove(oobCode);
-            Console.WriteLine($"VerifyEmailAsync: Cache removed for oobCode: {oobCode}");
-
             return user.UserId;
         }
 
