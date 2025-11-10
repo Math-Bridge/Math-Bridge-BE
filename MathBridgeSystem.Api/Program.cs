@@ -84,6 +84,7 @@ builder.Services.AddScoped<INotificationPreferenceRepository, NotificationPrefer
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IRescheduleRequestRepository, RescheduleRequestRepository>();
 builder.Services.AddScoped<ITutorVerificationRepository, TutorVerificationRepository>();
+builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 
 
 
@@ -123,6 +124,10 @@ builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<ICenterService, CenterService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
 builder.Services.AddScoped<ICurriculumService, CurriculumService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>();
+builder.Services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
+builder.Services.AddScoped<ITestResultService, TestResultService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
