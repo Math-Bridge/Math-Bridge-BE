@@ -30,4 +30,3 @@ namespace MathBridgeSystem.Application.DTOs
         public string? LinkSyllabus { get; set; }
     }
 }
-}

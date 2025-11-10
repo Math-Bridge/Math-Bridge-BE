@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<Curriculum>> GetActiveAsync();
         Task<Curriculum?> GetByCodeAsync(string code);
         Task<bool> ExistsByCodeAsync(string code);
+        Task<bool> ExistsAsync(Guid curriculumId);
 
         // Related Data Methods
         Task<int> GetSchoolsCountAsync(Guid curriculumId);

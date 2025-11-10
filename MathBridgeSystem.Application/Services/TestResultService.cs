@@ -218,7 +218,6 @@ namespace MathBridgeSystem.Application.Services
                 TutorId = testResult.TutorId,
                 TutorName = testResult.Tutor?.FullName ?? "Unknown",
                 ChildId = testResult.ChildId,
-                ChildName = testResult.Child?.ChildName ?? "Unknown",
                 TestName = testResult.TestName,
                 TestType = testResult.TestType,
                 Score = testResult.Score,

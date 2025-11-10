@@ -25,7 +25,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string UnitName { get; set; } = null!;
         public string? UnitDescription { get; set; }
         public int? UnitOrder { get; set; }
-        public decimal? Credit { get; set; }
+        public byte? Credit { get; set; }
         public string? LearningObjectives { get; set; }
         public bool IsActive { get; set; } = true;
     }
@@ -35,7 +35,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string UnitName { get; set; } = null!;
         public string? UnitDescription { get; set; }
         public int UnitOrder { get; set; }
-        public decimal? Credit { get; set; }
+        public byte? Credit { get; set; }
         public string? LearningObjectives { get; set; }
         public bool IsActive { get; set; }
     }

@@ -192,8 +192,8 @@ namespace MathBridgeSystem.Application.Services
                 AdditionalComments = feedback.AdditionalComments,
                 FeedbackStatus = feedback.FeedbackStatus,
                 CreatedDate = feedback.CreatedDate,
-                UserFullName = feedback.User != null ? $"{feedback.User.FirstName} {feedback.User.LastName}" : null,
-                ContractTitle = feedback.Contract?.ContractTitle
+                UserFullName = feedback.User != null ? feedback.User.FullName : null,
+                ContractTitle = feedback.Contract?.ContractId.ToString()
             };
         }
     }
