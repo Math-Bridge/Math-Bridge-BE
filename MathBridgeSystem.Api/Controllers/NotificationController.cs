@@ -2,6 +2,7 @@ using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -109,35 +110,46 @@ namespace MathBridgeSystem.Api.Controllers
         public async Task SubscribeToNotifications()
         {
             var userId = GetCurrentUserId();
+
             Response.ContentType = "text/event-stream";
             Response.StatusCode = 200;
             Response.Headers.Add("Cache-Control", "no-cache");
             Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers.Add("X-Accel-Buffering", "no");
 
-            var writer = new StreamWriter(Response.Body) { AutoFlush = false };
+            HttpContext.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
+            await Response.StartAsync();
+
+            var writer = new StreamWriter(Response.Body) { AutoFlush = true };
             _connectionManager.RegisterConnection(userId, writer);
 
             try
             {
+                // CRITICAL: Send initial message immediately!
+                await writer.WriteAsync("event: connected\n");
+                await writer.WriteAsync("data: {\"message\":\"SSE connection established\"}\n\n");
+
                 while (!HttpContext.RequestAborted.IsCancellationRequested)
                 {
-                    // Send keep-alive comment every 30 seconds
                     await writer.WriteAsync(":keep-alive\n\n");
-                    await writer.FlushAsync();
-                    await Task.Delay(30000, HttpContext.RequestAborted);
+                    await Task.Delay(15000, HttpContext.RequestAborted);  // Reduced to 15s
                 }
             }
             catch (OperationCanceledException)
             {
                 // Client disconnected
             }
+            catch (Exception ex)
+            {
+                // Log the exception
+            }
             finally
             {
                 _connectionManager.UnregisterConnection(userId);
-                await writer.FlushAsync();
                 await writer.DisposeAsync();
             }
         }
+
 
 
 
