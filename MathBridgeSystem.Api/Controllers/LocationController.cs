@@ -9,7 +9,6 @@ namespace MathBridgeSystem.Presentation.Controllers;
 
 [Route("api/location")]
 [ApiController]
-[Authorize]
 public class LocationController : ControllerBase
 {
     private readonly ILocationService _locationService;
