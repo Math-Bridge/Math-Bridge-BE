@@ -120,19 +120,22 @@ namespace MathBridgeSystem.Api.Controllers
             HttpContext.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
             await Response.StartAsync();
 
-            var writer = new StreamWriter(Response.Body) { AutoFlush = true };
+            // REMOVE AutoFlush = true
+            var writer = new StreamWriter(Response.Body);
             _connectionManager.RegisterConnection(userId, writer);
 
             try
             {
-                // CRITICAL: Send initial message immediately!
+                // Send initial message with manual flush
                 await writer.WriteAsync("event: connected\n");
                 await writer.WriteAsync("data: {\"message\":\"SSE connection established\"}\n\n");
+                await writer.FlushAsync();  // Manual flush
 
                 while (!HttpContext.RequestAborted.IsCancellationRequested)
                 {
                     await writer.WriteAsync(":keep-alive\n\n");
-                    await Task.Delay(15000, HttpContext.RequestAborted);  // Reduced to 15s
+                    await writer.FlushAsync();  // Manual flush after each write
+                    await Task.Delay(15000, HttpContext.RequestAborted);
                 }
             }
             catch (OperationCanceledException)
@@ -146,9 +149,10 @@ namespace MathBridgeSystem.Api.Controllers
             finally
             {
                 _connectionManager.UnregisterConnection(userId);
-                await writer.DisposeAsync();
+                await writer.DisposeAsync();  // Use async disposal
             }
         }
+
 
 
 
