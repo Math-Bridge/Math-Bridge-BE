@@ -26,6 +26,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Curriculum> Curricula { get; set; }
 
+    public virtual DbSet<DailyReport> DailyReports { get; set; }
+
     public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
@@ -354,6 +356,43 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
+        });
+
+        modelBuilder.Entity<DailyReport>(entity =>
+        {
+            entity.HasKey(e => e.ReportId).HasName("daily_reports_pk");
+
+            entity.ToTable("daily_reports");
+
+            entity.Property(e => e.ReportId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("report_id");
+            entity.Property(e => e.BookingId).HasColumnName("booking_id");
+            entity.Property(e => e.ChildId).HasColumnName("child_id");
+            entity.Property(e => e.CreatedDate).HasColumnName("created_date");
+            entity.Property(e => e.HaveHomework).HasColumnName("have_homework");
+            entity.Property(e => e.Notes)
+                .HasMaxLength(1)
+                .HasColumnName("notes");
+            entity.Property(e => e.OnTrack).HasColumnName("on_track");
+            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UnitId).HasColumnName("unit_id");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("daily_reports___fk_bookingid");
+
+            entity.HasOne(d => d.Child).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.ChildId)
+                .HasConstraintName("daily_reports___fk_child");
+
+            entity.HasOne(d => d.Tutor).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.TutorId)
+                .HasConstraintName("daily_reports___fk_tutor");
+
+            entity.HasOne(d => d.Unit).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.UnitId)
+                .HasConstraintName("daily_reports___fk_unit");
         });
 
         modelBuilder.Entity<FinalFeedback>(entity =>
