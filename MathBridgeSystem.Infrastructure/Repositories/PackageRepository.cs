@@ -24,7 +24,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.PaymentPackages.ToListAsync();
         }
-
+        
         public async Task<PaymentPackage> GetByIdAsync(Guid id)
         {
             return await _context.PaymentPackages.FirstOrDefaultAsync(p => p.PackageId == id);

@@ -14,5 +14,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<PaymentPackageDto>> GetAllPackagesAsync();
         Task<PaymentPackageDto> UpdatePackageAsync(Guid id, UpdatePackageRequest request);
         Task DeletePackageAsync(Guid id);
+        public Task<PaymentPackageDto> GetPackageByIdAsync(Guid id);
     }
 }
