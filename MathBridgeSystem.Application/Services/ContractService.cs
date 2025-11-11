@@ -450,6 +450,18 @@ namespace MathBridgeSystem.Application.Services
             await _contractRepository.UpdateAsync(contract);
             return true;
         }
+
+        public async Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(int contractId)
+        {
+            try
+            {
+                return await _contractRepository.GetAvailableTutorsForContractAsync(contractId);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as per your application's logging strategy
+                throw new ApplicationException("An error occurred while fetching available tutors.", ex);
+            }
+        }
     }
 }
-
