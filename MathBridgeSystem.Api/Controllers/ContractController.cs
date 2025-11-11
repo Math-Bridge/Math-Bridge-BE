@@ -201,5 +201,37 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Get available tutors for a contract (no overlapping contracts)
+        /// Tutors are sorted by average rating (descending)
+        /// </summary>
+        [HttpGet("{contractId}/available-tutors")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> GetAvailableTutors(Guid contractId)
+        {
+            try
+            {
+                var availableTutors = await _contractService.GetAvailableTutorsAsync(contractId);
+
+                if (availableTutors == null || availableTutors.Count == 0)
+                    return Ok(new List<object>());
+
+                return Ok(availableTutors);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAvailableTutors: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, new { error = "Failed to retrieve available tutors.", details = ex.Message });
+            }
+        }
     }
 }

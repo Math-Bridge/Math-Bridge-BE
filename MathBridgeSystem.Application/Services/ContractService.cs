@@ -1,4 +1,6 @@
 ﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs.Contract;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -449,6 +451,46 @@ namespace MathBridgeSystem.Application.Services
 
             await _contractRepository.UpdateAsync(contract);
             return true;
+        }
+
+        public async Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(Guid contractId)
+        {
+            try
+            {
+                // Get available tutors from repository
+                var availableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(contractId);
+
+                // Map to response DTOs and sort by rating (descending), then by review count (descending)
+                var result = availableTutors
+                    .Select(tutor => new AvailableTutorResponse
+                    {
+                        UserId = tutor.UserId,
+                        FullName = tutor.FullName,
+                        Email = tutor.Email,
+                        PhoneNumber = tutor.PhoneNumber,
+                        AverageRating = tutor.Reviews != null && tutor.Reviews.Count > 0
+                            ? (decimal)tutor.Reviews.Average(r => r.Rating)
+                            : 0m,
+                        ReviewCount = tutor.Reviews != null ? tutor.Reviews.Count : 0
+                    })
+                    .OrderByDescending(t => t.AverageRating)
+                    .ThenByDescending(t => t.ReviewCount)
+                    .ToList();
+
+                return result;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw;
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error retrieving available tutors: {ex.Message}", ex);
+            }
         }
     }
 }
