@@ -10,5 +10,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<Review> AddAsync(Review review);
         Task<Review> UpdateAsync(Review review);
         Task<bool> DeleteAsync(Guid id);
+        Task <List<Review>> GetAllAsync();
     }
 }

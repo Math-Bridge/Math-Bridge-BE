@@ -21,39 +21,15 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<TestResult> GetByIdAsync(Guid id)
         {
             return await _context.TestResults
-                .Include(t => t.Tutor)
-                .Include(t => t.Child)
-                .Include(t => t.Curriculum)
+                .Include(t => t.Contract)
                 .FirstOrDefaultAsync(t => t.ResultId == id);
         }
 
-        public async Task<IEnumerable<TestResult>> GetByTutorIdAsync(Guid tutorId)
+        public async Task<IEnumerable<TestResult>> GetByContractIdAsync(Guid contractId)
         {
             return await _context.TestResults
-                .Include(t => t.Tutor)
-                .Include(t => t.Child)
-                .Include(t => t.Curriculum)
-                .Where(t => t.TutorId == tutorId)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<TestResult>> GetByChildIdAsync(Guid childId)
-        {
-            return await _context.TestResults
-                .Include(t => t.Tutor)
-                .Include(t => t.Child)
-                .Include(t => t.Curriculum)
-                .Where(t => t.ChildId == childId)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<TestResult>> GetByCurriculumIdAsync(Guid curriculumId)
-        {
-            return await _context.TestResults
-                .Include(t => t.Tutor)
-                .Include(t => t.Child)
-                .Include(t => t.Curriculum)
-                .Where(t => t.CurriculumId == curriculumId)
+                .Include(t => t.Contract)
+                .Where(t => t.ContractId == contractId)
                 .ToListAsync();
         }
 

@@ -78,5 +78,6 @@ namespace MathBridgeSystem.Application.Interfaces
         /// <param name="endDate">End date</param>
         /// <returns>List of transactions</returns>
         Task<IEnumerable<SepayTransaction>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+        Task<IEnumerable<SepayTransaction>> GetAllAsync();
     }
 }
