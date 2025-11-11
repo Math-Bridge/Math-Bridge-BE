@@ -67,6 +67,23 @@ namespace MathBridgeSystem.Application.Services
             }).ToList();
         }
 
+        public async Task<PaymentPackageDto> GetPackageByIdAsync(Guid id)
+        {
+            var package = await _packageRepository.GetByIdAsync(id);
+            return new PaymentPackageDto
+            {
+                PackageId = package.PackageId,
+                PackageName = package.PackageName,
+                Grade = package.Grade,
+                Price = package.Price,
+                SessionCount = package.SessionCount,
+                SessionsPerWeek = package.SessionsPerWeek,
+                MaxReschedule = package.MaxReschedule,
+                DurationDays = package.DurationDays,
+                Description = package.Description
+            };
+        }
+
         public async Task<PaymentPackageDto> UpdatePackageAsync(Guid id, UpdatePackageRequest request)
         {
             var package = await _packageRepository.GetByIdAsync(id);

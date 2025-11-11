@@ -1,28 +1,50 @@
 ﻿using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-[Route("api/packages")]
-[ApiController]
-public class PackageController : ControllerBase
+namespace MathBridgeSystem.Api.Controllers
 {
-    private readonly IPackageService _packageService;
-
-    public PackageController(IPackageService packageService)
+    [Route("api/packages")]
+    [ApiController]
+    public class PackageController : ControllerBase
     {
-        _packageService = packageService ?? throw new ArgumentNullException(nameof(packageService));
-    }
+        private readonly IPackageService _packageService;
 
-    [HttpGet]
-    public async Task<IActionResult> GetAllPackages()
-    {
-        try
+        public PackageController(IPackageService packageService)
         {
-            var packages = await _packageService.GetAllPackagesAsync();
-            return Ok(packages);
+            _packageService = packageService ?? throw new ArgumentNullException(nameof(packageService));
         }
-        catch (Exception ex)
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllPackages()
         {
-            return StatusCode(500, new { error = ex.Message });
+            try
+            {
+                var packages = await _packageService.GetAllPackagesAsync();
+                return Ok(packages);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPackageById(Guid id)
+        {
+            try
+            {
+                var package = await _packageService.GetPackageByIdAsync(id);
+                if (package == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(package);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
