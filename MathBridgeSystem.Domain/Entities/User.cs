@@ -71,6 +71,8 @@ public partial class User
 
     public virtual ICollection<Contract> ContractSubstituteTutor2s { get; set; } = new List<Contract>();
 
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
     public virtual NotificationPreference? NotificationPreference { get; set; }

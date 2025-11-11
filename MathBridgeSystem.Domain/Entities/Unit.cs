@@ -33,5 +33,7 @@ public partial class Unit
 
     public virtual Curriculum Curriculum { get; set; } = null!;
 
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+
     public virtual User? UpdatedByNavigation { get; set; }
 }

@@ -20,4 +20,6 @@ public partial class TestResult
     public Guid? ContractId { get; set; }
 
     public virtual Contract? Contract { get; set; }
+
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
 }
