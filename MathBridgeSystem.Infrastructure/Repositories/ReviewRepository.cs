@@ -66,5 +66,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             }
             return false;
         }
+        public async Task<List<Review>> GetAllAsync()
+        {
+            return await _context.Reviews
+                .Include(r => r.User)
+                .ToListAsync();
+        }
     }
 }
