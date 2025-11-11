@@ -375,23 +375,32 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(1)
                 .HasColumnName("notes");
             entity.Property(e => e.OnTrack).HasColumnName("on_track");
+            entity.Property(e => e.TestId).HasColumnName("test_id");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
             entity.Property(e => e.UnitId).HasColumnName("unit_id");
 
             entity.HasOne(d => d.Booking).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("daily_reports___fk_bookingid");
 
             entity.HasOne(d => d.Child).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.ChildId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("daily_reports___fk_child");
+
+            entity.HasOne(d => d.Test).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.TestId)
+                .HasConstraintName("daily_reports___fk_test");
 
             entity.HasOne(d => d.Tutor).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.TutorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("daily_reports___fk_tutor");
 
             entity.HasOne(d => d.Unit).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.UnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("daily_reports___fk_unit");
         });
 

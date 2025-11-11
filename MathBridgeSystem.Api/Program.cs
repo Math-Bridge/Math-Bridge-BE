@@ -86,6 +86,7 @@ builder.Services.AddScoped<IRescheduleRequestRepository, RescheduleRequestReposi
 builder.Services.AddScoped<ITutorVerificationRepository, TutorVerificationRepository>();
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<IFinalFeedbackRepository, FinalFeedbackRepository>();
+builder.Services.AddScoped<IDailyReportRepository, DailyReportRepository>();
 
 
 
@@ -130,6 +131,7 @@ builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>(
 builder.Services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<ITestResultService, TestResultService>();
+builder.Services.AddScoped<IDailyReportService, DailyReportService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
