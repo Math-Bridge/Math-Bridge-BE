@@ -93,8 +93,6 @@ public partial class User
 
     public virtual ICollection<SupportRequest> SupportRequestUsers { get; set; } = new List<SupportRequest>();
 
-    public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
-
     public virtual ICollection<TutorCenter> TutorCenters { get; set; } = new List<TutorCenter>();
 
     public virtual ICollection<TutorSchedule> TutorSchedules { get; set; } = new List<TutorSchedule>();

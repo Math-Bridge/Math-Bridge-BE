@@ -34,6 +34,4 @@ public partial class Child
     public virtual User Parent { get; set; } = null!;
 
     public virtual School School { get; set; } = null!;
-
-    public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 }
