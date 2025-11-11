@@ -201,27 +201,5 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
             }
         }
-
-        [HttpGet("{contractId}/available-tutors")]
-        public async Task<IActionResult> GetAvailableTutors(int contractId)
-        {
-            try
-            {
-                var tutors = await _contractService.GetAvailableTutorsAsync(contractId);
-                return Ok(tutors);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(500, new { Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "An unexpected error occurred." });
-            }
-        }
     }
 }

@@ -89,58 +89,5 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .OrderByDescending(c => c.CreatedDate)
                 .ToListAsync();
         }
-
-        public async Task<List<AvailableTutorResponse>> GetAvailableTutorsForContractAsync(int contractId)
-        {
-            var inputContract = await _context.Contracts.FindAsync(contractId);
-            if (inputContract == null)
-            {
-                throw new ArgumentException("Contract not found.");
-            }
-
-            var tutors = await _context.Users
-                .Where(u => u.Role == "Tutor")
-                .Include(u => u.ContractsAsMainTutor)
-                .Include(u => u.ContractsAsSubstituteTutor1)
-                .Include(u => u.ContractsAsSubstituteTutor2)
-                .Include(u => u.Reviews)
-                .ToListAsync();
-
-            var availableTutors = new List<AvailableTutorResponse>();
-
-            foreach (var tutor in tutors)
-            {
-                var allContracts = tutor.ContractsAsMainTutor
-                    .Concat(tutor.ContractsAsSubstituteTutor1)
-                    .Concat(tutor.ContractsAsSubstituteTutor2);
-
-                var hasOverlap = allContracts.Any(c =>
-                    (c.DaysOfWeeks & inputContract.DaysOfWeeks) > 0 &&
-                    c.StartTime < inputContract.EndTime &&
-                    c.EndTime > inputContract.StartTime &&
-                    c.StartDate <= inputContract.EndDate &&
-                    c.EndDate >= inputContract.StartDate &&
-                    !(inputContract.StartTime >= c.EndTime.Add(TimeSpan.FromMinutes(90)))
-                );
-
-                if (!hasOverlap)
-                {
-                    availableTutors.Add(new AvailableTutorResponse
-                    {
-                        UserId = tutor.Id,
-                        FullName = tutor.FullName,
-                        Email = tutor.Email,
-                        PhoneNumber = tutor.PhoneNumber,
-                        AverageRating = tutor.Reviews.Any() ? tutor.Reviews.Average(r => r.Rating) : 0,
-                        ReviewCount = tutor.Reviews.Count
-                    });
-                }
-            }
-
-            return availableTutors
-                .OrderByDescending(t => t.AverageRating)
-                .ThenByDescending(t => t.ReviewCount)
-                .ToList();
-        }
     }
 }
