@@ -108,6 +108,82 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid childId)
+        {
+            // Get all daily reports for the child sorted by date
+            var dailyReports = await _dailyReportRepository.GetByChildIdAsync(childId);
+            if (!dailyReports.Any())
+                throw new KeyNotFoundException($"No daily reports found for child with ID {childId}.");
+
+            var reportsOrderedByDate = dailyReports.OrderBy(d => d.CreatedDate).ToList();
+            
+            // Get child and unit information
+            var child = reportsOrderedByDate.First().Child;
+            var curriculum = reportsOrderedByDate.First().Unit?.Curriculum;
+
+            if (child == null)
+                throw new InvalidOperationException($"Child information not found for daily reports.");
+
+            if (curriculum == null)
+                throw new InvalidOperationException($"Curriculum information not found in daily reports.");
+
+            // Group reports by unit
+            var unitGroups = reportsOrderedByDate
+                .GroupBy(d => d.UnitId)
+                .OrderBy(g => g.First().Unit?.UnitOrder ?? 0)
+                .ToList();
+
+            var unitsProgress = new List<UnitProgressDetail>();
+            var today = DateOnly.FromDateTime(DateTime.Now);
+
+            foreach (var unitGroup in unitGroups)
+            {
+                var unit = unitGroup.First().Unit;
+                if (unit == null)
+                    continue;
+
+                var unitReports = unitGroup.ToList();
+                var firstLearned = unitReports.Min(r => r.CreatedDate);
+                var lastLearned = unitReports.Max(r => r.CreatedDate);
+                var daysSinceLearned = (today.DayNumber - lastLearned.DayNumber);
+
+                unitsProgress.Add(new UnitProgressDetail
+                {
+                    UnitId = unit.UnitId,
+                    UnitName = unit.UnitName,
+                    UnitOrder = unit.UnitOrder,
+                    TimesLearned = unitReports.Count,
+                    FirstLearned = firstLearned,
+                    LastLearned = lastLearned,
+                    DaysSinceLearned = daysSinceLearned,
+                    OnTrack = unitReports.All(r => r.OnTrack),
+                    HasHomework = unitReports.Any(r => r.HaveHomework)
+                });
+            }
+
+            var firstReportDate = reportsOrderedByDate.First().CreatedDate;
+            var lastReportDate = reportsOrderedByDate.Last().CreatedDate;
+            var totalDays = (lastReportDate.DayNumber - firstReportDate.DayNumber) + 1;
+            var weeksElapsed = totalDays / 7.0;
+            var averageUnitsPerWeek = weeksElapsed > 0 ? Math.Round(unitGroups.Count / weeksElapsed, 2) : 0;
+
+            return new ChildUnitProgressDto
+            {
+                ChildId = child.ChildId,
+                ChildName = child.FullName,
+                CurriculumId = curriculum.CurriculumId,
+                CurriculumName = curriculum.CurriculumName,
+                TotalUnitsLearned = unitGroups.Count,
+                UniqueLessonsCompleted = reportsOrderedByDate.Count,
+                UnitsProgress = unitsProgress,
+                FirstLessonDate = firstReportDate,
+                LastLessonDate = lastReportDate,
+                TotalLessonDays = totalDays,
+                AverageUnitsPerWeek = averageUnitsPerWeek,
+                Message = $"{child.FullName} has learned {unitGroups.Count} units across {reportsOrderedByDate.Count} lessons over {totalDays} days, averaging {averageUnitsPerWeek} units per week."
+            };
+        }
+
         public async Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId)
         {
             var dailyReport = new DailyReport
