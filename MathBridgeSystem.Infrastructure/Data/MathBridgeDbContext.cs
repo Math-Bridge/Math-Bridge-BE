@@ -680,6 +680,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.ParentId).HasColumnName("parent_id");
             entity.Property(e => e.ProcessedDate)
                 .HasColumnType("datetime")
@@ -688,11 +689,9 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(500)
                 .HasColumnName("reason");
             entity.Property(e => e.RequestedDate).HasColumnName("requested_date");
-            entity.Property(e => e.RequestedTimeSlot)
-                .HasMaxLength(50)
-                .HasColumnName("requested_time_slot");
             entity.Property(e => e.RequestedTutorId).HasColumnName("requested_tutor_id");
             entity.Property(e => e.StaffId).HasColumnName("staff_id");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasColumnName("status");

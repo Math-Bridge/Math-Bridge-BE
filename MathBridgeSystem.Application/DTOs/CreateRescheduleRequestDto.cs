@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 
 namespace MathBridgeSystem.Application.DTOs
 {
@@ -6,8 +6,9 @@ namespace MathBridgeSystem.Application.DTOs
     {
         public Guid BookingId { get; set; }
         public DateOnly RequestedDate { get; set; }
-        public string RequestedTimeSlot { get; set; } = null!;
-        public Guid? RequestedTutorId { get; set; }
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly EndTime { get; set; }
+ //       public Guid? RequestedTutorId { get; set; }
         public string? Reason { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
@@ -72,7 +72,8 @@ namespace MathBridgeSystem.Tests.Services
             {
                 BookingId = _bookingId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTimeSlot = "10:00-12:00",
+                StartTime = new TimeOnly(16, 0),
+                EndTime = new TimeOnly(17, 30),
                 Reason = "Bận"
             };
 
@@ -100,7 +101,9 @@ namespace MathBridgeSystem.Tests.Services
             {
                 BookingId = _bookingId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTimeSlot = "10:00-12:00",
+                
+                StartTime = new TimeOnly(17, 30),
+                EndTime = new TimeOnly(19, 0),
                 RequestedTutorId = requestedTutorId
             };
 
@@ -189,7 +192,8 @@ namespace MathBridgeSystem.Tests.Services
             {
                 BookingId = _bookingId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTimeSlot = "10:00-12:00",
+                StartTime = new TimeOnly(19, 0),
+                EndTime = new TimeOnly(20, 30),
                 RequestedTutorId = requestedTutorId
             };
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
@@ -201,17 +205,40 @@ namespace MathBridgeSystem.Tests.Services
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Tutor not available.");
         }
 
-        // Test: Ném lỗi khi định dạng thời gian sai
+        // Test: Ném lỗi khi thời gian bắt đầu không hợp lệ
         [Fact]
-        public async Task CreateRequestAsync_InvalidTimeSlotFormat_ThrowsArgumentException()
+        public async Task CreateRequestAsync_InvalidStartTime_ThrowsArgumentException()
         {
-            var dto = new CreateRescheduleRequestDto { BookingId = _bookingId, RequestedTimeSlot = "10:00_12:00" }; 
+            var dto = new CreateRescheduleRequestDto 
+            { 
+                BookingId = _bookingId, 
+                StartTime = new TimeOnly(10, 0), // Invalid start time
+                EndTime = new TimeOnly(11, 30)
+            }; 
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
             _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
             _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
 
             Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, dto);
-            await act.Should().ThrowAsync<ArgumentException>().WithMessage("Invalid time slot format. Use 'HH:mm-HH:mm'");
+            await act.Should().ThrowAsync<ArgumentException>().WithMessage("Start time must be 16:00, 17:30, 19:00, or 20:30.");
+        }
+
+        // Test: Ném lỗi khi thời gian kết thúc không phải 90 phút từ thời gian bắt đầu
+        [Fact]
+        public async Task CreateRequestAsync_InvalidEndTime_ThrowsArgumentException()
+        {
+            var dto = new CreateRescheduleRequestDto 
+            { 
+                BookingId = _bookingId, 
+                StartTime = new TimeOnly(16, 0), // Valid start time
+                EndTime = new TimeOnly(18, 0) // Invalid: should be 17:30 (90 mins later)
+            }; 
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, dto);
+            await act.Should().ThrowAsync<ArgumentException>().WithMessage("End time must be 90 minutes after start time.*");
         }
 
 
@@ -231,7 +258,8 @@ namespace MathBridgeSystem.Tests.Services
                 Booking = _session, 
                 ContractId = _contractId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTimeSlot = "14:00-16:00",
+                StartTime = new TimeOnly(20, 30),
+                EndTime = new TimeOnly(22, 0),
                 RequestedTutorId = null
             };
 
@@ -295,7 +323,8 @@ namespace MathBridgeSystem.Tests.Services
                 Booking = _session,
                 ContractId = _contractId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTimeSlot = "14:00-16:00"
+                StartTime = new TimeOnly(19, 0),
+                EndTime = new TimeOnly(20, 30)
             };
 
             _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
