@@ -13,6 +13,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly IRescheduleRequestRepository _rescheduleRepo;
         private readonly IContractRepository _contractRepo;
         private readonly ISessionRepository _sessionRepo;
+        private readonly IUserRepository _userRepo;
 
         // Valid start times: 16:00, 17:30, 19:00, 20:30
         private static readonly TimeOnly[] ValidStartTimes = new[]
@@ -26,11 +27,13 @@ namespace MathBridgeSystem.Application.Services
         public RescheduleService(
             IRescheduleRequestRepository rescheduleRepo,
             IContractRepository contractRepo,
-            ISessionRepository sessionRepo)
+            ISessionRepository sessionRepo,
+            IUserRepository userRepo)
         {
             _rescheduleRepo = rescheduleRepo;
             _contractRepo = contractRepo;
             _sessionRepo = sessionRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
@@ -58,6 +61,10 @@ namespace MathBridgeSystem.Application.Services
 
             var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId);
             if (contract == null) throw new KeyNotFoundException("Contract not found.");
+            if (contract.Status != "active")
+                throw new InvalidOperationException("Contract is not active.");
+            if(contract.EndDate < dto.RequestedDate)
+                throw new InvalidOperationException("Requested date exceeds contract end date.");
             if (contract.RescheduleCount >= contract.Package.MaxReschedule)
                 throw new InvalidOperationException($"No reschedule attempts left. Max: {contract.Package.MaxReschedule}");
             
@@ -91,7 +98,33 @@ namespace MathBridgeSystem.Application.Services
             var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId);
             if (request == null || request.Status != "pending") throw new KeyNotFoundException("Invalid request.");
 
-            var finalTutorId = dto.NewTutorId != Guid.Empty ? dto.NewTutorId : (request.RequestedTutorId ?? request.Booking.TutorId);
+            // Determine the final tutor ID
+            Guid finalTutorId;
+            if (dto.NewTutorId != Guid.Empty)
+            {
+                // Validate that the new tutor exists and is a tutor
+                var newTutor = await _userRepo.GetByIdAsync(dto.NewTutorId);
+                if (newTutor == null)
+                    throw new KeyNotFoundException($"Tutor with ID {dto.NewTutorId} not found.");
+                if (newTutor.RoleId != 2) // 2 = tutor role
+                    throw new InvalidOperationException($"User {dto.NewTutorId} is not a tutor.");
+                finalTutorId = dto.NewTutorId;
+            }
+            else if (request.RequestedTutorId.HasValue)
+            {
+                // Validate that the requested tutor exists and is a tutor
+                var requestedTutor = await _userRepo.GetByIdAsync(request.RequestedTutorId.Value);
+                if (requestedTutor == null)
+                    throw new KeyNotFoundException($"Requested tutor with ID {request.RequestedTutorId} not found.");
+                if (requestedTutor.RoleId != 2)
+                    throw new InvalidOperationException($"Requested user {request.RequestedTutorId} is not a tutor.");
+                finalTutorId = request.RequestedTutorId.Value;
+            }
+            else
+            {
+                // Use the original tutor
+                finalTutorId = request.Booking.TutorId;
+            }
 
             var startDateTime = request.RequestedDate.ToDateTime(request.StartTime);
             var endDateTime = request.RequestedDate.ToDateTime(request.EndTime);
@@ -131,6 +164,7 @@ namespace MathBridgeSystem.Application.Services
 
             request.Status = "approved";
             request.StaffId = staffId;
+            request.RequestedTutorId = finalTutorId;
             request.ProcessedDate = DateTime.UtcNow;
             await _rescheduleRepo.UpdateAsync(request);
 

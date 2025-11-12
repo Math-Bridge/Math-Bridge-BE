@@ -57,6 +57,24 @@ namespace MathBridgeSystem.Application.Services
 
             var maxDistanceKm = request.MaxDistanceKm ?? 15;
 
+            // Check for overlapping contracts for the child
+            var hasOverlap = await _contractRepository.HasOverlappingContractForChildAsync(
+                childId: request.ChildId,
+                startDate: request.StartDate,
+                endDate: request.EndDate,
+                startTime: request.StartTime,
+                endTime: request.EndTime,
+                daysOfWeeks: daysOfWeeksByte,
+                excludeContractId: null
+            );
+
+            if (hasOverlap)
+            {
+                throw new InvalidOperationException(
+                    "Cannot create contract: This child already has an overlapping contract with the same schedule. " +
+                    "Please check the existing contracts or adjust the schedule (date range, days of week, or time slots).");
+            }
+
             var contract = new Contract
             {
                 ContractId = Guid.NewGuid(),

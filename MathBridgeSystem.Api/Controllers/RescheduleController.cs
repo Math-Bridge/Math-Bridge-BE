@@ -43,10 +43,14 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveRescheduleRequestDto dto)
         {
-            var staffId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found in claims");
+            }
             try
             {
-                var result = await _rescheduleService.ApproveRequestAsync(staffId, id, dto);
+                var result = await _rescheduleService.ApproveRequestAsync(userId, id, dto);
                 return Ok(result);
             }
             catch (Exception ex)

@@ -36,8 +36,7 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
 
         [Required]
         public Guid UnitId { get; set; }
-
-        public Guid? TestId { get; set; }
+        
     }
 
     public class UpdateDailyReportRequest
@@ -50,8 +49,7 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
         public bool? HaveHomework { get; set; }
 
         public Guid? UnitId { get; set; }
-
-        public Guid? TestId { get; set; }
+        
     }
 }
 

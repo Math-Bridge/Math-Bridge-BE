@@ -17,6 +17,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IRescheduleRequestRepository> _rescheduleRepoMock;
         private readonly Mock<IContractRepository> _contractRepoMock;
         private readonly Mock<ISessionRepository> _sessionRepoMock;
+        private readonly Mock<IUserRepository> _userRepoMock;
         private readonly RescheduleService _rescheduleService;
 
         private readonly Guid _parentId = Guid.NewGuid();
@@ -33,11 +34,13 @@ namespace MathBridgeSystem.Tests.Services
             _rescheduleRepoMock = new Mock<IRescheduleRequestRepository>();
             _contractRepoMock = new Mock<IContractRepository>();
             _sessionRepoMock = new Mock<ISessionRepository>();
+            _userRepoMock = new Mock<IUserRepository>();
 
             _rescheduleService = new RescheduleService(
                 _rescheduleRepoMock.Object,
                 _contractRepoMock.Object,
-                _sessionRepoMock.Object
+                _sessionRepoMock.Object,
+                _userRepoMock.Object
             );
 
             // --- Khởi tạo dữ liệu Mock chung ---
@@ -249,6 +252,14 @@ namespace MathBridgeSystem.Tests.Services
             var newTutorId = Guid.NewGuid();
             var dto = new ApproveRescheduleRequestDto { NewTutorId = newTutorId };
 
+            var newTutor = new User
+            {
+                UserId = newTutorId,
+                RoleId = 2, // Tutor role
+                Email = "tutor@example.com",
+                FullName = "Test Tutor"
+            };
+
             var request = new RescheduleRequest
             {
                 RequestId = requestId,
@@ -262,6 +273,7 @@ namespace MathBridgeSystem.Tests.Services
             };
 
             _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepoMock.Setup(u => u.GetByIdAsync(newTutorId)).ReturnsAsync(newTutor);
             _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(newTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(true);
 
             // Act
@@ -314,6 +326,15 @@ namespace MathBridgeSystem.Tests.Services
             var requestId = Guid.NewGuid();
             var newTutorId = Guid.NewGuid();
             var dto = new ApproveRescheduleRequestDto { NewTutorId = newTutorId };
+            
+            var newTutor = new User
+            {
+                UserId = newTutorId,
+                RoleId = 2, // Tutor role
+                Email = "tutor@example.com",
+                FullName = "Test Tutor"
+            };
+            
             var request = new RescheduleRequest
             {
                 RequestId = requestId,
@@ -326,6 +347,7 @@ namespace MathBridgeSystem.Tests.Services
             };
 
             _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepoMock.Setup(u => u.GetByIdAsync(newTutorId)).ReturnsAsync(newTutor);
             _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(newTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false); 
 
             Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, requestId, dto);
@@ -375,6 +397,66 @@ namespace MathBridgeSystem.Tests.Services
             _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>())).ReturnsAsync(request);
             Func<Task> act = () => _rescheduleService.RejectRequestAsync(_staffId, Guid.NewGuid(), "reason");
             await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Invalid request.");
+        }
+
+        // Test: Ném lỗi khi tutor mới không tồn tại
+        [Fact]
+        public async Task ApproveRequestAsync_NewTutorNotFound_ThrowsKeyNotFoundException()
+        {
+            var requestId = Guid.NewGuid();
+            var newTutorId = Guid.NewGuid();
+            var dto = new ApproveRescheduleRequestDto { NewTutorId = newTutorId };
+            
+            var request = new RescheduleRequest
+            {
+                RequestId = requestId,
+                Status = "pending",
+                Booking = _session,
+                ContractId = _contractId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                StartTime = new TimeOnly(19, 0),
+                EndTime = new TimeOnly(20, 30)
+            };
+
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepoMock.Setup(u => u.GetByIdAsync(newTutorId)).ReturnsAsync((User)null);
+
+            Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, requestId, dto);
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage($"Tutor with ID {newTutorId} not found.");
+        }
+
+        // Test: Ném lỗi khi user không phải là tutor
+        [Fact]
+        public async Task ApproveRequestAsync_NewUserIsNotTutor_ThrowsInvalidOperationException()
+        {
+            var requestId = Guid.NewGuid();
+            var newUserId = Guid.NewGuid();
+            var dto = new ApproveRescheduleRequestDto { NewTutorId = newUserId };
+            
+            var newUser = new User
+            {
+                UserId = newUserId,
+                RoleId = 3, // Not a tutor (e.g., parent role)
+                Email = "parent@example.com",
+                FullName = "Test Parent"
+            };
+            
+            var request = new RescheduleRequest
+            {
+                RequestId = requestId,
+                Status = "pending",
+                Booking = _session,
+                ContractId = _contractId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                StartTime = new TimeOnly(19, 0),
+                EndTime = new TimeOnly(20, 30)
+            };
+
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepoMock.Setup(u => u.GetByIdAsync(newUserId)).ReturnsAsync(newUser);
+
+            Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, requestId, dto);
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage($"User {newUserId} is not a tutor.");
         }
     }
 }

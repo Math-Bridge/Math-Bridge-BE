@@ -25,6 +25,8 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.Price <= 0)
                 throw new ArgumentException("Price must be greater than 0.");
+            if(request.SessionsPerWeek < 3)
+                throw new ArgumentException("Sessions per week must be at least 3.");
 
             // Kiểm tra Curriculum tồn tại
             var curriculumExists = await _packageRepository.ExistsCurriculumAsync(request.CurriculumId);
@@ -37,10 +39,10 @@ namespace MathBridgeSystem.Application.Services
                 PackageName = request.PackageName,
                 Grade = request.Grade,
                 Price = request.Price,
-                SessionCount = request.SessionsPerWeek*4*3, // 3 months
+                SessionCount = request.SessionCount, // 3 months
                 SessionsPerWeek = request.SessionsPerWeek,
                 MaxReschedule = request.MaxReschedule,
-                DurationDays = 90,
+                DurationDays = request.DurationDays,
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow,
                 CurriculumId = request.CurriculumId,
@@ -99,6 +101,8 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.Price.HasValue && request.Price <= 0)
                 throw new ArgumentException("Price must be greater than 0.");
+            if(request.SessionsPerWeek < 3)
+                throw new ArgumentException("Sessions per week must be at least 3.");
 
             if (request.CurriculumId.HasValue)
             {
@@ -116,7 +120,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.Price.HasValue) package.Price = request.Price.Value;
             if (request.SessionsPerWeek.HasValue) package.SessionsPerWeek = request.SessionsPerWeek.Value;
-            package.SessionCount = (int)request.SessionsPerWeek*4*3; // Cập nhật lại SessionCount nếu SessionsPerWeek thay đổi
+            if (request.SessionCount.HasValue) package.SessionCount = request.SessionCount.Value;
             if (request.MaxReschedule.HasValue) package.MaxReschedule = request.MaxReschedule.Value;
             if (request.DurationDays.HasValue) package.DurationDays = request.DurationDays.Value;
             if (request.Description != null) package.Description = request.Description;
