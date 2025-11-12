@@ -92,7 +92,7 @@ namespace MathBridgeSystem.Tests.Services
             _manager.GetActiveConnectionCount().Should().Be(1);
             stream.CanWrite.Should().BeTrue();
 
-            _manager.UnregisterConnection(userId);
+            _manager.UnregisterConnectionAsync(userId);
 
             _manager.GetActiveConnectionCount().Should().Be(0);
 
@@ -103,7 +103,7 @@ namespace MathBridgeSystem.Tests.Services
         [Fact]
         public void UnregisterConnection_NonExistentUser_DoesNotThrow()
         {
-            Action act = () => _manager.UnregisterConnection(Guid.NewGuid());
+            Action act = () => _manager.UnregisterConnectionAsync(Guid.NewGuid());
 
             act.Should().NotThrow();
             _manager.GetActiveConnectionCount().Should().Be(0);

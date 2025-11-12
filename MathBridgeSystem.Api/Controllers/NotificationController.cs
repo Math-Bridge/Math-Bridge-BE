@@ -148,7 +148,7 @@ namespace MathBridgeSystem.Api.Controllers
             }
             finally
             {
-                _connectionManager.UnregisterConnection(userId);
+                await _connectionManager.UnregisterConnectionAsync(userId);
                 await writer.DisposeAsync();  // Use async disposal
             }
         }

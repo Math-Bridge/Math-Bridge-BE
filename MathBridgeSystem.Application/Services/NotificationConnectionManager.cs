@@ -25,10 +25,14 @@ namespace MathBridgeSystem.Infrastructure.Services
             _userConnections.AddOrUpdate(userId, writer, (key, oldValue) => writer);
         }
 
-        public void UnregisterConnection(Guid userId)
+        public async Task UnregisterConnectionAsync(Guid userId)
         {
             _userConnections.TryRemove(userId, out var writer);
-            writer?.Dispose();
+            if (writer != null)
+            {
+                await writer.FlushAsync();
+                await writer.DisposeAsync();
+            }
         }
 
         public async Task SendNotificationAsync(Guid userId, NotificationResponseDto notification)
@@ -44,7 +48,7 @@ namespace MathBridgeSystem.Infrastructure.Services
                 }
                 catch (Exception)
                 {
-                    UnregisterConnection(userId);
+                    await UnregisterConnectionAsync(userId);
                 }
             }
         }

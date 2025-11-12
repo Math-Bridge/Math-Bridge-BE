@@ -2,6 +2,7 @@
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace MathBridgeSystem.Api.Controllers
 {
@@ -40,6 +41,21 @@ namespace MathBridgeSystem.Api.Controllers
             try
             {
                 var children = await _childService.GetChildrenByParentAsync(parentId);
+                return Ok(children);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("my-children")]
+        public async Task<IActionResult> GetMyChildren()
+        {
+            try
+            {
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+                var children = await _childService.GetChildrenByParentAsync(currentUserId);
                 return Ok(children);
             }
             catch (Exception ex)
