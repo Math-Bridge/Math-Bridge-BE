@@ -9,10 +9,6 @@ namespace MathBridgeSystem.Application.DTOs.Progress
 
         public string ChildName { get; set; } = null!;
 
-        public Guid CurriculumId { get; set; }
-
-        public string CurriculumName { get; set; } = null!;
-
         public int TotalUnitsLearned { get; set; }
 
         public int UniqueLessonsCompleted { get; set; }
@@ -22,10 +18,7 @@ namespace MathBridgeSystem.Application.DTOs.Progress
         public DateOnly FirstLessonDate { get; set; }
 
         public DateOnly LastLessonDate { get; set; }
-
-        public int TotalLessonDays { get; set; }
-
-        public double AverageUnitsPerWeek { get; set; }
+        public double PercentageOfCurriculumCompleted { get; set; }
 
         public string Message { get; set; } = null!;
     }

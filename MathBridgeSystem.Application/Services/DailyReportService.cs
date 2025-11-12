@@ -119,13 +119,10 @@ namespace MathBridgeSystem.Application.Services
             
             // Get child and unit information
             var child = reportsOrderedByDate.First().Child;
-            var curriculum = reportsOrderedByDate.First().Unit?.Curriculum;
 
             if (child == null)
                 throw new InvalidOperationException($"Child information not found for daily reports.");
-
-            if (curriculum == null)
-                throw new InvalidOperationException($"Curriculum information not found in daily reports.");
+            
 
             // Group reports by unit
             var unitGroups = reportsOrderedByDate
@@ -160,27 +157,23 @@ namespace MathBridgeSystem.Application.Services
                     HasHomework = unitReports.Any(r => r.HaveHomework)
                 });
             }
-
+            var uniqueUnitIdCount = reportsOrderedByDate
+                .GroupBy(d => d.UnitId)
+                .Count(g => g.Count() == 1);
             var firstReportDate = reportsOrderedByDate.First().CreatedDate;
             var lastReportDate = reportsOrderedByDate.Last().CreatedDate;
-            var totalDays = (lastReportDate.DayNumber - firstReportDate.DayNumber) + 1;
-            var weeksElapsed = totalDays / 7.0;
-            var averageUnitsPerWeek = weeksElapsed > 0 ? Math.Round(unitGroups.Count / weeksElapsed, 2) : 0;
-
+            var forecast = await GetLearningCompletionForecastAsync(childId);
             return new ChildUnitProgressDto
             {
                 ChildId = child.ChildId,
                 ChildName = child.FullName,
-                CurriculumId = curriculum.CurriculumId,
-                CurriculumName = curriculum.CurriculumName,
                 TotalUnitsLearned = unitGroups.Count,
                 UniqueLessonsCompleted = reportsOrderedByDate.Count,
                 UnitsProgress = unitsProgress,
                 FirstLessonDate = firstReportDate,
                 LastLessonDate = lastReportDate,
-                TotalLessonDays = totalDays,
-                AverageUnitsPerWeek = averageUnitsPerWeek,
-                Message = $"{child.FullName} has learned {unitGroups.Count} units across {reportsOrderedByDate.Count} lessons over {totalDays} days, averaging {averageUnitsPerWeek} units per week."
+                PercentageOfCurriculumCompleted = Math.Round((double)uniqueUnitIdCount / forecast.TotalUnitsToComplete * 100, 2),
+                Message = $"{child.FullName} has learned {unitGroups.Count} units across {reportsOrderedByDate.Count}"
             };
         }
 
