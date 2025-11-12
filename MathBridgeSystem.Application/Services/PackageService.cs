@@ -154,5 +154,44 @@ namespace MathBridgeSystem.Application.Services
 
             await _packageRepository.DeleteAsync(id);
         }
+
+        public async Task<List<PaymentPackageDto>> GetAllActivePackagesAsync()
+        {
+            var packages = await _packageRepository.GetAllActivePackagesAsync();
+            return packages.Select(p => new PaymentPackageDto
+            {
+                PackageId = p.PackageId,
+                PackageName = p.PackageName,
+                Grade = p.Grade,
+                Price = p.Price,
+                SessionCount = p.SessionCount,
+                SessionsPerWeek = p.SessionsPerWeek,
+                MaxReschedule = p.MaxReschedule,
+                DurationDays = p.DurationDays,
+                Description = p.Description,
+                IsActive = p.IsActive
+            }).ToList();
+        }
+
+        public async Task<PaymentPackageDto> GetActivePackageByIdAsync(Guid id)
+        {
+            var package = await _packageRepository.GetActivePackageByIdAsync(id);
+            if (package == null)
+                return null;
+
+            return new PaymentPackageDto
+            {
+                PackageId = package.PackageId,
+                PackageName = package.PackageName,
+                Grade = package.Grade,
+                Price = package.Price,
+                SessionCount = package.SessionCount,
+                SessionsPerWeek = package.SessionsPerWeek,
+                MaxReschedule = package.MaxReschedule,
+                DurationDays = package.DurationDays,
+                Description = package.Description,
+                IsActive = package.IsActive
+            };
+        }
     }
 }

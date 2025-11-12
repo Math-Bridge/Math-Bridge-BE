@@ -65,5 +65,18 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.PaymentPackages
                 .FirstOrDefaultAsync(p => p.CurriculumId == curriculumId);
         }
+
+        public async Task<List<PaymentPackage>> GetAllActivePackagesAsync()
+        {
+            return await _context.PaymentPackages
+                .Where(p => p.IsActive)
+                .ToListAsync();
+        }
+
+        public async Task<PaymentPackage> GetActivePackageByIdAsync(Guid id)
+        {
+            return await _context.PaymentPackages
+                .FirstOrDefaultAsync(p => p.PackageId == id && p.IsActive);
+        }
     }
 }
