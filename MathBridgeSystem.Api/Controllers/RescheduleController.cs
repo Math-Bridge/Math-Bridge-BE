@@ -4,6 +4,7 @@ using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 
 namespace MathBridgeSystem.Api.Controllers
 {
@@ -22,10 +23,14 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "parent")]
         public async Task<IActionResult> Create([FromBody] CreateRescheduleRequestDto dto)
         {
-            var parentId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found in claims");
+            }
             try
             {
-                var result = await _rescheduleService.CreateRequestAsync(parentId, dto);
+                var result = await _rescheduleService.CreateRequestAsync(userId, dto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -38,11 +43,34 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveRescheduleRequestDto dto)
         {
-            var staffId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found in claims");
+            }
             try
             {
-                var result = await _rescheduleService.ApproveRequestAsync(staffId, id, dto);
+                var result = await _rescheduleService.ApproveRequestAsync(userId, id, dto);
                 return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("{rescheduleRequestId}/available-sub-tutors")]
+        [Authorize]
+        public async Task<IActionResult> GetAvailableSubTutors(Guid rescheduleRequestId)
+        {
+            try
+            {
+                var result = await _rescheduleService.GetAvailableSubTutorsAsync(rescheduleRequestId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {

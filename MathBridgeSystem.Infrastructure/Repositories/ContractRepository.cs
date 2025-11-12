@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Domain.Entities;
+﻿﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -111,7 +111,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
                 // Get all tutors (Users with Tutor role) - RoleId 3 is typically tutor
                 var tutors = await _context.Users
-                    .Include(u => u.Reviews)
+                    .Include(u => u.FinalFeedbacks)
                     .Include(u => u.Role)
                     .Include(u => u.ContractMainTutors)
                     .Include(u => u.ContractSubstituteTutor1s)
@@ -234,6 +234,60 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             // Check if date ranges overlap
             return start1 <= end2 && start2 <= end1;
+        }
+
+        public async Task<bool> HasOverlappingContractForChildAsync(
+            Guid childId, 
+            DateOnly startDate, 
+            DateOnly endDate, 
+            TimeOnly? startTime, 
+            TimeOnly? endTime, 
+            byte? daysOfWeeks, 
+            Guid? excludeContractId = null)
+        {
+            try
+            {
+                // Get all active contracts for this child (excluding cancelled ones)
+                var childContracts = await _context.Contracts
+                    .Where(c => c.ChildId == childId)
+                    .Where(c => c.Status != "cancelled" && c.Status != "completed")
+                    .ToListAsync();
+
+                // If excludeContractId is provided, filter it out (used for updates)
+                if (excludeContractId.HasValue)
+                {
+                    childContracts = childContracts.Where(c => c.ContractId != excludeContractId.Value).ToList();
+                }
+
+                // If no active contracts exist, no overlap
+                if (!childContracts.Any())
+                    return false;
+
+                // Create a temporary contract object for overlap checking
+                var newContract = new Contract
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    DaysOfWeeks = daysOfWeeks
+                };
+
+                // Check for overlap with each existing contract
+                foreach (var existingContract in childContracts)
+                {
+                    if (CheckOverlap(newContract, existingContract))
+                    {
+                        return true; // Overlap found
+                    }
+                }
+
+                return false; // No overlap
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error checking for overlapping contracts: {ex.Message}", ex);
+            }
         }
     }
 }

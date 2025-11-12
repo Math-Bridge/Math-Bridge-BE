@@ -1,4 +1,4 @@
-﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
+﻿﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -13,19 +13,44 @@ namespace MathBridgeSystem.Application.Services
         private readonly IRescheduleRequestRepository _rescheduleRepo;
         private readonly IContractRepository _contractRepo;
         private readonly ISessionRepository _sessionRepo;
+        private readonly IUserRepository _userRepo;
+
+        // Valid start times: 16:00, 17:30, 19:00, 20:30
+        private static readonly TimeOnly[] ValidStartTimes = new[]
+        {
+            new TimeOnly(16, 0),
+            new TimeOnly(17, 30),
+            new TimeOnly(19, 0),
+            new TimeOnly(20, 30)
+        };
 
         public RescheduleService(
             IRescheduleRequestRepository rescheduleRepo,
             IContractRepository contractRepo,
-            ISessionRepository sessionRepo)
+            ISessionRepository sessionRepo,
+            IUserRepository userRepo)
         {
             _rescheduleRepo = rescheduleRepo;
             _contractRepo = contractRepo;
             _sessionRepo = sessionRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
         {
+            // Validate start time
+            if (!IsValidStartTime(dto.StartTime))
+            {
+                throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
+            }
+
+            // Validate end time (must be 90 minutes from start time)
+            var expectedEndTime = dto.StartTime.AddMinutes(90);
+            if (dto.EndTime != expectedEndTime)
+            {
+                throw new ArgumentException($"End time must be 90 minutes after start time. Expected: {expectedEndTime}");
+            }
+
             var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId);
             if (oldSession == null) throw new KeyNotFoundException("Session not found.");
             if (oldSession.Contract.ParentId != parentId) throw new UnauthorizedAccessException("Not your child.");
@@ -36,17 +61,13 @@ namespace MathBridgeSystem.Application.Services
 
             var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId);
             if (contract == null) throw new KeyNotFoundException("Contract not found.");
+            if (contract.Status != "active")
+                throw new InvalidOperationException("Contract is not active.");
+            if(contract.EndDate < dto.RequestedDate)
+                throw new InvalidOperationException("Requested date exceeds contract end date.");
             if (contract.RescheduleCount >= contract.Package.MaxReschedule)
                 throw new InvalidOperationException($"No reschedule attempts left. Max: {contract.Package.MaxReschedule}");
-
-            var (start, end) = ParseTimeSlot(dto.RequestedTimeSlot);
-            if (dto.RequestedTutorId.HasValue)
-            {
-                var startDateTime = dto.RequestedDate.ToDateTime(start);
-                var endDateTime = dto.RequestedDate.ToDateTime(end);
-                var available = await _sessionRepo.IsTutorAvailableAsync(dto.RequestedTutorId.Value, dto.RequestedDate, startDateTime, endDateTime);
-                if (!available) throw new InvalidOperationException("Tutor not available.");
-            }
+            
 
             var request = new RescheduleRequest
             {
@@ -55,8 +76,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = oldSession.ContractId,
                 ParentId = parentId,
                 RequestedDate = dto.RequestedDate,
-                RequestedTimeSlot = dto.RequestedTimeSlot,
-                RequestedTutorId = dto.RequestedTutorId,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
                 Reason = dto.Reason,
                 Status = "pending",
                 CreatedDate = DateTime.UtcNow
@@ -77,16 +98,41 @@ namespace MathBridgeSystem.Application.Services
             var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId);
             if (request == null || request.Status != "pending") throw new KeyNotFoundException("Invalid request.");
 
-            var (start, end) = ParseTimeSlot(request.RequestedTimeSlot);
-            var finalTutorId = dto.NewTutorId != Guid.Empty ? dto.NewTutorId : (request.RequestedTutorId ?? request.Booking.TutorId);
+            // Determine the final tutor ID
+            Guid finalTutorId;
+            if (dto.NewTutorId != Guid.Empty)
+            {
+                // Validate that the new tutor exists and is a tutor
+                var newTutor = await _userRepo.GetByIdAsync(dto.NewTutorId);
+                if (newTutor == null)
+                    throw new KeyNotFoundException($"Tutor with ID {dto.NewTutorId} not found.");
+                if (newTutor.RoleId != 2) // 2 = tutor role
+                    throw new InvalidOperationException($"User {dto.NewTutorId} is not a tutor.");
+                finalTutorId = dto.NewTutorId;
+            }
+            else if (request.RequestedTutorId.HasValue)
+            {
+                // Validate that the requested tutor exists and is a tutor
+                var requestedTutor = await _userRepo.GetByIdAsync(request.RequestedTutorId.Value);
+                if (requestedTutor == null)
+                    throw new KeyNotFoundException($"Requested tutor with ID {request.RequestedTutorId} not found.");
+                if (requestedTutor.RoleId != 2)
+                    throw new InvalidOperationException($"Requested user {request.RequestedTutorId} is not a tutor.");
+                finalTutorId = request.RequestedTutorId.Value;
+            }
+            else
+            {
+                // Use the original tutor
+                finalTutorId = request.Booking.TutorId;
+            }
 
-            var startDateTime = request.RequestedDate.ToDateTime(start);
-            var endDateTime = request.RequestedDate.ToDateTime(end);
+            var startDateTime = request.RequestedDate.ToDateTime(request.StartTime);
+            var endDateTime = request.RequestedDate.ToDateTime(request.EndTime);
             var available = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDateTime, endDateTime);
             if (!available) throw new InvalidOperationException("Tutor not available.");
 
-            var sessionStart = request.RequestedDate.ToDateTime(start);
-            var sessionEnd = request.RequestedDate.ToDateTime(end);
+            var sessionStart = request.RequestedDate.ToDateTime(request.StartTime);
+            var sessionEnd = request.RequestedDate.ToDateTime(request.EndTime);
 
             var newSession = new Session
             {
@@ -118,6 +164,7 @@ namespace MathBridgeSystem.Application.Services
 
             request.Status = "approved";
             request.StaffId = staffId;
+            request.RequestedTutorId = finalTutorId;
             request.ProcessedDate = DateTime.UtcNow;
             await _rescheduleRepo.UpdateAsync(request);
 
@@ -151,11 +198,94 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        private (TimeOnly start, TimeOnly end) ParseTimeSlot(string slot)
+        public async Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId)
         {
-            var parts = slot.Split('-');
-            if (parts.Length != 2) throw new ArgumentException("Invalid time slot format. Use 'HH:mm-HH:mm'");
-            return (TimeOnly.Parse(parts[0].Trim()), TimeOnly.Parse(parts[1].Trim()));
+            // Get the reschedule request with contract details
+            var rescheduleRequest = await _rescheduleRepo.GetByIdWithDetailsAsync(rescheduleRequestId);
+            if (rescheduleRequest == null)
+                throw new KeyNotFoundException("Reschedule request not found.");
+
+            var contract = rescheduleRequest.Contract;
+            if (contract == null)
+                throw new KeyNotFoundException("Contract not found.");
+
+            var availableTutors = new List<SubTutorInfoDto>();
+
+            // Convert TimeOnly to DateTime for comparison
+            var startDateTime = rescheduleRequest.RequestedDate.ToDateTime(rescheduleRequest.StartTime);
+            var endDateTime = rescheduleRequest.RequestedDate.ToDateTime(rescheduleRequest.EndTime);
+
+            // Check SubstituteTutor1
+            if (contract.SubstituteTutor1Id.HasValue)
+            {
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
+                    contract.SubstituteTutor1Id.Value,
+                    rescheduleRequest.RequestedDate,
+                    startDateTime,
+                    endDateTime
+                );
+
+                if (isAvailable && contract.SubstituteTutor1 != null)
+                {
+                    var averageRating = contract.SubstituteTutor1.FinalFeedbacks.Any()
+                        ? contract.SubstituteTutor1.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
+                        : (double?)null;
+
+                    availableTutors.Add(new SubTutorInfoDto
+                    {
+                        TutorId = contract.SubstituteTutor1.UserId,
+                        FullName = contract.SubstituteTutor1.FullName,
+                        PhoneNumber = contract.SubstituteTutor1.PhoneNumber,
+                        Email = contract.SubstituteTutor1.Email,
+                        Rating = averageRating,
+                        IsAvailable = true
+                    });
+                }
+            }
+
+            // Check SubstituteTutor2
+            if (contract.SubstituteTutor2Id.HasValue)
+            {
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
+                    contract.SubstituteTutor2Id.Value,
+                    rescheduleRequest.RequestedDate,
+                    startDateTime,
+                    endDateTime
+                );
+
+                if (isAvailable && contract.SubstituteTutor2 != null)
+                {
+                    var averageRating = contract.SubstituteTutor2.FinalFeedbacks.Any()
+                        ? contract.SubstituteTutor2.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
+                        : (double?)null;
+
+                    availableTutors.Add(new SubTutorInfoDto
+                    {
+                        TutorId = contract.SubstituteTutor2.UserId,
+                        FullName = contract.SubstituteTutor2.FullName,
+                        PhoneNumber = contract.SubstituteTutor2.PhoneNumber,
+                        Email = contract.SubstituteTutor2.Email,
+                        Rating = averageRating,
+                        IsAvailable = true
+                    });
+                }
+            }
+
+            return new AvailableSubTutorsDto
+            {
+                AvailableTutors = availableTutors,
+                TotalAvailable = availableTutors.Count
+            };
+        }
+
+        private bool IsValidStartTime(TimeOnly startTime)
+        {
+            foreach (var validTime in ValidStartTimes)
+            {
+                if (startTime == validTime)
+                    return true;
+            }
+            return false;
         }
     }
 }

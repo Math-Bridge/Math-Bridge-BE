@@ -25,7 +25,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Tutor)
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
-                .Include(d => d.Test)
                 .FirstOrDefaultAsync(d => d.ReportId == reportId);
         }
 
@@ -36,7 +35,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Tutor)
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
-                .Include(d => d.Test)
                 .Where(d => d.TutorId == tutorId)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
@@ -49,7 +47,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Tutor)
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
-                .Include(d => d.Test)
                 .Where(d => d.ChildId == childId)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
@@ -62,7 +59,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Tutor)
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
-                .Include(d => d.Test)
                 .Where(d => d.BookingId == bookingId)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
@@ -76,7 +72,6 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
                 .ThenInclude(u => u.Curriculum)
-                .Include(d => d.Test)
                 .Where(d => d.ChildId == childId)
                 .OrderBy(d => d.CreatedDate)
                 .FirstOrDefaultAsync();

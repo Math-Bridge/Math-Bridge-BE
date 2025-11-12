@@ -9,6 +9,6 @@ namespace MathBridgeSystem.Application.DTOs.Contract
         public string Email { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public decimal AverageRating { get; set; }
-        public int ReviewCount { get; set; }
+        public int FeedbackCount { get; set; }
     }
 }

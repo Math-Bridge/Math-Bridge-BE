@@ -9,5 +9,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto);
         Task<RescheduleResponseDto> ApproveRequestAsync(Guid staffId, Guid requestId, ApproveRescheduleRequestDto dto);
         Task<RescheduleResponseDto> RejectRequestAsync(Guid staffId, Guid requestId, string reason);
+        Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId);
     }
 }

@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -10,18 +10,18 @@ namespace MathBridgeSystem.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly ITutorCenterRepository _tutorCenterRepository;
         private readonly ITutorScheduleRepository _tutorScheduleRepository;
-        private readonly IReviewRepository _reviewRepository;
+        private readonly IFinalFeedbackRepository _finalFeedbackRepository;
 
         public TutorService(
           IUserRepository userRepository,
           ITutorCenterRepository tutorCenterRepository,
           ITutorScheduleRepository tutorScheduleRepository,
-          IReviewRepository reviewRepository)
+          IFinalFeedbackRepository finalFeedbackRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _tutorCenterRepository = tutorCenterRepository ?? throw new ArgumentNullException(nameof(tutorCenterRepository));
             _tutorScheduleRepository = tutorScheduleRepository ?? throw new ArgumentNullException(nameof(tutorScheduleRepository));
-            _reviewRepository = reviewRepository ?? throw new ArgumentNullException(nameof(reviewRepository));
+            _finalFeedbackRepository = finalFeedbackRepository ?? throw new ArgumentNullException(nameof(finalFeedbackRepository));
         }
 
         public async Task<TutorDto> GetTutorByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
@@ -37,7 +37,7 @@ namespace MathBridgeSystem.Application.Services
 
             var tutorSchedules = await _tutorScheduleRepository.GetByTutorIdAsync(id);
 
-            var reviews = await _reviewRepository.GetByReviewedUserIdAsync(id);
+            var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(id);
 
             var tutorDto = new TutorDto
             {
@@ -107,16 +107,18 @@ namespace MathBridgeSystem.Application.Services
                 CreatedDate = ts.CreatedDate
             }).ToList();
 
-            tutorDto.Reviews = reviews.Select(r => new ReviewDetailDto
+            tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
             {
-                ReviewId = r.ReviewId,
-                UserId = r.UserId,
-                Rating = r.Rating,
-                ReviewTitle = r.ReviewTitle,
-                ReviewText = r.ReviewText,
-                ReviewStatus = r.ReviewStatus,
-                CreatedDate = r.CreatedDate,
-                ReviewerName = r.User?.FullName ?? "Anonymous"
+                FeedbackId = f.FeedbackId,
+                UserId = f.UserId,
+                ContractId = f.ContractId,
+                FeedbackProviderType = f.FeedbackProviderType,
+                FeedbackText = f.FeedbackText,
+                OverallSatisfactionRating = f.OverallSatisfactionRating,
+                WouldRecommend = f.WouldRecommend,
+                FeedbackStatus = f.FeedbackStatus,
+                CreatedDate = f.CreatedDate,
+                ProviderName = f.User?.FullName ?? "Anonymous"
             }).ToList();
 
             return tutorDto;
@@ -199,7 +201,7 @@ namespace MathBridgeSystem.Application.Services
 
                 var tutorSchedules = await _tutorScheduleRepository.GetByTutorIdAsync(user.UserId);
 
-                var reviews = await _reviewRepository.GetByReviewedUserIdAsync(user.UserId);
+                var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(user.UserId);
 
                 var tutorDto = new TutorDto
                 {
@@ -269,16 +271,18 @@ namespace MathBridgeSystem.Application.Services
                     CreatedDate = ts.CreatedDate
                 }).ToList();
 
-                tutorDto.Reviews = reviews.Select(r => new ReviewDetailDto
+                tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
                 {
-                    ReviewId = r.ReviewId,
-                    UserId = r.UserId,
-                    Rating = r.Rating,
-                    ReviewTitle = r.ReviewTitle,
-                    ReviewText = r.ReviewText,
-                    ReviewStatus = r.ReviewStatus,
-                    CreatedDate = r.CreatedDate,
-                    ReviewerName = r.User?.FullName ?? "Anonymous"
+                    FeedbackId = f.FeedbackId,
+                    UserId = f.UserId,
+                    ContractId = f.ContractId,
+                    FeedbackProviderType = f.FeedbackProviderType,
+                    FeedbackText = f.FeedbackText,
+                    OverallSatisfactionRating = f.OverallSatisfactionRating,
+                    WouldRecommend = f.WouldRecommend,
+                    FeedbackStatus = f.FeedbackStatus,
+                    CreatedDate = f.CreatedDate,
+                    ProviderName = f.User?.FullName ?? "Anonymous"
                 }).ToList();
 
                 tutorList.Add(tutorDto);

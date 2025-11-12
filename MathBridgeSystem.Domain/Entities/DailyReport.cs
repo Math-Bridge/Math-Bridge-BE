@@ -23,13 +23,9 @@ public partial class DailyReport
 
     public Guid UnitId { get; set; }
 
-    public Guid? TestId { get; set; }
-
     public virtual Session Booking { get; set; } = null!;
 
     public virtual Child Child { get; set; } = null!;
-
-    public virtual TestResult? Test { get; set; }
 
     public virtual User Tutor { get; set; } = null!;
 

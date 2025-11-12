@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
@@ -56,6 +56,10 @@ namespace MathBridgeSystem.Tests.Services
             };
             var package = new PaymentPackage { PackageId = request.PackageId, SessionCount = 10, MaxReschedule = 2 };
             _packageRepositoryMock.Setup(repo => repo.GetByIdAsync(request.PackageId)).ReturnsAsync(package);
+            _contractRepositoryMock.Setup(repo => repo.HasOverlappingContractForChildAsync(
+                It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), 
+                It.IsAny<TimeOnly?>(), It.IsAny<TimeOnly?>(), It.IsAny<byte?>(), null))
+                .ReturnsAsync(false);
             _contractRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Contract>())).Returns(Task.CompletedTask);
             _sessionRepositoryMock.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Session>>())).Returns(Task.CompletedTask);
 
@@ -80,6 +84,10 @@ namespace MathBridgeSystem.Tests.Services
             };
             var package = new PaymentPackage { SessionCount = 10, MaxReschedule = 2 };
             _packageRepositoryMock.Setup(repo => repo.GetByIdAsync(request.PackageId)).ReturnsAsync(package);
+            _contractRepositoryMock.Setup(repo => repo.HasOverlappingContractForChildAsync(
+                It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), 
+                It.IsAny<TimeOnly?>(), It.IsAny<TimeOnly?>(), It.IsAny<byte?>(), null))
+                .ReturnsAsync(false);
 
             await _contractService.CreateContractAsync(request);
 
@@ -508,6 +516,94 @@ namespace MathBridgeSystem.Tests.Services
 
             Func<Task> act = () => _contractService.CompleteContractAsync(contractId, Guid.NewGuid());
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("All sessions must be completed before completing the contract.");
+        }
+
+        // Test: Ném lỗi khi tạo hợp đồng trùng lặp cho cùng một trẻ
+        [Fact]
+        public async Task CreateContractAsync_OverlappingContract_ThrowsInvalidOperationException()
+        {
+            var childId = Guid.NewGuid();
+            var request = new CreateContractRequest
+            {
+                ParentId = Guid.NewGuid(),
+                ChildId = childId,
+                PackageId = Guid.NewGuid(),
+                StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+                EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(30)),
+                DaysOfWeeks = 62, // T2, T3, T4, T5, T6
+                StartTime = new TimeOnly(16, 0),
+                EndTime = new TimeOnly(18, 0),
+                IsOnline = true,
+                Status = "pending",
+                MainTutorId = Guid.NewGuid()
+            };
+            var package = new PaymentPackage { PackageId = request.PackageId, SessionCount = 10, MaxReschedule = 2 };
+            _packageRepositoryMock.Setup(repo => repo.GetByIdAsync(request.PackageId)).ReturnsAsync(package);
+            
+            // Mock: Có contract trùng lặp
+            _contractRepositoryMock.Setup(repo => repo.HasOverlappingContractForChildAsync(
+                childId, 
+                request.StartDate, 
+                request.EndDate, 
+                request.StartTime, 
+                request.EndTime, 
+                62, 
+                null))
+                .ReturnsAsync(true);
+
+            Func<Task> act = () => _contractService.CreateContractAsync(request);
+            await act.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("Cannot create contract: This child already has an overlapping contract with the same schedule.*");
+        }
+
+        // Test: Tạo hợp đồng thành công khi không có trùng lặp
+        [Fact]
+        public async Task CreateContractAsync_NoOverlappingContract_CreatesSuccessfully()
+        {
+            var childId = Guid.NewGuid();
+            var request = new CreateContractRequest
+            {
+                ParentId = Guid.NewGuid(),
+                ChildId = childId,
+                PackageId = Guid.NewGuid(),
+                StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+                EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(30)),
+                DaysOfWeeks = 62, // T2, T3, T4, T5, T6
+                StartTime = new TimeOnly(16, 0),
+                EndTime = new TimeOnly(18, 0),
+                IsOnline = true,
+                Status = "pending",
+                MainTutorId = Guid.NewGuid()
+            };
+            var package = new PaymentPackage { PackageId = request.PackageId, SessionCount = 10, MaxReschedule = 2 };
+            _packageRepositoryMock.Setup(repo => repo.GetByIdAsync(request.PackageId)).ReturnsAsync(package);
+            
+            // Mock: Không có contract trùng lặp
+            _contractRepositoryMock.Setup(repo => repo.HasOverlappingContractForChildAsync(
+                childId,
+                request.StartDate,
+                request.EndDate,
+                request.StartTime,
+                request.EndTime,
+                62,
+                null))
+                .ReturnsAsync(false);
+            
+            _contractRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Contract>())).Returns(Task.CompletedTask);
+            _sessionRepositoryMock.Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Session>>())).Returns(Task.CompletedTask);
+
+            var result = await _contractService.CreateContractAsync(request);
+
+            result.Should().NotBe(Guid.Empty);
+            _contractRepositoryMock.Verify(repo => repo.HasOverlappingContractForChildAsync(
+                childId,
+                request.StartDate,
+                request.EndDate,
+                request.StartTime,
+                request.EndTime,
+                62,
+                null), Times.Once);
+            _contractRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Contract>()), Times.Once);
         }
     }
 }

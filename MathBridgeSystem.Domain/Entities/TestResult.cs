@@ -17,9 +17,11 @@ public partial class TestResult
 
     public DateTime UpdatedDate { get; set; }
 
-    public Guid? ContractId { get; set; }
+    public Guid ContractId { get; set; }
 
-    public virtual Contract? Contract { get; set; }
+    public Guid? BookingId { get; set; }
 
-    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+    public virtual Session? Booking { get; set; }
+
+    public virtual Contract Contract { get; set; } = null!;
 }

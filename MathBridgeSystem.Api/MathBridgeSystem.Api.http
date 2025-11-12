@@ -1,8 +1,14 @@
 
 @MathBridgeSystem.Api_HostAddress = http://0.0.0.0:5191
-
+@authToken = YOUR_JWT_TOKEN_HERE
 
 GET {{MathBridgeSystem.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+### Get Available Sub-Tutors for Reschedule Request
+GET {{MathBridgeSystem.Api_HostAddress}}/api/reschedule/550e8400-e29b-41d4-a716-446655440000/available-sub-tutors
+Authorization: Bearer {{authToken}}
+Accept: application/json
+

@@ -11,8 +11,6 @@ public partial class RescheduleRequest
 
     public Guid ParentId { get; set; }
 
-    public string RequestedTimeSlot { get; set; } = null!;
-
     public DateOnly RequestedDate { get; set; }
 
     public Guid? RequestedTutorId { get; set; }
@@ -31,6 +29,10 @@ public partial class RescheduleRequest
     /// FK to contracts. One contract has many reschedule requests (1-N).
     /// </summary>
     public Guid ContractId { get; set; }
+
+    public TimeOnly StartTime { get; set; }
+
+    public TimeOnly EndTime { get; set; }
 
     public virtual Session Booking { get; set; } = null!;
 

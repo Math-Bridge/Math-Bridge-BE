@@ -65,8 +65,6 @@ public partial class Contract
 
     public virtual User Parent { get; set; } = null!;
 
-    public virtual ICollection<PayosTransaction> PayosTransactions { get; set; } = new List<PayosTransaction>();
-
     public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 
     public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();

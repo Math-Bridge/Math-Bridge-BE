@@ -12,6 +12,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string? Grade { get; set; }
         public decimal? Price { get; set; }
         public int? SessionsPerWeek { get; set; }
+        public int? SessionCount { get; set; }
         public int? MaxReschedule { get; set; }
         public int? DurationDays { get; set; }
         public string? Description { get; set; }
