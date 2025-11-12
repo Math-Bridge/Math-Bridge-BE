@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -15,5 +15,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<PaymentPackageDto> UpdatePackageAsync(Guid id, UpdatePackageRequest request);
         Task DeletePackageAsync(Guid id);
         public Task<PaymentPackageDto> GetPackageByIdAsync(Guid id);
+        Task<List<PaymentPackageDto>> GetAllActivePackagesAsync();
+        Task<PaymentPackageDto> GetActivePackageByIdAsync(Guid id);
     }
 }
