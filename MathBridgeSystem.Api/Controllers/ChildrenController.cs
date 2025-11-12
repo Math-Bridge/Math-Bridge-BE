@@ -112,7 +112,7 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpPatch("{id}/restore")]
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,parent,staff")]
         public async Task<IActionResult> RestoreChild(Guid id)
         {
             try
