@@ -1,0 +1,353 @@
+﻿using FluentAssertions;
+using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
+using MathBridgeSystem.Application.Services;
+using MathBridgeSystem.Domain.Entities;
+using MathBridgeSystem.Domain.Interfaces;
+using Moq;
+using Xunit;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System;
+
+namespace MathBridgeSystem.Tests.Services
+{
+    public class RescheduleServiceTests
+    {
+        private readonly Mock<IRescheduleRequestRepository> _rescheduleRepoMock;
+        private readonly Mock<IContractRepository> _contractRepoMock;
+        private readonly Mock<ISessionRepository> _sessionRepoMock;
+        private readonly RescheduleService _rescheduleService;
+
+        private readonly Guid _parentId = Guid.NewGuid();
+        private readonly Guid _staffId = Guid.NewGuid();
+        private readonly Guid _tutorId = Guid.NewGuid();
+        private readonly Guid _contractId = Guid.NewGuid();
+        private readonly Guid _bookingId = Guid.NewGuid();
+        private readonly PaymentPackage _package;
+        private readonly Contract _contract;
+        private readonly Session _session;
+
+        public RescheduleServiceTests()
+        {
+            _rescheduleRepoMock = new Mock<IRescheduleRequestRepository>();
+            _contractRepoMock = new Mock<IContractRepository>();
+            _sessionRepoMock = new Mock<ISessionRepository>();
+
+            _rescheduleService = new RescheduleService(
+                _rescheduleRepoMock.Object,
+                _contractRepoMock.Object,
+                _sessionRepoMock.Object
+            );
+
+            // --- Khởi tạo dữ liệu Mock chung ---
+            _package = new PaymentPackage { PackageId = Guid.NewGuid(), MaxReschedule = 2 };
+
+            _contract = new Contract
+            {
+                ContractId = _contractId,
+                ParentId = _parentId,
+                RescheduleCount = 0,
+                Package = _package 
+            };
+
+            _session = new Session
+            {
+                BookingId = _bookingId,
+                ContractId = _contractId,
+                Contract = _contract, 
+                SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)), 
+                TutorId = _tutorId,
+                Status = "scheduled"
+            };
+        }
+
+
+        // Test: Tạo request thành công (không yêu cầu tutor cụ thể)
+        [Fact]
+        public async Task CreateRequestAsync_ValidRequest_CreatesRequest()
+        {
+            // Arrange
+            var dto = new CreateRescheduleRequestDto
+            {
+                BookingId = _bookingId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedTimeSlot = "10:00-12:00",
+                Reason = "Bận"
+            };
+
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+            _rescheduleRepoMock.Setup(r => r.AddAsync(It.IsAny<RescheduleRequest>())).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _rescheduleService.CreateRequestAsync(_parentId, dto);
+
+            // Assert
+            result.Status.Should().Be("pending");
+            result.Message.Should().Be("Yêu cầu đổi lịch đã được gửi.");
+            _rescheduleRepoMock.Verify(r => r.AddAsync(It.IsAny<RescheduleRequest>()), Times.Once);
+        }
+
+        // Test: Tạo request thành công (có yêu cầu tutor và tutor rảnh)
+        [Fact]
+        public async Task CreateRequestAsync_ValidRequestWithTutor_ChecksAvailabilityAndCreatesRequest()
+        {
+            // Arrange
+            var requestedTutorId = Guid.NewGuid();
+            var dto = new CreateRescheduleRequestDto
+            {
+                BookingId = _bookingId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedTimeSlot = "10:00-12:00",
+                RequestedTutorId = requestedTutorId
+            };
+
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(true);
+
+            // Act
+            var result = await _rescheduleService.CreateRequestAsync(_parentId, dto);
+
+            // Assert
+            result.Status.Should().Be("pending");
+            _sessionRepoMock.Verify(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Once);
+            _rescheduleRepoMock.Verify(r => r.AddAsync(It.IsAny<RescheduleRequest>()), Times.Once);
+        }
+
+        // Test: Ném lỗi khi không tìm thấy Session
+        [Fact]
+        public async Task CreateRequestAsync_SessionNotFound_ThrowsKeyNotFoundException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Session)null);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Session not found.");
+        }
+
+        // Test: Ném lỗi khi không đúng Parent
+        [Fact]
+        public async Task CreateRequestAsync_NotYourChild_ThrowsUnauthorizedAccessException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            var otherParentId = Guid.NewGuid();
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(otherParentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Not your child.");
+        }
+
+        // Test: Ném lỗi khi đổi lịch buổi học trong quá khứ
+        [Fact]
+        public async Task CreateRequestAsync_PastSession_ThrowsInvalidOperationException()
+        {
+            var pastSession = new Session { Contract = _contract, SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) };
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(pastSession);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Cannot reschedule past sessions.");
+        }
+
+        // Test: Ném lỗi khi đã có request đang chờ
+        [Fact]
+        public async Task CreateRequestAsync_PendingRequestExists_ThrowsInvalidOperationException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(true); 
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Pending request exists.");
+        }
+
+        // Test: Ném lỗi khi không tìm thấy Contract
+        [Fact]
+        public async Task CreateRequestAsync_ContractNotFound_ThrowsKeyNotFoundException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync((Contract)null); 
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Contract not found.");
+        }
+
+        // Test: Ném lỗi khi hết lượt đổi lịch
+        [Fact]
+        public async Task CreateRequestAsync_NoRescheduleAttemptsLeft_ThrowsInvalidOperationException()
+        {
+            _contract.RescheduleCount = 2;
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("No reschedule attempts left. Max: 2");
+        }
+
+        // Test: Ném lỗi khi Tutor được yêu cầu không rảnh
+        [Fact]
+        public async Task CreateRequestAsync_TutorNotAvailable_ThrowsInvalidOperationException()
+        {
+            var requestedTutorId = Guid.NewGuid();
+            var dto = new CreateRescheduleRequestDto
+            {
+                BookingId = _bookingId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedTimeSlot = "10:00-12:00",
+                RequestedTutorId = requestedTutorId
+            };
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false); 
+
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, dto);
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Tutor not available.");
+        }
+
+        // Test: Ném lỗi khi định dạng thời gian sai
+        [Fact]
+        public async Task CreateRequestAsync_InvalidTimeSlotFormat_ThrowsArgumentException()
+        {
+            var dto = new CreateRescheduleRequestDto { BookingId = _bookingId, RequestedTimeSlot = "10:00_12:00" }; 
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, dto);
+            await act.Should().ThrowAsync<ArgumentException>().WithMessage("Invalid time slot format. Use 'HH:mm-HH:mm'");
+        }
+
+
+        // Test: Duyệt request thành công
+        [Fact]
+        public async Task ApproveRequestAsync_ValidRequest_ApprovesAndCreatesNewSession()
+        {
+            // Arrange
+            var requestId = Guid.NewGuid();
+            var newTutorId = Guid.NewGuid();
+            var dto = new ApproveRescheduleRequestDto { NewTutorId = newTutorId };
+
+            var request = new RescheduleRequest
+            {
+                RequestId = requestId,
+                Status = "pending",
+                Booking = _session, 
+                ContractId = _contractId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedTimeSlot = "14:00-16:00",
+                RequestedTutorId = null
+            };
+
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(newTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(true);
+
+            // Act
+            var result = await _rescheduleService.ApproveRequestAsync(_staffId, requestId, dto);
+
+            // Assert
+            result.Status.Should().Be("approved");
+            result.Message.Should().Be("Đổi lịch thành công.");
+
+            _sessionRepoMock.Verify(r => r.AddRangeAsync(It.Is<IEnumerable<Session>>(list =>
+                list.Count() == 1 &&
+                list.First().TutorId == newTutorId &&
+                list.First().Status == "scheduled")),
+                Times.Once);
+
+            _session.Status.Should().Be("rescheduled");
+            _sessionRepoMock.Verify(r => r.UpdateAsync(_session), Times.Once);
+
+            _contract.RescheduleCount.Should().Be(1);
+            _contractRepoMock.Verify(r => r.UpdateAsync(_contract), Times.Once);
+
+            request.Status.Should().Be("approved");
+            request.StaffId.Should().Be(_staffId);
+            _rescheduleRepoMock.Verify(r => r.UpdateAsync(request), Times.Once);
+        }
+
+        // Test: Ném lỗi khi duyệt request không tìm thấy
+        [Fact]
+        public async Task ApproveRequestAsync_RequestNotFound_ThrowsKeyNotFoundException()
+        {
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>())).ReturnsAsync((RescheduleRequest)null);
+            Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, Guid.NewGuid(), new ApproveRescheduleRequestDto());
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Invalid request.");
+        }
+
+        // Test: Ném lỗi khi duyệt request không ở trạng thái "pending"
+        [Fact]
+        public async Task ApproveRequestAsync_RequestNotPending_ThrowsKeyNotFoundException()
+        {
+            var request = new RescheduleRequest { Status = "approved" }; 
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>())).ReturnsAsync(request);
+            Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, Guid.NewGuid(), new ApproveRescheduleRequestDto());
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Invalid request.");
+        }
+
+        // Test: Ném lỗi khi duyệt request nhưng tutor không rảnh
+        [Fact]
+        public async Task ApproveRequestAsync_TutorNotAvailable_ThrowsInvalidOperationException()
+        {
+            var requestId = Guid.NewGuid();
+            var newTutorId = Guid.NewGuid();
+            var dto = new ApproveRescheduleRequestDto { NewTutorId = newTutorId };
+            var request = new RescheduleRequest
+            {
+                RequestId = requestId,
+                Status = "pending",
+                Booking = _session,
+                ContractId = _contractId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedTimeSlot = "14:00-16:00"
+            };
+
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(newTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false); 
+
+            Func<Task> act = () => _rescheduleService.ApproveRequestAsync(_staffId, requestId, dto);
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Tutor not available.");
+        }
+
+
+        // Test: Từ chối request thành công
+        [Fact]
+        public async Task RejectRequestAsync_ValidRequest_RejectsRequest()
+        {
+            // Arrange
+            var requestId = Guid.NewGuid();
+            var reason = "Tutor bận";
+            var request = new RescheduleRequest { RequestId = requestId, Status = "pending", Booking = _session };
+
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _rescheduleRepoMock.Setup(r => r.UpdateAsync(It.IsAny<RescheduleRequest>())).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _rescheduleService.RejectRequestAsync(_staffId, requestId, reason);
+
+            // Assert
+            result.Status.Should().Be("rejected");
+            result.Message.Should().Be($"Từ chối: {reason}");
+
+            request.Status.Should().Be("rejected");
+            request.StaffId.Should().Be(_staffId);
+            request.Reason.Should().Be(reason);
+            _rescheduleRepoMock.Verify(r => r.UpdateAsync(request), Times.Once);
+        }
+
+        // Test: Ném lỗi khi từ chối request không tìm thấy
+        [Fact]
+        public async Task RejectRequestAsync_RequestNotFound_ThrowsKeyNotFoundException()
+        {
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>())).ReturnsAsync((RescheduleRequest)null);
+            Func<Task> act = () => _rescheduleService.RejectRequestAsync(_staffId, Guid.NewGuid(), "reason");
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Invalid request.");
+        }
+
+        // Test: Ném lỗi khi từ chối request không ở trạng thái "pending"
+        [Fact]
+        public async Task RejectRequestAsync_RequestNotPending_ThrowsKeyNotFoundException()
+        {
+            var request = new RescheduleRequest { Status = "rejected" }; 
+            _rescheduleRepoMock.Setup(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>())).ReturnsAsync(request);
+            Func<Task> act = () => _rescheduleService.RejectRequestAsync(_staffId, Guid.NewGuid(), "reason");
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Invalid request.");
+        }
+    }
+}
