@@ -32,7 +32,6 @@ namespace MathBridgeSystem.Tests.Services
                 PackageName = "Gói 1",
                 Grade = "grade 10",
                 Price = 1000,
-                SessionCount = 10,
                 CurriculumId = Guid.NewGuid()
             };
         }

@@ -29,6 +29,8 @@ public partial class PaymentPackage
 
     public Guid CurriculumId { get; set; }
 
+    public bool IsActive { get; set; }
+
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
     public virtual Curriculum Curriculum { get; set; } = null!;

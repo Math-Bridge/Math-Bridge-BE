@@ -1,4 +1,7 @@
 using MathBridgeSystem.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Domain.Interfaces
 {
@@ -8,9 +11,9 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<IEnumerable<DailyReport>> GetByTutorIdAsync(Guid tutorId);
         Task<IEnumerable<DailyReport>> GetByChildIdAsync(Guid childId);
         Task<IEnumerable<DailyReport>> GetByBookingIdAsync(Guid bookingId);
+        Task<DailyReport> GetOldestByChildIdAsync(Guid childId);
         Task<DailyReport> AddAsync(DailyReport dailyReport);
         Task<DailyReport> UpdateAsync(DailyReport dailyReport);
         Task<bool> DeleteAsync(Guid reportId);
     }
 }
-

@@ -87,6 +87,7 @@ builder.Services.AddScoped<ITutorVerificationRepository, TutorVerificationReposi
 builder.Services.AddScoped<ITestResultRepository, TestResultRepository>();
 builder.Services.AddScoped<IFinalFeedbackRepository, FinalFeedbackRepository>();
 builder.Services.AddScoped<IDailyReportRepository, DailyReportRepository>();
+builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 
 
 

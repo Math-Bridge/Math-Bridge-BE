@@ -1,4 +1,5 @@
 using MathBridgeSystem.Application.DTOs.DailyReport;
+using MathBridgeSystem.Application.DTOs.Progress;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -106,6 +107,61 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         /// <summary>
+        /// Get learning completion forecast for a child
+        /// Takes the unit from the oldest daily report and calculates when the child will complete all units
+        /// Based on average 2 weeks per unit
+        /// </summary>
+        [HttpGet("child/{childId}/learning-forecast")]
+        [Authorize(Roles = "tutor,parent,staff,admin")]
+        public async Task<IActionResult> GetLearningCompletionForecast(Guid childId)
+        {
+            try
+            {
+                var forecast = await _dailyReportService.GetLearningCompletionForecastAsync(childId);
+                return Ok(forecast);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving the learning forecast.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get child unit progress from daily reports
+        /// Returns information about which units the child has learned, how many times, and dates
+        /// </summary>
+        [HttpGet("child/{childId}/unit-progress")]
+        [Authorize(Roles = "tutor,parent,staff,admin")]
+        public async Task<IActionResult> GetChildUnitProgress(Guid childId)
+        {
+            try
+            {
+                var progress = await _dailyReportService.GetChildUnitProgressAsync(childId);
+                return Ok(progress);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving the child unit progress.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Create a new daily report
         /// Required fields: childId, bookingId, onTrack, haveHomework, unitId
         /// TutorId is automatically set from the logged-in user
@@ -191,4 +247,3 @@ namespace MathBridgeSystem.Api.Controllers
         }
     }
 }
-

@@ -37,13 +37,14 @@ namespace MathBridgeSystem.Application.Services
                 PackageName = request.PackageName,
                 Grade = request.Grade,
                 Price = request.Price,
-                SessionCount = request.SessionCount,
+                SessionCount = request.SessionsPerWeek*4*3, // 3 months
                 SessionsPerWeek = request.SessionsPerWeek,
                 MaxReschedule = request.MaxReschedule,
-                DurationDays = request.DurationDays,
+                DurationDays = 90,
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow,
-                CurriculumId = request.CurriculumId
+                CurriculumId = request.CurriculumId,
+                IsActive = request.IsActive
             };
 
             await _packageRepository.AddAsync(package);
@@ -63,7 +64,8 @@ namespace MathBridgeSystem.Application.Services
                 SessionsPerWeek = p.SessionsPerWeek,
                 MaxReschedule = p.MaxReschedule,
                 DurationDays = p.DurationDays,
-                Description = p.Description
+                Description = p.Description,
+                IsActive = p.IsActive
             }).ToList();
         }
 
@@ -80,7 +82,8 @@ namespace MathBridgeSystem.Application.Services
                 SessionsPerWeek = package.SessionsPerWeek,
                 MaxReschedule = package.MaxReschedule,
                 DurationDays = package.DurationDays,
-                Description = package.Description
+                Description = package.Description,
+                IsActive = package.IsActive
             };
         }
 
@@ -112,12 +115,13 @@ namespace MathBridgeSystem.Application.Services
                 package.Grade = request.Grade;
 
             if (request.Price.HasValue) package.Price = request.Price.Value;
-            if (request.SessionCount.HasValue) package.SessionCount = request.SessionCount.Value;
             if (request.SessionsPerWeek.HasValue) package.SessionsPerWeek = request.SessionsPerWeek.Value;
+            package.SessionCount = (int)request.SessionsPerWeek*4*3; // Cập nhật lại SessionCount nếu SessionsPerWeek thay đổi
             if (request.MaxReschedule.HasValue) package.MaxReschedule = request.MaxReschedule.Value;
             if (request.DurationDays.HasValue) package.DurationDays = request.DurationDays.Value;
             if (request.Description != null) package.Description = request.Description;
             if (request.CurriculumId.HasValue) package.CurriculumId = request.CurriculumId.Value;
+            if (request.IsActive.HasValue) package.IsActive = request.IsActive.Value;
 
             package.UpdatedDate = DateTime.UtcNow;
 
@@ -133,7 +137,8 @@ namespace MathBridgeSystem.Application.Services
                 SessionsPerWeek = package.SessionsPerWeek,
                 MaxReschedule = package.MaxReschedule,
                 DurationDays = package.DurationDays,
-                Description = package.Description
+                Description = package.Description,
+                IsActive = package.IsActive
             };
         }
 
