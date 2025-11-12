@@ -32,10 +32,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     .ThenInclude(s => s.Tutor)
                 .Include(r => r.Contract)
                     .ThenInclude(c => c.SubstituteTutor1)
-                        .ThenInclude(t => t.Reviews)
+                        .ThenInclude(t => t.FinalFeedbacks)
                 .Include(r => r.Contract)
                     .ThenInclude(c => c.SubstituteTutor2)
-                        .ThenInclude(t => t.Reviews)
+                        .ThenInclude(t => t.FinalFeedbacks)
                 .Include(r => r.Parent)
                 .Include(r => r.RequestedTutor)
                 .FirstOrDefaultAsync(r => r.RequestId == id);

@@ -17,7 +17,6 @@ namespace MathBridgeSystem.Application.Services
         private readonly IWalletTransactionRepository _walletTransactionRepository;
         private readonly IContractRepository _contractRepository;
         private readonly IPackageRepository _packageRepository;
-        private readonly IReviewRepository _reviewRepository;
         private readonly ISePayRepository _sePayRepository;
 
         public StatisticsService(
@@ -27,7 +26,6 @@ namespace MathBridgeSystem.Application.Services
             IWalletTransactionRepository walletTransactionRepository,
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
-            IReviewRepository reviewRepository,
             ISePayRepository sePayRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -36,7 +34,6 @@ namespace MathBridgeSystem.Application.Services
             _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
             _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
             _packageRepository = packageRepository ?? throw new ArgumentNullException(nameof(packageRepository));
-            _reviewRepository = reviewRepository ?? throw new ArgumentNullException(nameof(reviewRepository));
             _sePayRepository = sePayRepository ?? throw new ArgumentNullException(nameof(sePayRepository));
         }
 
@@ -236,35 +233,35 @@ namespace MathBridgeSystem.Application.Services
         public async Task<TutorStatisticsDto> GetTutorStatisticsAsync()
         {
             var tutors = await _userRepository.GetTutorsAsync();
-            var allreviews = await _reviewRepository.GetAllAsync();
-            var tutorReview = allreviews.Where(f => tutors.Any(t => t.UserId == f.UserId)).ToList();
+            var allFinalFeedbacks = await _finalFeedbackRepository.GetAllAsync();
+            var tutorFinalFeedbacks = allFinalFeedbacks.Where(f => tutors.Any(t => t.UserId == f.UserId)).ToList();
 
-            var tutorsWithReview = tutorReview.Select(f => f.UserId).Distinct().Count();
-            var tutorsWithoutReview = tutors.Count - tutorsWithReview;
+            var tutorsWithFeedback = tutorFinalFeedbacks.Select(f => f.UserId).Distinct().Count();
+            var tutorsWithoutFeedback = tutors.Count - tutorsWithFeedback;
 
-            var averageRating = tutorReview.Count > 0
-                ? Math.Round((decimal)tutorReview.Average(f => f.Rating), 2)
+            var averageRating = tutorFinalFeedbacks.Count > 0
+                ? Math.Round((decimal)tutorFinalFeedbacks.Average(f => f.OverallSatisfactionRating), 2)
                 : 0;
 
             return new TutorStatisticsDto
             {
                 TotalTutors = tutors.Count,
                 AverageRating = averageRating,
-                TutorsWithFeedback = tutorsWithReview,
-                TutorsWithoutFeedback = tutorsWithoutReview
+                TutorsWithFeedback = tutorsWithFeedback,
+                TutorsWithoutFeedback = tutorsWithoutFeedback
             };
         }
 
         public async Task<TopRatedTutorsListDto> GetTopRatedTutorsAsync(int limit = 10)
         {
             var tutors = await _userRepository.GetTutorsAsync();
-            var allReviews = await _reviewRepository.GetAllAsync();
+            var allFinalFeedbacks = await _finalFeedbackRepository.GetAllAsync();
 
             var tutorRatings = tutors
                 .Select(t => new
                 {
                     Tutor = t,
-                    Feedbacks = allReviews.Where(f => f.UserId == t.UserId).ToList()
+                    Feedbacks = allFinalFeedbacks.Where(f => f.UserId == t.UserId).ToList()
                 })
                 .Where(tr => tr.Feedbacks.Count > 0)
                 .Select(tr => new TopRatedTutorDto
@@ -272,7 +269,7 @@ namespace MathBridgeSystem.Application.Services
                     TutorId = tr.Tutor.UserId,
                     TutorName = tr.Tutor.FullName,
                     Email = tr.Tutor.Email,
-                    AverageRating = Math.Round((decimal)tr.Feedbacks.Average(f => f.Rating), 2),
+                    AverageRating = Math.Round((decimal)tr.Feedbacks.Average(f => f.OverallSatisfactionRating), 2),
                     FeedbackCount = tr.Feedbacks.Count
                 })
                 .OrderByDescending(t => t.AverageRating)

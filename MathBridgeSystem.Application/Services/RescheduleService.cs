@@ -193,8 +193,8 @@ namespace MathBridgeSystem.Application.Services
 
                 if (isAvailable && contract.SubstituteTutor1 != null)
                 {
-                    var averageRating = contract.SubstituteTutor1.Reviews.Any() 
-                        ? contract.SubstituteTutor1.Reviews.Average(r => r.Rating) 
+                    var averageRating = contract.SubstituteTutor1.FinalFeedbacks.Any()
+                        ? contract.SubstituteTutor1.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
                         : (double?)null;
 
                     availableTutors.Add(new SubTutorInfoDto
@@ -221,8 +221,8 @@ namespace MathBridgeSystem.Application.Services
 
                 if (isAvailable && contract.SubstituteTutor2 != null)
                 {
-                    var averageRating = contract.SubstituteTutor2.Reviews.Any() 
-                        ? contract.SubstituteTutor2.Reviews.Average(r => r.Rating) 
+                    var averageRating = contract.SubstituteTutor2.FinalFeedbacks.Any()
+                        ? contract.SubstituteTutor2.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
                         : (double?)null;
 
                     availableTutors.Add(new SubTutorInfoDto

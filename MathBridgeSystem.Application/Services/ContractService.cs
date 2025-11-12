@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Contract;
 using MathBridgeSystem.Application.Interfaces;
@@ -468,13 +468,13 @@ namespace MathBridgeSystem.Application.Services
                         FullName = tutor.FullName,
                         Email = tutor.Email,
                         PhoneNumber = tutor.PhoneNumber,
-                        AverageRating = tutor.Reviews != null && tutor.Reviews.Count > 0
-                            ? (decimal)tutor.Reviews.Average(r => r.Rating)
+                        AverageRating = tutor.FinalFeedbacks != null && tutor.FinalFeedbacks.Count > 0
+                            ? (decimal)tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
                             : 0m,
-                        ReviewCount = tutor.Reviews != null ? tutor.Reviews.Count : 0
+                        FeedbackCount = tutor.FinalFeedbacks != null ? tutor.FinalFeedbacks.Count : 0
                     })
                     .OrderByDescending(t => t.AverageRating)
-                    .ThenByDescending(t => t.ReviewCount)
+                    .ThenByDescending(t => t.FeedbackCount)
                     .ToList();
 
                 return result;

@@ -190,7 +190,6 @@ namespace MathBridgeSystem.Application.Services
                 HaveHomework = request.HaveHomework,
                 CreatedDate = DateOnly.FromDateTime(DateTime.Now),
                 UnitId = request.UnitId,
-                TestId = request.TestId
             };
 
             var createdReport = await _dailyReportRepository.AddAsync(dailyReport);
@@ -214,9 +213,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.UnitId.HasValue)
                 dailyReport.UnitId = request.UnitId.Value;
-
-            if (request.TestId.HasValue)
-                dailyReport.TestId = request.TestId.Value;
+            
 
             await _dailyReportRepository.UpdateAsync(dailyReport);
         }
@@ -239,7 +236,6 @@ namespace MathBridgeSystem.Application.Services
                 HaveHomework = dailyReport.HaveHomework,
                 CreatedDate = dailyReport.CreatedDate,
                 UnitId = dailyReport.UnitId,
-                TestId = dailyReport.TestId
             };
         }
     }

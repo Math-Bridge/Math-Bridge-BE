@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Domain.Entities;
+﻿﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -111,7 +111,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
                 // Get all tutors (Users with Tutor role) - RoleId 3 is typically tutor
                 var tutors = await _context.Users
-                    .Include(u => u.Reviews)
+                    .Include(u => u.FinalFeedbacks)
                     .Include(u => u.Role)
                     .Include(u => u.ContractMainTutors)
                     .Include(u => u.ContractSubstituteTutor1s)

@@ -104,7 +104,6 @@ namespace MathBridgeSystem.Tests.Services
                 
                 StartTime = new TimeOnly(17, 30),
                 EndTime = new TimeOnly(19, 0),
-                RequestedTutorId = requestedTutorId
             };
 
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
@@ -194,7 +193,6 @@ namespace MathBridgeSystem.Tests.Services
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
                 StartTime = new TimeOnly(19, 0),
                 EndTime = new TimeOnly(20, 30),
-                RequestedTutorId = requestedTutorId
             };
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
             _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);

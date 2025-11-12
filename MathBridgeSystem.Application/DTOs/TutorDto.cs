@@ -28,8 +28,8 @@ namespace MathBridgeSystem.Application.DTOs
         // TutorSchedules
         public List<TutorScheduleDetailDto> TutorSchedules { get; set; }
 
-        // Reviews
-        public List<ReviewDetailDto> Reviews { get; set; }
+        // Final Feedbacks
+        public List<FinalFeedbackDetailDto> FinalFeedbacks { get; set; }
     }
 
     public class TutorVerificationDto
@@ -81,16 +81,18 @@ namespace MathBridgeSystem.Application.DTOs
         public DateTime CreatedDate { get; set; }
     }
 
-    public class ReviewDetailDto
+    public class FinalFeedbackDetailDto
     {
-        public Guid ReviewId { get; set; }
+        public Guid FeedbackId { get; set; }
         public Guid UserId { get; set; }
-        public int Rating { get; set; }
-        public string ReviewTitle { get; set; }
-        public string ReviewText { get; set; }
-        public string ReviewStatus { get; set; }
+        public Guid ContractId { get; set; }
+        public string FeedbackProviderType { get; set; }
+        public string? FeedbackText { get; set; }
+        public int OverallSatisfactionRating { get; set; }
+        public bool WouldRecommend { get; set; }
+        public string FeedbackStatus { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string ReviewerName { get; set; }
+        public string ProviderName { get; set; }
     }
 
     public class UpdateTutorRequest

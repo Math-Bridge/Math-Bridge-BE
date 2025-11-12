@@ -28,7 +28,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
         public string? Notes { get; set; }
 
         [Required]
-        public Guid? ContractId { get; set; }
+        public Guid ContractId { get; set; }
     }
 
     public class UpdateTestResultRequest
