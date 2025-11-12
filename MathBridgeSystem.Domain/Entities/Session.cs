@@ -43,6 +43,8 @@ public partial class Session
 
     public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
 
+    public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+
     public virtual User Tutor { get; set; } = null!;
 
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();

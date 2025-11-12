@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Domain.Entities;
+﻿﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +30,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                         .ThenInclude(c => c.Package)
                 .Include(r => r.Booking)
                     .ThenInclude(s => s.Tutor)
+                .Include(r => r.Contract)
+                    .ThenInclude(c => c.SubstituteTutor1)
+                        .ThenInclude(t => t.Reviews)
+                .Include(r => r.Contract)
+                    .ThenInclude(c => c.SubstituteTutor2)
+                        .ThenInclude(t => t.Reviews)
                 .Include(r => r.Parent)
                 .Include(r => r.RequestedTutor)
                 .FirstOrDefaultAsync(r => r.RequestId == id);

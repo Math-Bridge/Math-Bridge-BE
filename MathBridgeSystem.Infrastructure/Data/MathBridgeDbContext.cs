@@ -18,8 +18,6 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Center> Centers { get; set; }
 
-    public virtual DbSet<ChatMessage> ChatMessages { get; set; }
-
     public virtual DbSet<Child> Children { get; set; }
 
     public virtual DbSet<Contract> Contracts { get; set; }
@@ -32,17 +30,9 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
-    public virtual DbSet<NotificationPreference> NotificationPreferences { get; set; }
-
-    public virtual DbSet<PaymentGatewayConfig> PaymentGatewayConfigs { get; set; }
-
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
 
-    public virtual DbSet<PayosTransaction> PayosTransactions { get; set; }
-
     public virtual DbSet<RescheduleRequest> RescheduleRequests { get; set; }
-
-    public virtual DbSet<Review> Reviews { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -126,47 +116,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
-        });
-
-        modelBuilder.Entity<ChatMessage>(entity =>
-        {
-            entity.HasKey(e => e.MessageId).HasName("PK__chat_mes__0BBF6EE69D14EC58");
-
-            entity.ToTable("chat_messages");
-
-            entity.HasIndex(e => e.RecipientUserId, "IX_chat_messages_recipient_user_id");
-
-            entity.HasIndex(e => e.SentDate, "IX_chat_messages_sent_date");
-
-            entity.HasIndex(e => e.UserId, "IX_chat_messages_user_id");
-
-            entity.Property(e => e.MessageId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("message_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.MessageText).HasColumnName("message_text");
-            entity.Property(e => e.MessageType)
-                .HasMaxLength(20)
-                .HasDefaultValue("text")
-                .HasColumnName("message_type");
-            entity.Property(e => e.RecipientUserId).HasColumnName("recipient_user_id");
-            entity.Property(e => e.SentDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("sent_date");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.RecipientUser).WithMany(p => p.ChatMessageRecipientUsers)
-                .HasForeignKey(d => d.RecipientUserId)
-                .HasConstraintName("FK_chat_messages_recipient_user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ChatMessageUsers)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_chat_messages_user_id");
         });
 
         modelBuilder.Entity<Child>(entity =>
@@ -373,7 +322,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.HaveHomework).HasColumnName("have_homework");
             entity.Property(e => e.Notes).HasColumnName("notes");
             entity.Property(e => e.OnTrack).HasColumnName("on_track");
-            entity.Property(e => e.TestId).HasColumnName("test_id");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
             entity.Property(e => e.UnitId).HasColumnName("unit_id");
 
@@ -386,10 +334,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.ChildId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("daily_reports___fk_child");
-
-            entity.HasOne(d => d.Test).WithMany(p => p.DailyReports)
-                .HasForeignKey(d => d.TestId)
-                .HasConstraintName("daily_reports___fk_test");
 
             entity.HasOne(d => d.Tutor).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.TutorId)
@@ -493,70 +437,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("FK_Notifications_Users");
         });
 
-        modelBuilder.Entity<NotificationPreference>(entity =>
-        {
-            entity.HasKey(e => e.PreferenceId).HasName("PK__notifica__E228496F2755A4B2");
-
-            entity.ToTable("notification_preferences");
-
-            entity.HasIndex(e => e.UserId, "IX_NotificationPreferences_UserId");
-
-            entity.HasIndex(e => e.UserId, "UQ__notifica__1788CC4D3B12E62B").IsUnique();
-
-            entity.Property(e => e.PreferenceId).ValueGeneratedNever();
-            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getutcdate())");
-            entity.Property(e => e.ReceiveContractUpdates).HasDefaultValue(true);
-            entity.Property(e => e.ReceiveEmailNotifications).HasDefaultValue(true);
-            entity.Property(e => e.ReceivePaymentNotifications).HasDefaultValue(true);
-            entity.Property(e => e.ReceiveSessionReminders).HasDefaultValue(true);
-            entity.Property(e => e.ReceiveSmsnotifications).HasColumnName("ReceiveSMSNotifications");
-            entity.Property(e => e.ReceiveWebNotifications).HasDefaultValue(true);
-
-            entity.HasOne(d => d.User).WithOne(p => p.NotificationPreference)
-                .HasForeignKey<NotificationPreference>(d => d.UserId)
-                .HasConstraintName("FK_NotificationPreferences_Users");
-        });
-
-        modelBuilder.Entity<PaymentGatewayConfig>(entity =>
-        {
-            entity.HasKey(e => e.GatewayId).HasName("PK__payment___0AF5B00B1B274D31");
-
-            entity.ToTable("payment_gateway_config");
-
-            entity.HasIndex(e => e.GatewayName, "UQ_PaymentGatewayConfig_GatewayName").IsUnique();
-
-            entity.Property(e => e.GatewayId).HasColumnName("gateway_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.DisplayName)
-                .HasMaxLength(100)
-                .HasColumnName("display_name");
-            entity.Property(e => e.DisplayOrder).HasColumnName("display_order");
-            entity.Property(e => e.GatewayName)
-                .HasMaxLength(50)
-                .HasColumnName("gateway_name");
-            entity.Property(e => e.IconUrl).HasColumnName("icon_url");
-            entity.Property(e => e.IsEnabled)
-                .HasDefaultValue(true)
-                .HasColumnName("is_enabled");
-            entity.Property(e => e.MaxAmount)
-                .HasDefaultValue(50000000m)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("max_amount");
-            entity.Property(e => e.MinAmount)
-                .HasDefaultValue(10000m)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("min_amount");
-            entity.Property(e => e.UpdatedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-        });
-
         modelBuilder.Entity<PaymentPackage>(entity =>
         {
             entity.HasKey(e => e.PackageId).HasName("PK__payment___63846AE8C179A8BE");
@@ -598,61 +478,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.CurriculumId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_payment_packages_curriculum");
-        });
-
-        modelBuilder.Entity<PayosTransaction>(entity =>
-        {
-            entity.HasKey(e => e.PayosTransactionId).HasName("PK__payos_tr__11A5DD8D5AA3D100");
-
-            entity.ToTable("payos_transactions");
-
-            entity.HasIndex(e => e.CreatedDate, "IX_PayOSTransactions_CreatedDate").IsDescending();
-
-            entity.HasIndex(e => e.OrderCode, "IX_PayOSTransactions_OrderCode").IsUnique();
-
-            entity.HasIndex(e => e.PaymentStatus, "IX_PayOSTransactions_PaymentStatus");
-
-            entity.HasIndex(e => e.WalletTransactionId, "IX_PayOSTransactions_WalletTransactionId");
-
-            entity.Property(e => e.PayosTransactionId)
-                .HasDefaultValueSql("(newsequentialid())")
-                .HasColumnName("payos_transaction_id");
-            entity.Property(e => e.Amount)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("amount");
-            entity.Property(e => e.CancelUrl).HasColumnName("cancel_url");
-            entity.Property(e => e.CheckoutUrl).HasColumnName("checkout_url");
-            entity.Property(e => e.ContractId).HasColumnName("contract_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.OrderCode).HasColumnName("order_code");
-            entity.Property(e => e.PaidAt)
-                .HasColumnType("datetime")
-                .HasColumnName("paid_at");
-            entity.Property(e => e.PaymentLinkId)
-                .HasMaxLength(255)
-                .HasColumnName("payment_link_id");
-            entity.Property(e => e.PaymentStatus)
-                .HasMaxLength(50)
-                .HasColumnName("payment_status");
-            entity.Property(e => e.ReturnUrl).HasColumnName("return_url");
-            entity.Property(e => e.UpdatedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-            entity.Property(e => e.WalletTransactionId).HasColumnName("wallet_transaction_id");
-
-            entity.HasOne(d => d.Contract).WithMany(p => p.PayosTransactions)
-                .HasForeignKey(d => d.ContractId)
-                .HasConstraintName("contract_link");
-
-            entity.HasOne(d => d.WalletTransaction).WithMany(p => p.PayosTransactions)
-                .HasForeignKey(d => d.WalletTransactionId)
-                .HasConstraintName("FK_PayOSTransactions_WalletTransactions");
         });
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
@@ -718,42 +543,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.HasOne(d => d.Staff).WithMany(p => p.RescheduleRequestStaffs)
                 .HasForeignKey(d => d.StaffId)
                 .HasConstraintName("fk_reschedule_requests_staff");
-        });
-
-        modelBuilder.Entity<Review>(entity =>
-        {
-            entity.HasKey(e => e.ReviewId).HasName("PK__reviews__60883D90D1F42160");
-
-            entity.ToTable("reviews");
-
-            entity.HasIndex(e => e.Rating, "IX_reviews_rating");
-
-            entity.HasIndex(e => e.UserId, "IX_reviews_user_id");
-
-            entity.Property(e => e.ReviewId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("review_id");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Rating).HasColumnName("rating");
-            entity.Property(e => e.ReviewStatus)
-                .HasMaxLength(20)
-                .HasDefaultValue("approved")
-                .HasColumnName("review_status");
-            entity.Property(e => e.ReviewText)
-                .HasMaxLength(2000)
-                .HasColumnName("review_text");
-            entity.Property(e => e.ReviewTitle)
-                .HasMaxLength(200)
-                .HasColumnName("review_title");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Reviews)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("reviews_users_user_id_fk");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -1012,6 +801,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.ResultId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("result_id");
+            entity.Property(e => e.BookingId).HasColumnName("booking_id");
             entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
@@ -1030,8 +820,13 @@ public partial class MathBridgeDbContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
 
+            entity.HasOne(d => d.Booking).WithMany(p => p.TestResults)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("test_results___fk_session");
+
             entity.HasOne(d => d.Contract).WithMany(p => p.TestResults)
                 .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("test_results_contracts_contract_id_fk");
         });
 

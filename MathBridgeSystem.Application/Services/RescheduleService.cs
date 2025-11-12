@@ -164,6 +164,86 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId)
+        {
+            // Get the reschedule request with contract details
+            var rescheduleRequest = await _rescheduleRepo.GetByIdWithDetailsAsync(rescheduleRequestId);
+            if (rescheduleRequest == null)
+                throw new KeyNotFoundException("Reschedule request not found.");
+
+            var contract = rescheduleRequest.Contract;
+            if (contract == null)
+                throw new KeyNotFoundException("Contract not found.");
+
+            var availableTutors = new List<SubTutorInfoDto>();
+
+            // Convert TimeOnly to DateTime for comparison
+            var startDateTime = rescheduleRequest.RequestedDate.ToDateTime(rescheduleRequest.StartTime);
+            var endDateTime = rescheduleRequest.RequestedDate.ToDateTime(rescheduleRequest.EndTime);
+
+            // Check SubstituteTutor1
+            if (contract.SubstituteTutor1Id.HasValue)
+            {
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
+                    contract.SubstituteTutor1Id.Value,
+                    rescheduleRequest.RequestedDate,
+                    startDateTime,
+                    endDateTime
+                );
+
+                if (isAvailable && contract.SubstituteTutor1 != null)
+                {
+                    var averageRating = contract.SubstituteTutor1.Reviews.Any() 
+                        ? contract.SubstituteTutor1.Reviews.Average(r => r.Rating) 
+                        : (double?)null;
+
+                    availableTutors.Add(new SubTutorInfoDto
+                    {
+                        TutorId = contract.SubstituteTutor1.UserId,
+                        FullName = contract.SubstituteTutor1.FullName,
+                        PhoneNumber = contract.SubstituteTutor1.PhoneNumber,
+                        Email = contract.SubstituteTutor1.Email,
+                        Rating = averageRating,
+                        IsAvailable = true
+                    });
+                }
+            }
+
+            // Check SubstituteTutor2
+            if (contract.SubstituteTutor2Id.HasValue)
+            {
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
+                    contract.SubstituteTutor2Id.Value,
+                    rescheduleRequest.RequestedDate,
+                    startDateTime,
+                    endDateTime
+                );
+
+                if (isAvailable && contract.SubstituteTutor2 != null)
+                {
+                    var averageRating = contract.SubstituteTutor2.Reviews.Any() 
+                        ? contract.SubstituteTutor2.Reviews.Average(r => r.Rating) 
+                        : (double?)null;
+
+                    availableTutors.Add(new SubTutorInfoDto
+                    {
+                        TutorId = contract.SubstituteTutor2.UserId,
+                        FullName = contract.SubstituteTutor2.FullName,
+                        PhoneNumber = contract.SubstituteTutor2.PhoneNumber,
+                        Email = contract.SubstituteTutor2.Email,
+                        Rating = averageRating,
+                        IsAvailable = true
+                    });
+                }
+            }
+
+            return new AvailableSubTutorsDto
+            {
+                AvailableTutors = availableTutors,
+                TotalAvailable = availableTutors.Count
+            };
+        }
+
         private bool IsValidStartTime(TimeOnly startTime)
         {
             foreach (var validTime in ValidStartTimes)

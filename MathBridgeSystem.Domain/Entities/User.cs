@@ -57,10 +57,6 @@ public partial class User
 
     public DateTime? LocationUpdatedDate { get; set; }
 
-    public virtual ICollection<ChatMessage> ChatMessageRecipientUsers { get; set; } = new List<ChatMessage>();
-
-    public virtual ICollection<ChatMessage> ChatMessageUsers { get; set; } = new List<ChatMessage>();
-
     public virtual ICollection<Child> Children { get; set; } = new List<Child>();
 
     public virtual ICollection<Contract> ContractMainTutors { get; set; } = new List<Contract>();
@@ -75,8 +71,6 @@ public partial class User
 
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
-    public virtual NotificationPreference? NotificationPreference { get; set; }
-
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequestParents { get; set; } = new List<RescheduleRequest>();
@@ -84,8 +78,6 @@ public partial class User
     public virtual ICollection<RescheduleRequest> RescheduleRequestRequestedTutors { get; set; } = new List<RescheduleRequest>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequestStaffs { get; set; } = new List<RescheduleRequest>();
-
-    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public virtual Role Role { get; set; } = null!;
 

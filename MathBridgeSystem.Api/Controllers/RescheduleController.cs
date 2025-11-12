@@ -55,6 +55,25 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
+        [HttpGet("{rescheduleRequestId}/available-sub-tutors")]
+        [Authorize]
+        public async Task<IActionResult> GetAvailableSubTutors(Guid rescheduleRequestId)
+        {
+            try
+            {
+                var result = await _rescheduleService.GetAvailableSubTutorsAsync(rescheduleRequestId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
         [HttpPut("{id}/reject")]
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> Reject(Guid id, [FromBody] RejectRequestDto dto)
