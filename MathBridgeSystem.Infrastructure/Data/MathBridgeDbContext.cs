@@ -371,9 +371,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.ChildId).HasColumnName("child_id");
             entity.Property(e => e.CreatedDate).HasColumnName("created_date");
             entity.Property(e => e.HaveHomework).HasColumnName("have_homework");
-            entity.Property(e => e.Notes)
-                .HasMaxLength(1)
-                .HasColumnName("notes");
+            entity.Property(e => e.Notes).HasColumnName("notes");
             entity.Property(e => e.OnTrack).HasColumnName("on_track");
             entity.Property(e => e.TestId).HasColumnName("test_id");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
@@ -582,6 +580,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Grade)
                 .HasMaxLength(50)
                 .HasColumnName("grade");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.MaxReschedule).HasColumnName("max_reschedule");
             entity.Property(e => e.PackageName)
                 .HasMaxLength(100)
