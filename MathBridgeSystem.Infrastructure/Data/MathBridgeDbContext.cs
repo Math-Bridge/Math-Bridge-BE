@@ -26,6 +26,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Curriculum> Curricula { get; set; }
 
+    public virtual DbSet<DailyReport> DailyReports { get; set; }
+
     public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
@@ -354,6 +356,52 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
+        });
+
+        modelBuilder.Entity<DailyReport>(entity =>
+        {
+            entity.HasKey(e => e.ReportId).HasName("daily_reports_pk");
+
+            entity.ToTable("daily_reports");
+
+            entity.Property(e => e.ReportId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("report_id");
+            entity.Property(e => e.BookingId).HasColumnName("booking_id");
+            entity.Property(e => e.ChildId).HasColumnName("child_id");
+            entity.Property(e => e.CreatedDate).HasColumnName("created_date");
+            entity.Property(e => e.HaveHomework).HasColumnName("have_homework");
+            entity.Property(e => e.Notes)
+                .HasMaxLength(1)
+                .HasColumnName("notes");
+            entity.Property(e => e.OnTrack).HasColumnName("on_track");
+            entity.Property(e => e.TestId).HasColumnName("test_id");
+            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UnitId).HasColumnName("unit_id");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("daily_reports___fk_bookingid");
+
+            entity.HasOne(d => d.Child).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.ChildId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("daily_reports___fk_child");
+
+            entity.HasOne(d => d.Test).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.TestId)
+                .HasConstraintName("daily_reports___fk_test");
+
+            entity.HasOne(d => d.Tutor).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.TutorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("daily_reports___fk_tutor");
+
+            entity.HasOne(d => d.Unit).WithMany(p => p.DailyReports)
+                .HasForeignKey(d => d.UnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("daily_reports___fk_unit");
         });
 
         modelBuilder.Entity<FinalFeedback>(entity =>
@@ -963,73 +1011,30 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.ToTable("test_results");
 
-            entity.HasIndex(e => e.ChildId, "IX_test_results_child_id");
-
-            entity.HasIndex(e => e.CurriculumId, "IX_test_results_curriculum");
-
-            entity.HasIndex(e => e.Percentage, "IX_test_results_percentage");
-
-            entity.HasIndex(e => e.TestDate, "IX_test_results_test_date");
-
-            entity.HasIndex(e => e.TutorId, "IX_test_results_tutor_id");
-
             entity.Property(e => e.ResultId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("result_id");
-            entity.Property(e => e.AreasForImprovement)
-                .HasMaxLength(500)
-                .HasColumnName("areas_for_improvement");
-            entity.Property(e => e.ChildId).HasColumnName("child_id");
-            entity.Property(e => e.CorrectAnswers).HasColumnName("correct_answers");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.CurriculumId).HasColumnName("curriculum_id");
-            entity.Property(e => e.DurationMinutes).HasColumnName("duration_minutes");
-            entity.Property(e => e.MaxScore)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("max_score");
             entity.Property(e => e.Notes)
                 .HasMaxLength(1000)
                 .HasColumnName("notes");
-            entity.Property(e => e.NumberOfQuestions).HasColumnName("number_of_questions");
-            entity.Property(e => e.Percentage)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("percentage");
             entity.Property(e => e.Score)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("score");
-            entity.Property(e => e.TestDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("test_date");
-            entity.Property(e => e.TestName)
-                .HasMaxLength(200)
-                .HasColumnName("test_name");
             entity.Property(e => e.TestType)
                 .HasMaxLength(50)
                 .HasColumnName("test_type");
-            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
             entity.Property(e => e.UpdatedDate)
-                .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("updated_date");
 
-            entity.HasOne(d => d.Child).WithMany(p => p.TestResults)
-                .HasForeignKey(d => d.ChildId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_test_results_child_id");
-
-            entity.HasOne(d => d.Curriculum).WithMany(p => p.TestResults)
-                .HasForeignKey(d => d.CurriculumId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_test_results_curriculum");
-
-            entity.HasOne(d => d.Tutor).WithMany(p => p.TestResults)
-                .HasForeignKey(d => d.TutorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_test_results_tutor_id");
+            entity.HasOne(d => d.Contract).WithMany(p => p.TestResults)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("test_results_contracts_contract_id_fk");
         });
 
         modelBuilder.Entity<TutorCenter>(entity =>

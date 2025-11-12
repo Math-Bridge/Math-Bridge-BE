@@ -31,9 +31,9 @@ public partial class Child
 
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+
     public virtual User Parent { get; set; } = null!;
 
     public virtual School School { get; set; } = null!;
-
-    public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 }

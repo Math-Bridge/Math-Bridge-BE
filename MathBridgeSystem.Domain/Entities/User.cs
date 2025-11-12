@@ -71,6 +71,8 @@ public partial class User
 
     public virtual ICollection<Contract> ContractSubstituteTutor2s { get; set; } = new List<Contract>();
 
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+
     public virtual ICollection<FinalFeedback> FinalFeedbacks { get; set; } = new List<FinalFeedback>();
 
     public virtual NotificationPreference? NotificationPreference { get; set; }
@@ -92,8 +94,6 @@ public partial class User
     public virtual ICollection<SupportRequest> SupportRequestAssignedToUsers { get; set; } = new List<SupportRequest>();
 
     public virtual ICollection<SupportRequest> SupportRequestUsers { get; set; } = new List<SupportRequest>();
-
-    public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
     public virtual ICollection<TutorCenter> TutorCenters { get; set; } = new List<TutorCenter>();
 

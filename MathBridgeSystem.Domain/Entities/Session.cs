@@ -37,6 +37,8 @@ public partial class Session
 
     public virtual Contract Contract { get; set; } = null!;
 
+    public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
+
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();

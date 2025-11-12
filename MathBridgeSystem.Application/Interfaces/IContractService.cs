@@ -1,4 +1,5 @@
 ﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,5 +16,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<bool> AssignTutorsAsync(Guid contractId, AssignTutorToContractRequest request, Guid staffId);
         Task<bool> CompleteContractAsync(Guid contractId, Guid staffId);
         Task<List<ContractDto>> GetContractsByParentPhoneAsync(string phoneNumber);
+        Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(Guid contractId);
     }
 }

@@ -100,4 +100,11 @@ public class SePayRepository : ISePayRepository
             .OrderByDescending(s => s.TransactionDate)
             .ToListAsync();
     }
+    public async Task<IEnumerable<SepayTransaction>> GetAllAsync()
+    {
+        return await _context.SepayTransactions
+            .Include(s => s.WalletTransaction)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+    }
 }
