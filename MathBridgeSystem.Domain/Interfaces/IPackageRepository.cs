@@ -12,5 +12,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task UpdateAsync(PaymentPackage package);
         Task DeleteAsync(Guid id);
         Task<bool> IsPackageInUseAsync(Guid packageId);
+        Task<PaymentPackage> GetPackageByCurriculumIdAsync(Guid curriculumId);
     }
 }

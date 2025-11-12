@@ -68,6 +68,20 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<DailyReport> GetOldestByChildIdAsync(Guid childId)
+        {
+            return await _context.DailyReports
+                .Include(d => d.Child)
+                .Include(d => d.Tutor)
+                .Include(d => d.Booking)
+                .Include(d => d.Unit)
+                .ThenInclude(u => u.Curriculum)
+                .Include(d => d.Test)
+                .Where(d => d.ChildId == childId)
+                .OrderBy(d => d.CreatedDate)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<DailyReport> AddAsync(DailyReport dailyReport)
         {
             _context.DailyReports.Add(dailyReport);

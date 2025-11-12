@@ -1,4 +1,5 @@
 using MathBridgeSystem.Application.DTOs.DailyReport;
+using MathBridgeSystem.Application.DTOs.Progress;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByTutorIdAsync(Guid tutorId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByChildIdAsync(Guid childId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByBookingIdAsync(Guid bookingId);
+        Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid childId);
         Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId);
         Task UpdateDailyReportAsync(Guid reportId, UpdateDailyReportRequest request);
         Task<bool> DeleteDailyReportAsync(Guid reportId);
     }
 }
-
