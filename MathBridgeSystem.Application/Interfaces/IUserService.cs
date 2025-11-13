@@ -1,4 +1,4 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿﻿using MathBridgeSystem.Application.DTOs;
 
 namespace MathBridgeSystem.Application.Interfaces
 {
@@ -11,5 +11,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<Guid> UpdateUserStatusAsync(Guid id, UpdateStatusRequest request, string currentUserRole);
 
         Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid id, Guid currentUserId, string currentUserRole);
+        
+        Task<IEnumerable<UserResponse>> GetAllUsersAsync(string currentUserRole);
     }
 }

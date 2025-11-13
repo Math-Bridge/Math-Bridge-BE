@@ -1,8 +1,9 @@
-﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,7 +41,6 @@ namespace MathBridgeSystem.Application.Services
                 Status = user.Status,
                 FormattedAddress = user.FormattedAddress,
                 placeId = user.GooglePlaceId
-
             };
         }
 
@@ -143,7 +143,6 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid id, Guid currentUserId, string currentUserRole)
         {
-
             // Authorization check: only the parent themselves or admin can deduct from wallet
             if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != parentId))
                 throw new Exception("Unauthorized access");
@@ -200,6 +199,29 @@ namespace MathBridgeSystem.Application.Services
                 TransactionDate = transaction.TransactionDate,
                 Message = "Wallet deduction successful"
             };
+        }
+
+        public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(string currentUserRole)
+        {
+            // Only admins can get all users
+            if (string.IsNullOrEmpty(currentUserRole) || currentUserRole != "admin")
+                throw new Exception("Only admins can view all users");
+
+            var users = await _userRepository.GetAllAsync();
+
+            return users.Select(user => new UserResponse
+            {
+                UserId = user.UserId,
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Gender = user.Gender,
+                WalletBalance = user.WalletBalance,
+                RoleId = user.RoleId,
+                Status = user.Status,
+                FormattedAddress = user.FormattedAddress,
+                placeId = user.GooglePlaceId
+            });
         }
     }
 }
