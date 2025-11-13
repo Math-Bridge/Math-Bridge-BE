@@ -271,7 +271,6 @@ namespace MathBridgeSystem.Application.Services
         {
             var contract = await _contractRepository.GetByIdWithPackageAsync(contractId);
             if (contract == null) throw new KeyNotFoundException("Contract not found.");
-            if (contract.MainTutorId.HasValue) throw new InvalidOperationException("Main tutor already assigned.");
             if (contract.Status == "cancelled") throw new InvalidOperationException("Cannot assign tutors to cancelled contract.");
 
             if (request.MainTutorId == Guid.Empty)
