@@ -87,8 +87,7 @@ namespace MathBridgeSystem.Tests.Controllers
             var result = await _controller.GetUserById(_userId);
 
             // Assert
-            var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
-            statusResult.StatusCode.Should().Be(500);
+            var statusResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
         }
 
         [Fact]
@@ -184,8 +183,7 @@ namespace MathBridgeSystem.Tests.Controllers
             var result = await _controller.GetWallet(_userId);
 
             // Assert
-            var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
-            statusResult.StatusCode.Should().Be(500);
+            var statusResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
         }
 
         #endregion

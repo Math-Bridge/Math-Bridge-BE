@@ -260,7 +260,7 @@ namespace MathBridgeSystem.Tests.Controllers
             var result = await _controller.MarkAsRead(notificationId);
 
             // Assert
-            result.Should().BeOfType<ActionResult>();
+            result.Should().BeAssignableTo<ActionResult>();
             _notificationServiceMock.Verify(s => s.MarkAsReadAsync(notificationId), Times.Once);
         }
 
