@@ -1,9 +1,7 @@
-﻿﻿using MathBridgeSystem.Domain.Entities;
+﻿﻿﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Infrastructure.Repositories
 {
@@ -38,7 +36,33 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                         .ThenInclude(t => t.FinalFeedbacks)
                 .Include(r => r.Parent)
                 .Include(r => r.RequestedTutor)
+                .Include(r => r.Staff)
                 .FirstOrDefaultAsync(r => r.RequestId == id);
+        }
+
+        public async Task<IEnumerable<RescheduleRequest>> GetAllAsync()
+        {
+            return await _context.RescheduleRequests
+                .Include(r => r.Booking)
+                    .ThenInclude(s => s.Tutor)
+                .Include(r => r.Parent)
+                .Include(r => r.RequestedTutor)
+                .Include(r => r.Staff)
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<RescheduleRequest>> GetByParentIdAsync(Guid parentId)
+        {
+            return await _context.RescheduleRequests
+                .Include(r => r.Booking)
+                    .ThenInclude(s => s.Tutor)
+                .Include(r => r.Parent)
+                .Include(r => r.RequestedTutor)
+                .Include(r => r.Staff)
+                .Where(r => r.ParentId == parentId)
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
         }
 
         public async Task UpdateAsync(RescheduleRequest entity)

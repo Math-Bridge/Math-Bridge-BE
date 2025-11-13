@@ -32,7 +32,12 @@ namespace MathBridgeSystem.Application.Services
             if (parent == null || parent.RoleId != 3) // Assuming 3 is 'parent'
                 throw new Exception("Invalid parent");
 
-                        // Validate center if provided
+            // Check if child with same parent and name already exists
+            var existingChildren = await _childRepository.GetByParentIdAsync(parentId);
+            if (existingChildren.Any(c => c.FullName.Equals(request.FullName, StringComparison.OrdinalIgnoreCase) && c.Status != "deleted"))
+                throw new Exception("A child with the same name already exists for this parent");
+
+            // Validate center if provided
             if (request.CenterId.HasValue)
             {
                 var center = await _centerRepository.GetByIdAsync(request.CenterId.Value);
@@ -42,7 +47,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (!new[] { "grade 9", "grade 10", "grade 11", "grade 12" }.Contains(request.Grade))
                 throw new Exception("Invalid grade");
-
+            
             var child = new Child
             {
                 ChildId = Guid.NewGuid(),

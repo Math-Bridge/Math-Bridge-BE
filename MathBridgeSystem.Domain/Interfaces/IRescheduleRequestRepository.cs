@@ -1,5 +1,6 @@
-﻿using MathBridgeSystem.Domain.Entities;
+﻿﻿using MathBridgeSystem.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Domain.Interfaces
@@ -8,6 +9,8 @@ namespace MathBridgeSystem.Domain.Interfaces
     {
         Task AddAsync(RescheduleRequest entity);
         Task<RescheduleRequest?> GetByIdWithDetailsAsync(Guid id);
+        Task<IEnumerable<RescheduleRequest>> GetAllAsync();
+        Task<IEnumerable<RescheduleRequest>> GetByParentIdAsync(Guid parentId);
         Task UpdateAsync(RescheduleRequest entity);
         Task<bool> HasPendingRequestForBookingAsync(Guid bookingId);
     }

@@ -12,6 +12,10 @@ namespace MathBridgeSystem.Application.DTOs
         public decimal Price { get; set; }
         public Guid? MainTutorId { get; set; }
         public string? MainTutorName { get; set; } = null!;
+        public Guid? substitute_tutor1_id { get; set; }
+        public string? substitute_tutor1_name { get; set; }
+        public Guid? substitute_tutor2_id { get; set; }
+        public string? substitute_tutor2_name { get; set; }
         public Guid? CenterId { get; set; }
         public string? CenterName { get; set; }
         public DateOnly StartDate { get; set; }

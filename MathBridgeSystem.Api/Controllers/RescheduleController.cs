@@ -1,4 +1,4 @@
-﻿// MathBridgeSystem.Api.Controllers/RescheduleController.cs
+﻿﻿// MathBridgeSystem.Api.Controllers/RescheduleController.cs
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -19,15 +19,70 @@ namespace MathBridgeSystem.Api.Controllers
             _rescheduleService = rescheduleService;
         }
 
-        [HttpPost]
-        [Authorize(Roles = "parent")]
-        public async Task<IActionResult> Create([FromBody] CreateRescheduleRequestDto dto)
+        private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
             {
                 throw new UnauthorizedAccessException("User ID not found in claims");
             }
+            return userId;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "staff,parent")]
+        public async Task<IActionResult> GetAll([FromQuery] Guid? parentId = null)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var role = User.IsInRole("staff") ? "staff" : "parent";
+
+                // If parent role, can only see their own requests
+                if (role == "parent")
+                {
+                    parentId = userId;
+                }
+
+                var requests = await _rescheduleService.GetAllAsync(parentId);
+                return Ok(requests);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}")]
+        [Authorize(Roles = "staff,parent")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var role = User.IsInRole("staff") ? "staff" : "parent";
+
+                var request = await _rescheduleService.GetByIdAsync(id, userId, role);
+                if (request == null)
+                    return NotFound(new { error = "Reschedule request not found" });
+
+                return Ok(request);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "parent")]
+        public async Task<IActionResult> Create([FromBody] CreateRescheduleRequestDto dto)
+        {
+            var userId = GetUserId();
             try
             {
                 var result = await _rescheduleService.CreateRequestAsync(userId, dto);
@@ -43,11 +98,7 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveRescheduleRequestDto dto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-            {
-                throw new UnauthorizedAccessException("User ID not found in claims");
-            }
+            var userId = GetUserId();
             try
             {
                 var result = await _rescheduleService.ApproveRequestAsync(userId, id, dto);
@@ -82,10 +133,10 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "staff")]
         public async Task<IActionResult> Reject(Guid id, [FromBody] RejectRequestDto dto)
         {
-            var staffId = Guid.Parse(User.FindFirst("sub")?.Value!);
+            var userId = GetUserId();
             try
             {
-                var result = await _rescheduleService.RejectRequestAsync(staffId, id, dto.Reason);
+                var result = await _rescheduleService.RejectRequestAsync(userId, id, dto.Reason);
                 return Ok(result);
             }
             catch (Exception ex)
