@@ -80,7 +80,7 @@ namespace MathBridgeSystem.Application.Services
                 ImprovementSuggestions = request.ImprovementSuggestions,
                 AdditionalComments = request.AdditionalComments,
                 FeedbackStatus = "Submitted",
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _feedbackRepository.AddAsync(feedback);

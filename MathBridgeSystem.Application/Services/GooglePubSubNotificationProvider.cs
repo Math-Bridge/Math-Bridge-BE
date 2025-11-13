@@ -115,7 +115,7 @@ namespace MathBridgeSystem.Infrastructure.Services
                     {
                         { "userId", notification.UserId.ToString() },
                         { "notificationType", notification.NotificationType },
-                        { "timestamp", DateTime.UtcNow.Ticks.ToString() }
+                        { "timestamp", DateTime.UtcNow.ToLocalTime().Ticks.ToString() }
                     }
                 };
 
@@ -139,7 +139,7 @@ namespace MathBridgeSystem.Infrastructure.Services
                     {
                         { "userId", n.UserId.ToString() },
                         { "notificationType", n.NotificationType },
-                        { "timestamp", DateTime.UtcNow.Ticks.ToString() }
+                        { "timestamp", DateTime.UtcNow.ToLocalTime().Ticks.ToString() }
                     }
                 }).ToList();
 

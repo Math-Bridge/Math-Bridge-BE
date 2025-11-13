@@ -51,9 +51,9 @@ namespace MathBridgeSystem.Tests.Services
                 Contract = contract, 
                 TutorId = tutorId,
                 Tutor = new User { UserId = tutorId, FullName = "Test Tutor" },
-                SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(3)),
-                StartTime = DateTime.UtcNow.AddDays(3).AddHours(9),
-                EndTime = DateTime.UtcNow.AddDays(3).AddHours(11),
+                SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(3)),
+                StartTime = DateTime.UtcNow.ToLocalTime().AddDays(3).AddHours(9),
+                EndTime = DateTime.UtcNow.ToLocalTime().AddDays(3).AddHours(11),
                 Status = sessionStatus,
                 IsOnline = true,
                 VideoCallPlatform = "Zoom"

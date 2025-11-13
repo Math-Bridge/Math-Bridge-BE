@@ -48,7 +48,7 @@ namespace MathBridgeSystem.Application.Services
             var adminCount = allUsers.Count(u => u.Role?.RoleName == "admin");
             var staffCount = allUsers.Count(u => u.Role?.RoleName == "staff");
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow.ToLocalTime();
             var activeLast24Hours = allUsers.Count(u => u.LastActive >= now.AddHours(-24));
             var activeLast7Days = allUsers.Count(u => u.LastActive >= now.AddDays(-7));
             var activeLast30Days = allUsers.Count(u => u.LastActive >= now.AddDays(-30));
@@ -161,11 +161,11 @@ namespace MathBridgeSystem.Application.Services
         {
             var allSessions = await _sessionRepository.GetSessionsInTimeRangeAsync(
                 new DateTime(2000, 1, 1),
-                DateTime.UtcNow.AddYears(10));
+                DateTime.UtcNow.ToLocalTime().AddYears(10));
 
             var completedCount = allSessions.Count(s => s.Status == "Completed");
             var cancelledCount = allSessions.Count(s => s.Status == "Cancelled");
-            var upcomingCount = allSessions.Count(s => s.Status == "Scheduled" && s.StartTime > DateTime.UtcNow);
+            var upcomingCount = allSessions.Count(s => s.Status == "Scheduled" && s.StartTime > DateTime.UtcNow.ToLocalTime());
             var rescheduledCount = allSessions.Count(s => s.Status == "Rescheduled");
 
             var completionRate = allSessions.Count > 0
@@ -187,7 +187,7 @@ namespace MathBridgeSystem.Application.Services
         {
             var allSessions = await _sessionRepository.GetSessionsInTimeRangeAsync(
                 new DateTime(2000, 1, 1),
-                DateTime.UtcNow.AddYears(10));
+                DateTime.UtcNow.ToLocalTime().AddYears(10));
 
             var onlineCount = allSessions.Count(s => s.IsOnline);
             var offlineCount = allSessions.Count(s => !s.IsOnline);

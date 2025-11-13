@@ -44,7 +44,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task UpdateAsync(Session session)
         {
-            session.UpdatedAt = DateTime.UtcNow;
+            session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             _context.Sessions.Update(session);
             await _context.SaveChangesAsync();
         }

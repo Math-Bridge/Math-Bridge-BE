@@ -48,7 +48,7 @@ namespace MathBridgeSystem.Application.Services
                 SyllabusUrl = request.SyllabusUrl,
                 TotalCredits = request.TotalCredits,
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _curriculumRepository.AddAsync(curriculum);
@@ -114,7 +114,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (hasChanges)
             {
-                curriculum.UpdatedDate = DateTime.UtcNow;
+                curriculum.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _curriculumRepository.UpdateAsync(curriculum);
             }
         }
@@ -145,7 +145,7 @@ namespace MathBridgeSystem.Application.Services
             if (!curriculum.IsActive)
             {
                 curriculum.IsActive = true;
-                curriculum.UpdatedDate = DateTime.UtcNow;
+                curriculum.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _curriculumRepository.UpdateAsync(curriculum);
             }
         }
@@ -159,7 +159,7 @@ namespace MathBridgeSystem.Application.Services
             if (curriculum.IsActive)
             {
                 curriculum.IsActive = false;
-                curriculum.UpdatedDate = DateTime.UtcNow;
+                curriculum.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _curriculumRepository.UpdateAsync(curriculum);
             }
         }

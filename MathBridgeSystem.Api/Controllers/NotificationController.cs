@@ -172,7 +172,7 @@ namespace MathBridgeSystem.Api.Controllers
                     {
                         status = "unhealthy",
                         error = "PubSub provider not registered",
-                        timestamp = DateTime.UtcNow
+                        timestamp = DateTime.UtcNow.ToLocalTime()
                     });
                 }
 
@@ -184,7 +184,7 @@ namespace MathBridgeSystem.Api.Controllers
                     topicExists = topicExists,
                     projectId = HttpContext.RequestServices.GetService(typeof(IConfiguration)) is IConfiguration config ? config["GoogleMeet:ProjectId"] : "unknown",
                     credentialsPath = HttpContext.RequestServices.GetService(typeof(IConfiguration)) is IConfiguration config2 ? config2["GoogleMeet:OAuthCredentialsPath"] : "unknown",
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
             catch (Exception ex)
@@ -194,7 +194,7 @@ namespace MathBridgeSystem.Api.Controllers
                     status = "unhealthy",
                     error = ex.Message,
                     stackTrace = ex.StackTrace,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
         }
@@ -219,7 +219,7 @@ namespace MathBridgeSystem.Api.Controllers
                     Message = request.Message ?? "This is a test notification from Pub/Sub",
                     NotificationType = request.NotificationType ?? "Test",
                     IsRead = false,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow.ToLocalTime()
                 };
 
                 await pubSubProvider.PublishNotificationAsync(
@@ -231,7 +231,7 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     message = "Test notification published successfully",
                     notification = testNotification,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
             catch (Exception ex)
@@ -271,7 +271,7 @@ namespace MathBridgeSystem.Api.Controllers
                         Message = $"This is batch notification {i + 1} from Pub/Sub",
                         NotificationType = "BatchTest",
                         IsRead = false,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTime.UtcNow.ToLocalTime()
                     });
                 }
 
@@ -285,7 +285,7 @@ namespace MathBridgeSystem.Api.Controllers
                     message = $"Batch of {count} test notifications published successfully",
                     notificationCount = count,
                     notifications = notifications,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
             catch (Exception ex)
@@ -322,7 +322,7 @@ namespace MathBridgeSystem.Api.Controllers
                     message = "Test subscription created successfully",
                     topicName = topicName,
                     subscriptionName = subscriptionName,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
             catch (Exception ex)
@@ -355,7 +355,7 @@ namespace MathBridgeSystem.Api.Controllers
                 {
                     topicName = topicName,
                     exists = exists,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow.ToLocalTime()
                 });
             }
             catch (Exception ex)
@@ -384,7 +384,7 @@ namespace MathBridgeSystem.Api.Controllers
                     NotificationType = request.NotificationType ?? "DatabaseTest",
                     Status = "Created",
                     IsRead = false,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow.ToLocalTime()
                 };
 
                 // Note: CreateNotificationAsync requires proper implementation in INotificationService

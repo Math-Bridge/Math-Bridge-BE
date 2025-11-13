@@ -54,7 +54,7 @@ namespace MathBridgeSystem.Application.Services
             var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId);
             if (oldSession == null) throw new KeyNotFoundException("Session not found.");
             if (oldSession.Contract.ParentId != parentId) throw new UnauthorizedAccessException("Not your child.");
-            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.UtcNow)) throw new InvalidOperationException("Cannot reschedule past sessions.");
+            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime())) throw new InvalidOperationException("Cannot reschedule past sessions.");
 
             var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
             if (hasPending) throw new InvalidOperationException("Pending request exists.");
@@ -80,7 +80,7 @@ namespace MathBridgeSystem.Application.Services
                 EndTime = dto.EndTime,
                 Reason = dto.Reason,
                 Status = "pending",
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _rescheduleRepo.AddAsync(request);
@@ -148,31 +148,31 @@ namespace MathBridgeSystem.Application.Services
                 OfflineLatitude = request.Booking.OfflineLatitude,
                 OfflineLongitude = request.Booking.OfflineLongitude,
                 Status = "scheduled",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.ToLocalTime()
             };
 
             await _sessionRepo.AddRangeAsync(new[] { newSession });
 
             request.Booking.Status = "rescheduled";
-            request.Booking.UpdatedAt = DateTime.UtcNow;
+            request.Booking.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(request.Booking);
 
             var contract = request.Booking.Contract;
             contract.RescheduleCount += 1;
-            contract.UpdatedDate = DateTime.UtcNow;
+            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
 
             request.Status = "approved";
             request.StaffId = staffId;
             request.RequestedTutorId = finalTutorId;
-            request.ProcessedDate = DateTime.UtcNow;
+            request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Đổi lịch thành công.",
+                Message = "Done reschedule",
                 ProcessedDate = request.ProcessedDate
             };
         }
@@ -184,7 +184,7 @@ namespace MathBridgeSystem.Application.Services
 
             request.Status = "rejected";
             request.StaffId = staffId;
-            request.ProcessedDate = DateTime.UtcNow;
+            request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.Reason = reason;
 
             await _rescheduleRepo.UpdateAsync(request);

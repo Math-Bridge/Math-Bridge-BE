@@ -44,7 +44,7 @@ namespace MathBridgeSystem.Application.Services
                 SchoolName = request.SchoolName,
                 CurriculumId = request.CurriculumId,
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _schoolRepository.AddAsync(school);
@@ -93,7 +93,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (hasChanges)
             {
-                school.UpdatedDate = DateTime.UtcNow;
+                school.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _schoolRepository.UpdateAsync(school);
             }
         }
@@ -120,7 +120,7 @@ namespace MathBridgeSystem.Application.Services
             if (!school.IsActive)
             {
                 school.IsActive = true;
-                school.UpdatedDate = DateTime.UtcNow;
+                school.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _schoolRepository.UpdateAsync(school);
             }
         }
@@ -134,7 +134,7 @@ namespace MathBridgeSystem.Application.Services
             if (school.IsActive)
             {
                 school.IsActive = false;
-                school.UpdatedDate = DateTime.UtcNow;
+                school.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _schoolRepository.UpdateAsync(school);
             }
         }

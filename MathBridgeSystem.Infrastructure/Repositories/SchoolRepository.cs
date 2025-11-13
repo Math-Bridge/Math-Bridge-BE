@@ -21,14 +21,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         // Basic CRUD Methods
         public async Task AddAsync(School school)
         {
-            school.CreatedDate = DateTime.UtcNow;
+            school.CreatedDate = DateTime.UtcNow.ToLocalTime();
             _context.Schools.Add(school);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(School school)
         {
-            school.UpdatedDate = DateTime.UtcNow;
+            school.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             _context.Schools.Update(school);
             await _context.SaveChangesAsync();
         }

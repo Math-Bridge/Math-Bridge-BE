@@ -94,7 +94,7 @@ public class LocationService : ILocationService
             user.District = placeDetails.Place.District;
             user.PlaceName = placeDetails.Place.PlaceName;
             user.CountryCode = placeDetails.Place.CountryCode;
-            user.LocationUpdatedDate = DateTime.UtcNow;
+            user.LocationUpdatedDate = DateTime.UtcNow.ToLocalTime();
 
             await _userRepository.UpdateAsync(user);
 

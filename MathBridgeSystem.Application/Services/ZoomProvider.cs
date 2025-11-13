@@ -103,7 +103,7 @@ public class ZoomProvider : IVideoConferenceProvider
 
     private async Task<string> GetAccessTokenAsync()
     {
-        if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow < _tokenExpiryTime.AddSeconds(-60))
+        if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow.ToLocalTime() < _tokenExpiryTime.AddSeconds(-60))
         {
             return _cachedAccessToken;
         }
@@ -145,7 +145,7 @@ public class ZoomProvider : IVideoConferenceProvider
         }
 
         _cachedAccessToken = token;
-        _tokenExpiryTime = DateTime.UtcNow.AddSeconds(expiresIn);
+        _tokenExpiryTime = DateTime.UtcNow.ToLocalTime().AddSeconds(expiresIn);
         return token;
     }
     

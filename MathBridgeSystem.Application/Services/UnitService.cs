@@ -46,7 +46,7 @@ namespace MathBridgeSystem.Application.Services
                 Credit = request.Credit,
                 LearningObjectives = request.LearningObjectives?.Trim(),
                 IsActive = request.IsActive,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 CreatedBy = createdBy
             };
 
@@ -74,7 +74,7 @@ namespace MathBridgeSystem.Application.Services
             unit.Credit = request.Credit;
             unit.LearningObjectives = request.LearningObjectives?.Trim();
             unit.IsActive = request.IsActive;
-            unit.UpdatedDate = DateTime.UtcNow;
+            unit.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             unit.UpdatedBy = updatedBy;
 
             await _unitRepository.UpdateAsync(unit);

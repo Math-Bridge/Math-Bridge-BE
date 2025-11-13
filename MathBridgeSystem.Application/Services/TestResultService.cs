@@ -36,8 +36,8 @@ namespace MathBridgeSystem.Application.Services
                 Score = request.Score,
                 Notes = request.Notes,
                 ContractId = request.ContractId,
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                UpdatedDate = DateTime.UtcNow.ToLocalTime()
             };
             var createdTestResult = await _testResultRepository.AddAsync(testResult);
             return createdTestResult.ResultId;
@@ -55,7 +55,7 @@ namespace MathBridgeSystem.Application.Services
                 testResult.Notes = request.Notes;
             if (request.ContractId.HasValue)
                 testResult.ContractId = request.ContractId.Value;
-            testResult.UpdatedDate = DateTime.UtcNow;
+            testResult.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _testResultRepository.UpdateAsync(testResult);
         }
         public async Task<bool> DeleteTestResultAsync(Guid resultId)

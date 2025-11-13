@@ -24,7 +24,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             if (verification == null)
                 throw new ArgumentNullException(nameof(verification));
 
-            verification.CreatedDate = DateTime.UtcNow;
+            verification.CreatedDate = DateTime.UtcNow.ToLocalTime();
             verification.IsDeleted = false;
             _context.TutorVerifications.Add(verification);
             await _context.SaveChangesAsync();

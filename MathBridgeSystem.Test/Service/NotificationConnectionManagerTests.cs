@@ -22,7 +22,7 @@ namespace MathBridgeSystem.Tests.Services
                 Title = "Test",
                 Message = "Hello!",
                 IsRead = false,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
         }
 

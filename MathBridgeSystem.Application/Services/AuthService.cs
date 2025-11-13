@@ -112,8 +112,8 @@ namespace MathBridgeSystem.Application.Services
                 Gender = request.Gender,
                 RoleId = request.RoleId,
                 WalletBalance = 0.00m,
-                CreatedDate = DateTime.UtcNow,
-                LastActive = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                LastActive = DateTime.UtcNow.ToLocalTime(),
                 Status = "active"
             };
 
@@ -157,7 +157,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Account is banned");
             }
 
-            user.LastActive = DateTime.UtcNow;
+            user.LastActive = DateTime.UtcNow.ToLocalTime();
             await _userRepository.UpdateAsync(user);
 
             var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
@@ -203,8 +203,8 @@ namespace MathBridgeSystem.Application.Services
                     Gender = "other",
                     RoleId = parentRoleId,
                     WalletBalance = 0.00m,
-                    CreatedDate = DateTime.UtcNow,
-                    LastActive = DateTime.UtcNow,
+                    CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                    LastActive = DateTime.UtcNow.ToLocalTime(),
                     Status = "active"
                 };
                 await _userRepository.AddAsync(user);
@@ -218,7 +218,7 @@ namespace MathBridgeSystem.Application.Services
                     throw new Exception("Account is banned");
                 }
 
-                user.LastActive = DateTime.UtcNow;
+                user.LastActive = DateTime.UtcNow.ToLocalTime();
                 await _userRepository.UpdateAsync(user);
                 Console.WriteLine($"GoogleLoginAsync: User updated: {user.UserId}");
             }
@@ -295,7 +295,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("User not found");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            user.LastActive = DateTime.UtcNow;
+            user.LastActive = DateTime.UtcNow.ToLocalTime();
             await _userRepository.UpdateAsync(user);
 
             _cache.Remove(request.OobCode);
@@ -324,7 +324,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            user.LastActive = DateTime.UtcNow;
+            user.LastActive = DateTime.UtcNow.ToLocalTime();
             await _userRepository.UpdateAsync(user);
 
             Console.WriteLine($"ChangePasswordAsync: Password changed successfully for user: {user.UserId}");
