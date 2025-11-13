@@ -67,7 +67,7 @@ namespace MathBridgeSystem.Tests.Controllers
                 .ReturnsAsync(expectedUser);
 
             // Act
-            var result = await _controller.GetUser(_userId);
+            var result = await _controller.GetUserById(_userId);
 
             // Assert
             var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
@@ -84,7 +84,7 @@ namespace MathBridgeSystem.Tests.Controllers
                 .ThrowsAsync(new Exception("User not found"));
 
             // Act
-            var result = await _controller.GetUser(_userId);
+            var result = await _controller.GetUserById(_userId);
 
             // Assert
             var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
@@ -101,7 +101,7 @@ namespace MathBridgeSystem.Tests.Controllers
                 .ReturnsAsync(expectedUser);
 
             // Act
-            var result = await _controller.GetUser(_userId);
+            var result = await _controller.GetUserById(_userId);
 
             // Assert
             result.Should().BeOfType<OkObjectResult>();
