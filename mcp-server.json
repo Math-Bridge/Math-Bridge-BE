@@ -1,0 +1,222 @@
+{
+  "mcpServers": {
+    "math-bridge-api": {
+      "name": "Math Bridge API",
+      "description": "Math-Bridge backend API server providing comprehensive tutoring management services",
+      "version": "1.0.0",
+      "baseUrl": "https://api.vibe88.tech",
+      "authentication": {
+        "type": "JWT Bearer",
+        "description": "JWT token required in Authorization header"
+      },
+      "capabilities": {
+        "resources": [
+          {
+            "name": "users",
+            "description": "User management and authentication",
+            "endpoints": [
+              "GET /api/users",
+              "POST /api/auth/login",
+              "POST /api/auth/register",
+              "POST /api/auth/google-login"
+            ]
+          },
+          {
+            "name": "tutors",
+            "description": "Tutor profiles, schedules, and verification",
+            "endpoints": [
+              "GET /api/tutor",
+              "POST /api/tutor",
+              "PUT /api/tutor/{id}",
+              "GET /api/tutor-schedule",
+              "POST /api/tutor-verification"
+            ]
+          },
+          {
+            "name": "sessions",
+            "description": "Tutoring session management",
+            "endpoints": [
+              "GET /api/session",
+              "POST /api/session",
+              "PUT /api/session/{id}",
+              "GET /api/session/{id}",
+              "POST /api/reschedule"
+            ]
+          },
+          {
+            "name": "children",
+            "description": "Student (children) profiles and management",
+            "endpoints": [
+              "GET /api/children",
+              "POST /api/children",
+              "PUT /api/children/{id}",
+              "GET /api/parent-children"
+            ]
+          },
+          {
+            "name": "contracts",
+            "description": "Contract management between parents and tutors",
+            "endpoints": [
+              "GET /api/contract",
+              "POST /api/contract",
+              "PUT /api/contract/{id}"
+            ]
+          },
+          {
+            "name": "packages",
+            "description": "Service packages and pricing",
+            "endpoints": [
+              "GET /api/package",
+              "POST /api/package",
+              "PUT /api/package/{id}",
+              "GET /api/admin-package"
+            ]
+          },
+          {
+            "name": "centers",
+            "description": "Tutoring center information",
+            "endpoints": [
+              "GET /api/center",
+              "POST /api/center",
+              "PUT /api/center/{id}"
+            ]
+          },
+          {
+            "name": "schools",
+            "description": "School information and management",
+            "endpoints": [
+              "GET /api/school",
+              "POST /api/school",
+              "PUT /api/school/{id}"
+            ]
+          },
+          {
+            "name": "curriculum",
+            "description": "Educational curriculum management",
+            "endpoints": [
+              "GET /api/curriculum",
+              "POST /api/curriculum",
+              "PUT /api/curriculum/{id}"
+            ]
+          },
+          {
+            "name": "units",
+            "description": "Educational units and modules",
+            "endpoints": [
+              "GET /api/unit",
+              "POST /api/unit",
+              "PUT /api/unit/{id}"
+            ]
+          },
+          {
+            "name": "notifications",
+            "description": "Push notifications and alerts",
+            "endpoints": [
+              "GET /api/notification",
+              "POST /api/notification",
+              "PUT /api/notification/{id}"
+            ]
+          },
+          {
+            "name": "feedback",
+            "description": "Session feedback and reports",
+            "endpoints": [
+              "GET /api/final-feedback",
+              "POST /api/final-feedback",
+              "GET /api/daily-report",
+              "POST /api/daily-report"
+            ]
+          },
+          {
+            "name": "test-results",
+            "description": "Student test results tracking",
+            "endpoints": [
+              "GET /api/test-result",
+              "POST /api/test-result",
+              "PUT /api/test-result/{id}"
+            ]
+          },
+          {
+            "name": "wallet",
+            "description": "Wallet and transaction management",
+            "endpoints": [
+              "GET /api/wallet-transaction",
+              "POST /api/wallet-transaction"
+            ]
+          },
+          {
+            "name": "payments",
+            "description": "Payment processing via SePay",
+            "endpoints": [
+              "POST /api/sepay/create-payment",
+              "POST /api/sepay/webhook"
+            ]
+          },
+          {
+            "name": "statistics",
+            "description": "Analytics and reporting",
+            "endpoints": [
+              "GET /api/statistics"
+            ]
+          },
+          {
+            "name": "video-conference",
+            "description": "Video conferencing integration (Meet/Zoom)",
+            "endpoints": [
+              "POST /api/video-conference/create-meeting",
+              "GET /api/video-conference/meeting/{id}"
+            ]
+          },
+          {
+            "name": "location",
+            "description": "Location services and Google Maps integration",
+            "endpoints": [
+              "GET /api/location/geocode",
+              "GET /api/location/distance"
+            ]
+          }
+        ],
+        "tools": [
+          {
+            "name": "send_notification",
+            "description": "Send push notifications to users via Firebase"
+          },
+          {
+            "name": "schedule_session",
+            "description": "Schedule a new tutoring session"
+          },
+          {
+            "name": "process_payment",
+            "description": "Process payment transactions via SePay"
+          },
+          {
+            "name": "create_video_meeting",
+            "description": "Create video conference meetings (Google Meet or Zoom)"
+          },
+          {
+            "name": "send_email",
+            "description": "Send email notifications via SMTP"
+          },
+          {
+            "name": "calculate_distance",
+            "description": "Calculate distance between locations using Google Maps API"
+          }
+        ]
+      },
+      "technologies": [
+        "ASP.NET Core",
+        "Entity Framework Core",
+        "SQL Server",
+        "Firebase",
+        "Google Cloud Pub/Sub",
+        "Google Maps API",
+        "JWT Authentication",
+        "Swagger/OpenAPI"
+      ],
+      "environment": {
+        "development": "http://localhost:5000",
+        "production": "https://api.vibe88.tech"
+      }
+    }
+  }
+}
