@@ -116,7 +116,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     .Include(u => u.ContractMainTutors)
                     .Include(u => u.ContractSubstituteTutor1s)
                     .Include(u => u.ContractSubstituteTutor2s)
-                    .Where(u => u.Role.RoleName == "tutor" && u.Status != "inactive")
+                    .Where(u => u.Role.RoleName == "tutor" && u.Status != "inactive" && u.TutorCenters.Count >0)
                     .ToListAsync();
 
                 var inputDaysOfWeeks = inputContract.DaysOfWeeks.Value;
