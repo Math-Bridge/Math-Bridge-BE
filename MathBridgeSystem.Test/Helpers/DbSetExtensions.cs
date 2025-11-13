@@ -58,17 +58,26 @@ namespace MathBridgeSystem.Tests.Helpers
         }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
-{
-    // Ensure the expression is properly handled for async execution
-    if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(Task<>))
-    {
-        var resultType = typeof(TResult).GetGenericArguments()[0];
-        var executionResult = _inner.Execute(expression);
-        return (TResult)Task.FromResult(Convert.ChangeType(executionResult, resultType));
-    }
+        {
+            // Execute synchronously using the inner provider
+            var executionResult = _inner.Execute(expression);
 
-    return Execute<TResult>(expression);
-}
+            // If TResult is a Task<T>, wrap the result into Task.FromResult(T)
+            var tResultType = typeof(TResult);
+            if (tResultType.IsGenericType && tResultType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                var resultType = tResultType.GetGenericArguments()[0];
+                var taskFromResultMethod = typeof(Task).GetMethod(nameof(Task.FromResult))?.MakeGenericMethod(resultType);
+                if (taskFromResultMethod != null)
+                {
+                    var task = taskFromResultMethod.Invoke(null, new[] { executionResult });
+                    return (TResult)task!;
+                }
+            }
+
+            // Otherwise try direct cast
+            return (TResult)executionResult!;
+        }
     }
 
     internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>

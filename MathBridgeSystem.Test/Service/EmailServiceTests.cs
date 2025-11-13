@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
-namespace MathBridgeSystem.Test.Service
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class EmailServiceTests
     {

@@ -41,7 +41,7 @@ namespace MathBridgeSystem.Application.Services
             // Validate day of week range
             if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
-                throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+                throw new ArgumentException("Day bitmask must be between 0 and 127");
             }
 
             if (request.DaysOfWeek == 0) {
@@ -148,9 +148,9 @@ namespace MathBridgeSystem.Application.Services
             // Update only provided fields, preserve old data if null
             if (request.DaysOfWeek.HasValue)
             {
-                if (request.DaysOfWeek.Value < 0 || request.DaysOfWeek.Value > 6)
+                if (request.DaysOfWeek.Value < 0 || request.DaysOfWeek.Value > 127)
                 {
-                    throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+                    throw new ArgumentException("Day bitmask must be between 0 and 127");
                 }
                 availability.DaysOfWeek = request.DaysOfWeek.Value;
             }
@@ -213,10 +213,15 @@ namespace MathBridgeSystem.Application.Services
                 availability.CanTeachOffline = request.CanTeachOffline.Value;
             }
 
-            // Validate at least one teaching mode is enabled
-            if (!availability.CanTeachOnline && !availability.CanTeachOffline)
+            // Validate at least one teaching mode is enabled only when modes are updated
+            if (request.CanTeachOnline.HasValue || request.CanTeachOffline.HasValue)
             {
-                throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
+                var resultingCanTeachOnline = request.CanTeachOnline.HasValue ? request.CanTeachOnline.Value : availability.CanTeachOnline;
+                var resultingCanTeachOffline = request.CanTeachOffline.HasValue ? request.CanTeachOffline.Value : availability.CanTeachOffline;
+                if (!resultingCanTeachOnline && !resultingCanTeachOffline)
+                {
+                    throw new ArgumentException("At least one teaching mode (online or offline) must be enabled");
+                }
             }
 
             // Check for minimum 15-minute spacing with existing time slots (excluding current availability)
@@ -304,7 +309,7 @@ namespace MathBridgeSystem.Application.Services
             // Validate search parameters
             if (request.DaysOfWeek < 0 || request.DaysOfWeek > 127)
             {
-                throw new ArgumentException("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+                throw new ArgumentException("Day bitmask must be between 0 and 127");
             }
 
             if (request.EndTime <= request.StartTime && request.EndTime != request.StartTime)
@@ -339,6 +344,7 @@ namespace MathBridgeSystem.Application.Services
                     TutorName = group.First().Tutor.FullName,
                     TutorEmail = group.First().Tutor.Email,
                     AvailabilitySlots = group.Select(MapToResponse).ToList(),
+                    TotalAvailableSlots = group.Count(),
                     CanTeachOnline = group.Any(a => a.CanTeachOnline),
                     CanTeachOffline = group.Any(a => a.CanTeachOffline)
                 })

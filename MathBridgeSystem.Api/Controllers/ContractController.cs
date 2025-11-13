@@ -19,6 +19,9 @@ namespace MathBridgeSystem.Api.Controllers
 
         private Guid GetUserIdFromClaims()
         {
+            if (User == null)
+                throw new UnauthorizedAccessException("Missing user in HttpContext.");
+
             var sub = User.FindFirst("sub")?.Value ??
                       User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                       User.FindFirst(ClaimTypes.Name)?.Value;

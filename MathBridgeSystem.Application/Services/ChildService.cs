@@ -33,8 +33,8 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Invalid parent");
 
             // Check if child with same parent and name already exists
-            var existingChildren = await _childRepository.GetByParentIdAsync(parentId);
-            if (existingChildren.Any(c => c.FullName.Equals(request.FullName, StringComparison.OrdinalIgnoreCase) && c.Status != "deleted"))
+            var existingChildren = (await _childRepository.GetByParentIdAsync(parentId)) ?? new List<Child>();
+            if (!string.IsNullOrWhiteSpace(request.FullName) && existingChildren.Any(c => c.FullName != null && c.FullName.Equals(request.FullName, StringComparison.OrdinalIgnoreCase) && c.Status != "deleted"))
                 throw new Exception("A child with the same name already exists for this parent");
 
             // Validate center if provided

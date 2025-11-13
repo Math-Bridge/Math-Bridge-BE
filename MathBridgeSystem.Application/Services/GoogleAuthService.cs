@@ -16,6 +16,9 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<(string Email, string Name)> ValidateGoogleTokenAsync(string idToken)
         {
+            if (string.IsNullOrWhiteSpace(idToken))
+                throw new ArgumentException("Google id token is required", nameof(idToken));
+
             try
             {
                 var decodedToken = await _firebaseAuth.VerifyIdTokenAsync(idToken);
@@ -29,6 +32,11 @@ namespace MathBridgeSystem.Application.Services
             }
             catch (FirebaseAuthException ex)
             {
+                throw new Exception($"Google token validation failed: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Wrap any other exception to provide consistent message for callers/tests
                 throw new Exception($"Google token validation failed: {ex.Message}");
             }
         }

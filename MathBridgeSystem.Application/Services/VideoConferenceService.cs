@@ -41,7 +41,7 @@ public class VideoConferenceService : IVideoConferenceService
             throw new Exception($"Video conference provider '{request.Platform}' not found");
         var meeting= await _context.VideoConferenceSessions.FirstOrDefaultAsync(vc => vc.BookingId == request.BookingId);
         if (meeting != null)
-            return await GetVideoConferenceAsync(meeting.ConferenceId);
+            return MapToDto(meeting);
         // Create meeting via provider
         var creationResult = await provider.CreateMeetingAsync( );
 
@@ -67,7 +67,8 @@ public class VideoConferenceService : IVideoConferenceService
 
         await _context.SaveChangesAsync();
 
-        return await GetVideoConferenceAsync(conferenceSession.ConferenceId);
+            // Return the created conference without re-querying the DbSet (helps tests using in-memory/mock DbSet)
+            return MapToDto(conferenceSession);
     }
 
     public async Task<VideoConferenceSessionDto> GetVideoConferenceAsync(Guid conferenceId)

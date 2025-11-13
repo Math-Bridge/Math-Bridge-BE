@@ -15,8 +15,8 @@ namespace MathBridgeSystem.API.Controllers
 
         public EmailTestController(IEmailService emailService, ILogger<EmailTestController> logger)
         {
-            _emailService = emailService;
-            _logger = logger;
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpPost("send-verification")]

@@ -38,12 +38,13 @@ namespace MathBridgeSystem.Application.Services
                 Message = request.Message,
                 NotificationType = request.NotificationType,
                 Status = "Pending",
-                CreatedDate = DateTime.UtcNow.ToLocalTime()
+                CreatedDate = DateTime.UtcNow
             };
 
             await _notificationRepository.AddAsync(notification);
-            
-            var dto = MapToDto(notification);
+            // Reload the saved entity (repository may set fields) to avoid mutating the same instance
+            var saved = await _notificationRepository.GetByIdAsync(notification.NotificationId);
+            var dto = MapToDto(saved ?? notification);
             
             // Send immediately via SSE to connected users (maybe duplicate with  HandleMessageAsync)
            // await _connectionManager.SendNotificationAsync(notification.UserId, dto);
@@ -54,10 +55,15 @@ namespace MathBridgeSystem.Application.Services
                 await _pubSubProvider.PublishNotificationAsync(dto, "notifications");
             }
             
-            // Mark as sent
-            notification.Status = "Sent";
-            notification.SentDate = DateTime.UtcNow.ToLocalTime();
-            await _notificationRepository.UpdateAsync(notification);
+            // Mark as sent - update using a separate object so the original instance (passed to AddAsync) is not mutated
+            var updateNotification = new Notification
+            {
+                NotificationId = notification.NotificationId,
+                Status = "Sent",
+                SentDate = DateTime.UtcNow
+            };
+            await _notificationRepository.UpdateAsync(updateNotification);
+
 
             return dto;
         }
