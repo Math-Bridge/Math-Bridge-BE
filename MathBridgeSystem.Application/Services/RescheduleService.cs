@@ -172,7 +172,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Đổi lịch thành công.",
+                Message = "Done reschedule",
                 ProcessedDate = request.ProcessedDate
             };
         }

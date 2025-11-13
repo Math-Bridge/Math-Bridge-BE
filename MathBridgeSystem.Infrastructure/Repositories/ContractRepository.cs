@@ -128,9 +128,9 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 {
                     // Get all contracts where tutor is MainTutor, SubstituteTutor1, or SubstituteTutor2
                     var tutorContracts = new List<Contract>();
-                    tutorContracts.AddRange(tutor.ContractMainTutors.Where(c => c.Status != "cancelled"));
-                    tutorContracts.AddRange(tutor.ContractSubstituteTutor1s.Where(c => c.Status != "cancelled"));
-                    tutorContracts.AddRange(tutor.ContractSubstituteTutor2s.Where(c => c.Status != "cancelled"));
+                    tutorContracts.AddRange(tutor.ContractMainTutors.Where(c => c.Status != "cancelled" && c.Status != "completed"));
+                    tutorContracts.AddRange(tutor.ContractSubstituteTutor1s.Where(c => c.Status != "cancelled" && c.Status != "completed"));
+                    tutorContracts.AddRange(tutor.ContractSubstituteTutor2s.Where(c => c.Status != "cancelled" && c.Status != "completed"));
 
                     bool hasOverlap = false;
 
