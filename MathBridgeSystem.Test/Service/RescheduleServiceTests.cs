@@ -59,7 +59,7 @@ namespace MathBridgeSystem.Tests.Services
                 BookingId = _bookingId,
                 ContractId = _contractId,
                 Contract = _contract, 
-                SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)), 
+                SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(5)), 
                 TutorId = _tutorId,
                 Status = "scheduled"
             };
@@ -74,7 +74,7 @@ namespace MathBridgeSystem.Tests.Services
             var dto = new CreateRescheduleRequestDto
             {
                 BookingId = _bookingId,
-                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(10)),
                 StartTime = new TimeOnly(16, 0),
                 EndTime = new TimeOnly(17, 30),
                 Reason = "Bận"
@@ -103,7 +103,7 @@ namespace MathBridgeSystem.Tests.Services
             var dto = new CreateRescheduleRequestDto
             {
                 BookingId = _bookingId,
-                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(10)),
                 
                 StartTime = new TimeOnly(17, 30),
                 EndTime = new TimeOnly(19, 0),

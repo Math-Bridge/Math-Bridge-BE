@@ -32,7 +32,7 @@ namespace MathBridgeSystem.Infrastructure.Services
 
         public async Task ListenForNotificationsAsync(string subscriptionName, CancellationToken cancellationToken = default)
         {
-            _logger.LogWarning($"[LISTENER_START] Starting listener for subscription: {subscriptionName} at {DateTime.UtcNow:HH:mm:ss.fff}");
+            _logger.LogWarning($"[LISTENER_START] Starting listener for subscription: {subscriptionName} at {DateTime.UtcNow.ToLocalTime():HH:mm:ss.fff}");
             try
             {
                 var subscriptionPath = SubscriptionName.FromProjectSubscription(_projectId, subscriptionName);
@@ -104,7 +104,7 @@ namespace MathBridgeSystem.Infrastructure.Services
 
         private async Task HandleMessageAsync(PubsubMessage message, CancellationToken cancellationToken)
         {
-            _logger.LogWarning($"[HANDLE_MSG] MessageId: {message.MessageId}, Timestamp: {DateTime.UtcNow:HH:mm:ss.fff}");
+            _logger.LogWarning($"[HANDLE_MSG] MessageId: {message.MessageId}, Timestamp: {DateTime.UtcNow.ToLocalTime():HH:mm:ss.fff}");
             try
             {
                 var messageText = message.Data.ToStringUtf8();

@@ -136,7 +136,7 @@ public class LocationController : ControllerBase
                 nearbyUsers = result.NearbyUsers,
                 totalUsers = result.TotalUsers,
                 radiusKm = result.RadiusKm,
-                searchedAt = DateTime.UtcNow
+                searchedAt = DateTime.UtcNow.ToLocalTime()
             });
         }
         catch (Exception ex)

@@ -38,7 +38,7 @@ namespace MathBridgeSystem.Application.Services
                 Message = request.Message,
                 NotificationType = request.NotificationType,
                 Status = "Pending",
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _notificationRepository.AddAsync(notification);
@@ -56,7 +56,7 @@ namespace MathBridgeSystem.Application.Services
             
             // Mark as sent
             notification.Status = "Sent";
-            notification.SentDate = DateTime.UtcNow;
+            notification.SentDate = DateTime.UtcNow.ToLocalTime();
             await _notificationRepository.UpdateAsync(notification);
 
             return dto;

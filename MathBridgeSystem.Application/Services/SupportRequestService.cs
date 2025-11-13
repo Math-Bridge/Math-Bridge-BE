@@ -36,8 +36,8 @@ namespace MathBridgeSystem.Application.Services
                 Description = request.Description.Trim(),
                 Category = request.Category.Trim(),
                 Status = "Open",
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                UpdatedDate = DateTime.UtcNow.ToLocalTime()
             };
             await _supportRequestRepository.AddAsync(supportRequest);
             return supportRequest.RequestId;
@@ -54,7 +54,7 @@ namespace MathBridgeSystem.Application.Services
             supportRequest.Subject = request.Subject.Trim();
             supportRequest.Description = request.Description.Trim();
             supportRequest.Category = request.Category.Trim();
-            supportRequest.UpdatedDate = DateTime.UtcNow;
+            supportRequest.UpdatedDate = DateTime.UtcNow.ToLocalTime();
 
             await _supportRequestRepository.UpdateAsync(supportRequest);
         }
@@ -115,7 +115,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Assigned user not found.");
 
             sr.AssignedToUserId = request.AssignedToUserId;
-            sr.UpdatedDate = DateTime.UtcNow;
+            sr.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _supportRequestRepository.UpdateAsync(sr);
         }
 
@@ -128,9 +128,9 @@ namespace MathBridgeSystem.Application.Services
             sr.Status = request.Status.Trim();
             sr.Resolution = request.Resolution?.Trim();
             sr.AdminNotes = request.AdminNotes?.Trim();
-            sr.UpdatedDate = DateTime.UtcNow;
+            sr.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             if (string.Equals(sr.Status, "Resolved", StringComparison.OrdinalIgnoreCase))
-                sr.ResolvedDate = DateTime.UtcNow;
+                sr.ResolvedDate = DateTime.UtcNow.ToLocalTime();
 
             await _supportRequestRepository.UpdateAsync(sr);
         }

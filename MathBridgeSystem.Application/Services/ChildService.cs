@@ -52,7 +52,7 @@ namespace MathBridgeSystem.Application.Services
                 CenterId = request.CenterId, // Có thể NULL
                 Grade = request.Grade,
                 DateOfBirth = request.DateOfBirth,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "active"
             };
 

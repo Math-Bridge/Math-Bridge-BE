@@ -62,7 +62,7 @@ namespace MathBridgeSystem.Application.Services
                 Bio = request.Bio,
                 VerificationStatus = "pending",
                 IsDeleted = false,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _repository.AddAsync(verification);
@@ -191,7 +191,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new KeyNotFoundException($"Tutor verification with ID {verificationId} not found.");
 
             verification.VerificationStatus = "approved";
-            verification.VerificationDate = DateTime.UtcNow;
+            verification.VerificationDate = DateTime.UtcNow.ToLocalTime();
             await _repository.UpdateAsync(verification);
         }
 
@@ -205,7 +205,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new KeyNotFoundException($"Tutor verification with ID {verificationId} not found.");
 
             verification.VerificationStatus = "rejected";
-            verification.VerificationDate = DateTime.UtcNow;
+            verification.VerificationDate = DateTime.UtcNow.ToLocalTime();
             // Note: Could extend TutorVerification entity to include RejectionReason field if needed
             await _repository.UpdateAsync(verification);
         }

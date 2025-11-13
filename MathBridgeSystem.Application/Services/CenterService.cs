@@ -70,9 +70,9 @@ namespace MathBridgeSystem.Application.Services
                 District = place.District,
                 PlaceName = place.PlaceName,
                 CountryCode = place.CountryCode ?? "VN",
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow,
-                LocationUpdatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                UpdatedDate = DateTime.UtcNow.ToLocalTime(),
+                LocationUpdatedDate = DateTime.UtcNow.ToLocalTime(),
                 TutorCount = 0
             };
 
@@ -143,14 +143,14 @@ namespace MathBridgeSystem.Application.Services
                     center.District = place.District;
                     center.PlaceName = place.PlaceName;
                     center.CountryCode = place.CountryCode ?? "VN";
-                    center.LocationUpdatedDate = DateTime.UtcNow;
+                    center.LocationUpdatedDate = DateTime.UtcNow.ToLocalTime();
                     hasChanges = true;
                 }
             }
 
             if (hasChanges)
             {
-                center.UpdatedDate = DateTime.UtcNow;
+                center.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _centerRepository.UpdateAsync(center);
             }
         }
@@ -352,7 +352,7 @@ namespace MathBridgeSystem.Application.Services
                 TutorCenterId = Guid.NewGuid(),
                 TutorId = tutorId,
                 CenterId = centerId,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _tutorCenterRepository.AddAsync(tutorCenter);

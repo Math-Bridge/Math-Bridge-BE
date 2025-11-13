@@ -44,7 +44,7 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = request.MaxReschedule,
                 DurationDays = request.DurationDays,
                 Description = request.Description,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 CurriculumId = request.CurriculumId,
                 IsActive = request.IsActive
             };
@@ -127,7 +127,7 @@ namespace MathBridgeSystem.Application.Services
             if (request.CurriculumId.HasValue) package.CurriculumId = request.CurriculumId.Value;
             if (request.IsActive.HasValue) package.IsActive = request.IsActive.Value;
 
-            package.UpdatedDate = DateTime.UtcNow;
+            package.UpdatedDate = DateTime.UtcNow.ToLocalTime();
 
             await _packageRepository.UpdateAsync(package);
 

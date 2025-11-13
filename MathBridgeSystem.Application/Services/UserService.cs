@@ -115,8 +115,8 @@ namespace MathBridgeSystem.Application.Services
                 Gender = request.Gender,
                 RoleId = request.RoleId,
                 WalletBalance = 0.00m,
-                CreatedDate = DateTime.UtcNow,
-                LastActive = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow.ToLocalTime(),
+                LastActive = DateTime.UtcNow.ToLocalTime(),
                 Status = "active"
             };
 
@@ -178,7 +178,7 @@ namespace MathBridgeSystem.Application.Services
                 Amount = packagePrice,
                 TransactionType = "withdrawal",
                 Description = $"Payment for contract {id} - Package: {contract.Package.PackageName}",
-                TransactionDate = DateTime.UtcNow,
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "completed",
                 PaymentMethod = "wallet",
                 PaymentGateway = "internal"

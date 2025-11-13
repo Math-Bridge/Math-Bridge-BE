@@ -90,7 +90,7 @@ public class SePayService : ISePayService
                 Amount = request.Amount,
                 TransactionType = "Deposit",
                 Description = $"SePay deposit: {request.Description}",
-                TransactionDate = DateTime.UtcNow,
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "Pending",
                 PaymentMethod = "SePay",
                 PaymentGatewayReference = ""
@@ -115,7 +115,7 @@ public class SePayService : ISePayService
                 Code = orderReference,
                 Content = orderReference + "-" + request.Description,
                 Description = request.Description,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.ToLocalTime()
             };
 
             await _sePayRepository.AddAsync(sePayTransaction);
@@ -388,7 +388,7 @@ public class SePayService : ISePayService
                 Code = orderReference,
                 Content = orderReference + "-Contract Payment",
                 Description = $"Direct payment for contract {contractId}",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.ToLocalTime()
             };
 
             await _sePayRepository.AddAsync(sePayTransaction);

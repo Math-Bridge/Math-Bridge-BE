@@ -49,7 +49,7 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<List<SessionReminderDto>> GetUpcomingSessionsAsync(TimeSpan timeWindow)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow.ToLocalTime();
             var endTime = now.Add(timeWindow);
 
             var sessions = await _sessionRepository.GetSessionsInTimeRangeAsync(now, endTime);
@@ -125,7 +125,7 @@ namespace MathBridgeSystem.Application.Services
                     Message = $"Your session starts at {session.SessionStartTime:HH:mm}",
                     NotificationType = "SessionReminder",
                     Status = "Pending",
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow.ToLocalTime()
                 };
                 notifications.Add(dto);
             }

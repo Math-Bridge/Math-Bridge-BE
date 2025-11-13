@@ -419,7 +419,7 @@ namespace MathBridgeSystem.Tests.Services
         public async Task CheckPaymentStatusAsync_TransactionCompleted_ReturnsPaidStatus()
         {
             var txId = Guid.NewGuid();
-            var paidDate = DateTime.UtcNow.AddMinutes(-5);
+            var paidDate = DateTime.UtcNow.ToLocalTime().AddMinutes(-5);
             var walletTx = new WalletTransaction { TransactionId = txId, Status = "Completed", Amount = 1000 };
             var sepayTx = new SepayTransaction { TransactionDate = paidDate };
 

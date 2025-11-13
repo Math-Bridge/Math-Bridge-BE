@@ -259,7 +259,7 @@ public class SePayController : ControllerBase
         {
             service = "SePay Integration",
             status = "Healthy",
-            timestamp = DateTime.UtcNow,
+            timestamp = DateTime.UtcNow.ToLocalTime(),
             version = "1.0.0"
         });
     }

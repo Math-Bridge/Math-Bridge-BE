@@ -63,7 +63,7 @@ namespace MathBridgeSystem.Application.Services
                 Amount = request.Amount,
                 TransactionType = request.TransactionType,
                 Description = request.Description,
-                TransactionDate = DateTime.UtcNow,
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "Pending",
                 PaymentMethod = request.PaymentMethod,
                 PaymentGatewayReference = request.PaymentGatewayReference,

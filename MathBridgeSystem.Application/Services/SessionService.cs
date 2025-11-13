@@ -122,7 +122,7 @@ namespace MathBridgeSystem.Application.Services
 
             // Update the tutor
             session.TutorId = newTutorId;
-            session.UpdatedAt = DateTime.UtcNow;
+            session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             
             await _sessionRepository.UpdateAsync(session);
             return true;
@@ -146,7 +146,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentException("Status must be 'completed' or 'cancelled' or processing'.");
 
             session.Status = normalizedNewStatus;
-            session.UpdatedAt = DateTime.UtcNow;
+            session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepository.UpdateAsync(session);
             return true;
         }

@@ -319,7 +319,7 @@ namespace MathBridgeSystem.Tests.Services
             await _service.ApproveVerificationAsync(verificationId);
 
             verification.VerificationStatus.Should().Be("approved");
-            verification.VerificationDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+            verification.VerificationDate.Should().BeCloseTo(DateTime.UtcNow.ToLocalTime(), TimeSpan.FromSeconds(1));
             _repositoryMock.Verify(r => r.UpdateAsync(verification), Times.Once);
         }
 

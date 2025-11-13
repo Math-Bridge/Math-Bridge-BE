@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<List<TutorSchedule>> GetActiveTutorSchedulesAsync(Guid tutorId)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime());
             
             return await _context.TutorSchedules
                 .Include(ta => ta.Tutor)
@@ -158,7 +158,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<TutorSchedule> CreateAsync(TutorSchedule availability)
         {
             availability.AvailabilityId = Guid.NewGuid();
-            availability.CreatedDate = DateTime.UtcNow;
+            availability.CreatedDate = DateTime.UtcNow.ToLocalTime();
             availability.Status = "active";
 
             await _context.TutorSchedules.AddAsync(availability);
@@ -169,7 +169,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task UpdateAsync(TutorSchedule availability)
         {
-            availability.UpdatedDate = DateTime.UtcNow;
+            availability.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             _context.TutorSchedules.Update(availability);
             await _context.SaveChangesAsync();
         }

@@ -60,7 +60,7 @@ public class VideoConferenceService : IVideoConferenceService
             MeetingUri = creationResult.MeetingUri,
             MeetingCode = creationResult.MeetingCode,
             CreatedByUserId = createdByUserId,
-            CreatedDate = DateTime.UtcNow
+            CreatedDate = DateTime.UtcNow.ToLocalTime()
         };
 
         _context.VideoConferenceSessions.Add(conferenceSession);
