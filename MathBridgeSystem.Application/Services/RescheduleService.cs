@@ -4,6 +4,8 @@ using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Services
@@ -286,6 +288,63 @@ namespace MathBridgeSystem.Application.Services
                     return true;
             }
             return false;
+        }
+
+        public async Task<RescheduleRequestDto?> GetByIdAsync(Guid requestId, Guid userId, string role)
+        {
+            var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId);
+            if (request == null)
+                return null;
+
+            // Authorization check
+            if (role == "parent" && request.ParentId != userId)
+                throw new UnauthorizedAccessException("You can only view your own reschedule requests.");
+
+            return MapToDto(request);
+        }
+
+        public async Task<IEnumerable<RescheduleRequestDto>> GetAllAsync(Guid? parentId = null)
+        {
+            IEnumerable<RescheduleRequest> requests;
+
+            if (parentId.HasValue)
+            {
+                requests = await _rescheduleRepo.GetByParentIdAsync(parentId.Value);
+            }
+            else
+            {
+                requests = await _rescheduleRepo.GetAllAsync();
+            }
+
+            return requests.Select(MapToDto);
+        }
+
+        private RescheduleRequestDto MapToDto(RescheduleRequest request)
+        {
+            return new RescheduleRequestDto
+            {
+                RequestId = request.RequestId,
+                BookingId = request.BookingId,
+                ParentId = request.ParentId,
+                ParentName = request.Parent?.FullName ?? "N/A",
+                ContractId = request.ContractId,
+                RequestedDate = request.RequestedDate,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                RequestedTutorId = request.RequestedTutorId,
+                RequestedTutorName = request.RequestedTutor?.FullName,
+                Reason = request.Reason,
+                Status = request.Status,
+                StaffId = request.StaffId,
+                StaffName = request.Staff?.FullName,
+                ProcessedDate = request.ProcessedDate,
+                CreatedDate = request.CreatedDate,
+                OriginalSessionDate = request.Booking.SessionDate,
+                OriginalStartTime = request.Booking.StartTime,
+                OriginalEndTime = request.Booking.EndTime,
+                OriginalTutorId = request.Booking.TutorId,
+                OriginalTutorName = request.Booking.Tutor?.FullName ?? "N/A"
+            };
         }
     }
 }

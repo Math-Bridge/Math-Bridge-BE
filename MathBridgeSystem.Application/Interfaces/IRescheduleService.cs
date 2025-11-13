@@ -1,5 +1,6 @@
-﻿using MathBridgeSystem.Application.DTOs;
+﻿﻿using MathBridgeSystem.Application.DTOs;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Application.Interfaces
@@ -10,5 +11,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<RescheduleResponseDto> ApproveRequestAsync(Guid staffId, Guid requestId, ApproveRescheduleRequestDto dto);
         Task<RescheduleResponseDto> RejectRequestAsync(Guid staffId, Guid requestId, string reason);
         Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId);
+        Task<RescheduleRequestDto?> GetByIdAsync(Guid requestId, Guid userId, string role);
+        Task<IEnumerable<RescheduleRequestDto>> GetAllAsync(Guid? parentId = null);
     }
 }
