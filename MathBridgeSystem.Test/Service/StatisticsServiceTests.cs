@@ -7,7 +7,7 @@ using MathBridgeSystem.Domain.Interfaces;
 using Moq;
 using Xunit;
 
-namespace MathBridgeSystem.Test.Service
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class StatisticsServiceTests
     {

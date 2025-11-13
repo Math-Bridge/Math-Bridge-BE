@@ -143,7 +143,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException($"Session must be in 'processing' status to update. Current: {currentStatus}");
 
             if (normalizedNewStatus != "completed" && normalizedNewStatus != "cancelled" && normalizedNewStatus != "processing")
-                throw new ArgumentException("Status must be 'completed' or 'cancelled' or processing'.");
+                throw new ArgumentException("Status must be 'completed' or 'cancelled'");
 
             session.Status = normalizedNewStatus;
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
