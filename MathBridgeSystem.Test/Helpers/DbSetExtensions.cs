@@ -59,8 +59,18 @@ namespace MathBridgeSystem.Tests.Helpers
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 {
-    // Ensure the expression is properly handled for async execution
+    // If TResult is a Task<T>, create a completed Task<T> wrapping the sync result.
+    var resultType = typeof(TResult);
+    if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Task<>))
+    {
+        var innerResult = _inner.Execute(expression);
+        var taskResultType = resultType.GetGenericArguments()[0];
+        var fromResult = typeof(Task).GetMethod(nameof(Task.FromResult)).MakeGenericMethod(taskResultType);
+        var task = fromResult.Invoke(null, new[] { innerResult });
+        return (TResult)task;
+    }
 
+    // Otherwise the provider expects a synchronous TResult (e.g. T), so forward the call.
     return Execute<TResult>(expression);
 }
     }
