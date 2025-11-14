@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Moq;
 using System.Collections.Generic;
@@ -6,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace MathBridgeSystem.Tests.Helpers
 {
@@ -49,30 +49,71 @@ namespace MathBridgeSystem.Tests.Helpers
 
         public object Execute(Expression expression)
         {
-            return _inner.Execute(expression);
+            var converted = QueryableToEnumerableVisitor.Convert(expression);
+            return _inner.Execute(converted);
         }
 
         public TResult Execute<TResult>(Expression expression)
         {
-            return _inner.Execute<TResult>(expression);
+            var converted = QueryableToEnumerableVisitor.Convert(expression);
+            return _inner.Execute<TResult>(converted);
         }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
-{
-    // If TResult is a Task<T>, create a completed Task<T> wrapping the sync result.
-    var resultType = typeof(TResult);
-    if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Task<>))
-    {
-        var innerResult = _inner.Execute(expression);
-        var taskResultType = resultType.GetGenericArguments()[0];
-        var fromResult = typeof(Task).GetMethod(nameof(Task.FromResult)).MakeGenericMethod(taskResultType);
-        var task = fromResult.Invoke(null, new[] { innerResult });
-        return (TResult)task;
+        {
+            var converted = QueryableToEnumerableVisitor.Convert(expression);
+            return Execute<TResult>(converted);
+        }
+
+        // Converts Queryable.* calls in an expression tree to Enumerable.* calls so LINQ-to-objects can execute them
+        private class QueryableToEnumerableVisitor : ExpressionVisitor
+        {
+            public static Expression Convert(Expression expression) => new QueryableToEnumerableVisitor().Visit(expression);
+
+            protected override Expression VisitMethodCall(MethodCallExpression node)
+            {
+                if (node.Method.DeclaringType == typeof(System.Linq.Queryable))
+                {
+                    var enumerableMethods = typeof(System.Linq.Enumerable).GetMethods().Where(m => m.Name == node.Method.Name).ToList();
+                    foreach (var m in enumerableMethods)
+                    {
+                        if (m.GetParameters().Length == node.Method.GetParameters().Length)
+                        {
+                            var gm = m;
+                            if (node.Method.IsGenericMethod)
+                            {
+                                try
+                                {
+                                    gm = m.MakeGenericMethod(node.Method.GetGenericArguments());
+                                }
+                                catch
+                                {
+                                    continue;
+                                }
+                            }
+
+                            var visitedArgs = node.Arguments.Select(Visit).ToArray();
+                            return Expression.Call(gm, visitedArgs);
+                        }
+                    }
+                }
+
+                return base.VisitMethodCall(node);
+            }
+        }
     }
 
-    // Otherwise the provider expects a synchronous TResult (e.g. T), so forward the call.
-    return Execute<TResult>(expression);
-}
+    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    {
+        public TestAsyncEnumerable(IEnumerable<T> enumerable) : base(enumerable) { }
+        public TestAsyncEnumerable(Expression expression) : base(expression) { }
+
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            return new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        }
+
+        IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
     }
 
     internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
@@ -96,18 +137,5 @@ namespace MathBridgeSystem.Tests.Helpers
         {
             return new ValueTask<bool>(_inner.MoveNext());
         }
-    }
-
-    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
-    {
-        public TestAsyncEnumerable(IEnumerable<T> enumerable) : base(enumerable) { }
-        public TestAsyncEnumerable(Expression expression) : base(expression) { }
-
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            return new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
-        }
-
-        IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
     }
 }

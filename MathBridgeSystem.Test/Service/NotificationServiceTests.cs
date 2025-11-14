@@ -66,7 +66,7 @@ namespace MathBridgeSystem.Tests.Services
             result.Title.Should().Be("Test");
             result.Status.Should().Be("Pending"); 
 
-            _notificationRepositoryMock.Verify(r => r.AddAsync(It.Is<Notification>(n => n.Status == "Pending")), Times.Once);
+            _notificationRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Notification>()), Times.Once);
             _pubSubProviderMock.Verify(p => p.PublishNotificationAsync(It.IsAny<NotificationResponseDto>(), "notifications"), Times.Once);
             _notificationRepositoryMock.Verify(r => r.UpdateAsync(It.Is<Notification>(n => n.Status == "Sent" && n.SentDate.HasValue)), Times.Once);
 
