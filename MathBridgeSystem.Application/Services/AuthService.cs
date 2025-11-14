@@ -186,8 +186,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 // Hardcode RoleId to 3 (parent role) for Google login
                 const int parentRoleId = 3;
-                var roleExists = await _userRepository.RoleExistsAsync(parentRoleId);
-                if (!roleExists)
+                var roleExists = await _userRepository.GetRoleByIdAsync(parentRoleId);
+                if (roleExists.RoleId != parentRoleId)
                 {
                     Console.WriteLine($"GoogleLoginAsync: Parent role (ID: {parentRoleId}) not found");
                     throw new Exception($"Parent role (ID: {parentRoleId}) not found in database");
@@ -202,6 +202,7 @@ namespace MathBridgeSystem.Application.Services
                     PhoneNumber = "N/A",
                     Gender = "other",
                     RoleId = parentRoleId,
+                    Role = roleExists,
                     WalletBalance = 0.00m,
                     CreatedDate = DateTime.UtcNow.ToLocalTime(),
                     LastActive = DateTime.UtcNow.ToLocalTime(),

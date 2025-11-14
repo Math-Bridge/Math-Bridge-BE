@@ -60,12 +60,6 @@ namespace MathBridgeSystem.Tests.Helpers
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 {
     // Ensure the expression is properly handled for async execution
-    if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(Task<>))
-    {
-        var resultType = typeof(TResult).GetGenericArguments()[0];
-        var executionResult = _inner.Execute(expression);
-        return (TResult)Task.FromResult(Convert.ChangeType(executionResult, resultType));
-    }
 
     return Execute<TResult>(expression);
 }

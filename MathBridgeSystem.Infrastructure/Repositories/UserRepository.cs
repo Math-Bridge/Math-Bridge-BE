@@ -119,5 +119,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.Package)
                 .FirstOrDefaultAsync(c => c.ContractId == Id);
         }
+
+        public async Task<Role> GetRoleByIdAsync(int roleId)
+        {
+            return await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
+        }
     }
 }
