@@ -2,7 +2,7 @@ using FluentAssertions;
 using MathBridgeSystem.Application.Services;
 using Xunit;
 
-namespace MathBridgeSystem.Tests.Controllers
+namespace MathBridgeSystem.Test.Service
 {
     public class GoogleAuthServiceTests
     {

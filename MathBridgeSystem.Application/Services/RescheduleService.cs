@@ -40,7 +40,19 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
         {
-            // Fetch the existing session first
+            // Validate start time
+            if (!IsValidStartTime(dto.StartTime))
+            {
+                throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
+            }
+
+            // Validate end time (must be 90 minutes from start time)
+            var expectedEndTime = dto.StartTime.AddMinutes(90);
+            if (dto.EndTime != expectedEndTime)
+            {
+                throw new ArgumentException($"End time must be 90 minutes after start time. Expected: {expectedEndTime}");
+            }
+
             var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId);
             if (oldSession == null) throw new KeyNotFoundException("Session not found.");
             if (oldSession.Contract.ParentId != parentId) throw new UnauthorizedAccessException("Not your child.");
@@ -51,36 +63,13 @@ namespace MathBridgeSystem.Application.Services
 
             var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId);
             if (contract == null) throw new KeyNotFoundException("Contract not found.");
-            if (!string.IsNullOrWhiteSpace(contract.Status) && !contract.Status.Equals("active", StringComparison.OrdinalIgnoreCase))
+            if (contract.Status != "active")
                 throw new InvalidOperationException("Contract is not active.");
-            if (contract.EndDate < dto.RequestedDate)
+            if(contract.EndDate < dto.RequestedDate)
                 throw new InvalidOperationException("Requested date exceeds contract end date.");
             if (contract.RescheduleCount >= contract.Package.MaxReschedule)
                 throw new InvalidOperationException($"No reschedule attempts left. Max: {contract.Package.MaxReschedule}");
-
-            // Validate start/end times only if provided
-            bool hasCustomTimes = dto.StartTime != default(TimeOnly) || dto.EndTime != default(TimeOnly);
-            if (hasCustomTimes)
-            {
-                if (!IsValidStartTime(dto.StartTime))
-                    throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
-
-                var expectedEndTime = dto.StartTime.AddMinutes(90);
-                if (dto.EndTime != expectedEndTime)
-                    throw new ArgumentException($"End time must be 90 minutes after start time. Expected: {expectedEndTime}");
-            }
-
-            // If a specific tutor is requested, check availability
-            if (dto.RequestedTutorId.HasValue)
-            {
-                Console.WriteLine($"DEBUG: Checking availability for requested tutor {dto.RequestedTutorId.Value} on {dto.RequestedDate}");
-                var requestedTutorId = dto.RequestedTutorId.Value;
-                var startDateTime = dto.RequestedDate.ToDateTime(dto.StartTime);
-                var endDateTime = dto.RequestedDate.ToDateTime(dto.EndTime);
-                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, startDateTime, endDateTime);
-                if (!isAvailable)
-                    throw new InvalidOperationException("Tutor not available.");
-            }
+            
 
             var request = new RescheduleRequest
             {
@@ -92,13 +81,11 @@ namespace MathBridgeSystem.Application.Services
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
                 Reason = dto.Reason,
-                RequestedTutorId = dto.RequestedTutorId,
                 Status = "pending",
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             await _rescheduleRepo.AddAsync(request);
-
 
             return new RescheduleResponseDto
             {
@@ -187,7 +174,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Đổi lịch thành công.",
+                Message = "Done reschedule",
                 ProcessedDate = request.ProcessedDate
             };
         }

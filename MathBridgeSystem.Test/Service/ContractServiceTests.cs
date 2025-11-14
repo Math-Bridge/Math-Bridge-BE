@@ -394,7 +394,7 @@ namespace MathBridgeSystem.Tests.Services
             _contractRepositoryMock.Setup(repo => repo.GetByIdWithPackageAsync(contractId)).ReturnsAsync(contract);
 
             Func<Task> act = () => _contractService.AssignTutorsAsync(contractId, new AssignTutorToContractRequest(), Guid.NewGuid());
-            await act.Should().ThrowAsync<System.ArgumentException>();
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Main tutor already assigned.");
         }
 
         // Test: Ném lỗi khi gán tutor cho hợp đồng đã bị hủy

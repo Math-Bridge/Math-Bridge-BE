@@ -6,7 +6,7 @@ using MathBridgeSystem.Domain.Interfaces;
 using Moq;
 using Xunit;
 
-namespace MathBridgeSystem.Tests.Services
+namespace MathBridgeSystem.Test.Services
 {
     public class FinalFeedbackServiceTests
     {
