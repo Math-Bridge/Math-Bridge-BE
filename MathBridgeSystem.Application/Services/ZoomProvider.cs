@@ -103,7 +103,7 @@ public class ZoomProvider : IVideoConferenceProvider
 
     private async Task<string> GetAccessTokenAsync()
     {
-        if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow < _tokenExpiryTime.AddSeconds(-60))
+        if (!string.IsNullOrEmpty(_cachedAccessToken) && DateTime.UtcNow.ToLocalTime() < _tokenExpiryTime.AddSeconds(-60))
         {
             return _cachedAccessToken;
         }
@@ -136,17 +136,8 @@ public class ZoomProvider : IVideoConferenceProvider
         }
 
         var json = await System.Text.Json.JsonDocument.ParseAsync(new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(responseContent)));
-        if (!json.RootElement.TryGetProperty("access_token", out var accessTokenElement) || accessTokenElement.ValueKind == System.Text.Json.JsonValueKind.Null)
-        {
-            throw new InvalidOperationException("Zoom access token is empty or not found in response");
-        }
-
-        var token = accessTokenElement.GetString();
-        if (!json.RootElement.TryGetProperty("expires_in", out var expiresInElement) || expiresInElement.ValueKind == System.Text.Json.JsonValueKind.Null)
-        {
-            throw new InvalidOperationException("Zoom token expiry not found in response");
-        }
-        var expiresIn = expiresInElement.GetInt32();
+        var token = json.RootElement.GetProperty("access_token").GetString();
+        var expiresIn = json.RootElement.GetProperty("expires_in").GetInt32();
 
         if (string.IsNullOrEmpty(token))
         {
@@ -154,7 +145,7 @@ public class ZoomProvider : IVideoConferenceProvider
         }
 
         _cachedAccessToken = token;
-        _tokenExpiryTime = DateTime.UtcNow.AddSeconds(expiresIn);
+        _tokenExpiryTime = DateTime.UtcNow.ToLocalTime().AddSeconds(expiresIn);
         return token;
     }
     

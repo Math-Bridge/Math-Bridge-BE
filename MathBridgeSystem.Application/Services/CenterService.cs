@@ -162,19 +162,15 @@ namespace MathBridgeSystem.Application.Services
                 throw new Exception("Center not found");
 
             // Check if center has active contracts
-            var activeContractsList = await _context.Contracts
-                .Where(c => c.CenterId == id && c.Status == "active").ToListAsync();
-
-            var activeContracts = activeContractsList.Any();
+            var activeContracts = await _context.Contracts
+                .AnyAsync(c => c.CenterId == id && c.Status == "active");
 
             if (activeContracts)
                 throw new Exception("Cannot delete center with active contracts");
 
             // Check if center has assigned children
-            var assignedChildrenList = await _context.Children
-                .Where(c => c.CenterId == id && c.Status == "active").ToListAsync();
-
-            var assignedChildren = assignedChildrenList.Any();
+            var assignedChildren = await _context.Children
+                .AnyAsync(c => c.CenterId == id && c.Status == "active");
 
             if (assignedChildren)
                 throw new Exception("Cannot delete center with assigned children");

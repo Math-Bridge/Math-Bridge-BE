@@ -6,7 +6,7 @@ using Moq;
 using Xunit;
 using TestResultEntity = MathBridgeSystem.Domain.Entities.TestResult;
 
-namespace MathBridgeSystem.Tests.Controllers
+namespace MathBridgeSystem.Test.Service
 {
     public class TestResultServiceTests
     {

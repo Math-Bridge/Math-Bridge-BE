@@ -8,7 +8,7 @@ namespace MathBridgeSystem.Application.DTOs
         public DateOnly RequestedDate { get; set; }
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }
-        public Guid? RequestedTutorId { get; set; }
+ //       public Guid? RequestedTutorId { get; set; }
         public string? Reason { get; set; }
     }
 }

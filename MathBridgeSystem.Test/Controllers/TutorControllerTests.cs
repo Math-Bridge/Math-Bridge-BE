@@ -8,7 +8,7 @@ using Moq;
 using System.Security.Claims;
 using Xunit;
 
-namespace MathBridgeSystem.Tests.Controllers
+namespace MathBridgeSystem.Test.Controllers
 {
     public class TutorControllerTests
     {

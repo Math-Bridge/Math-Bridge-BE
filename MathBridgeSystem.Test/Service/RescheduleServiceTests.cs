@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿﻿using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
@@ -51,9 +51,7 @@ namespace MathBridgeSystem.Tests.Services
                 ContractId = _contractId,
                 ParentId = _parentId,
                 RescheduleCount = 0,
-                Package = _package,
-                Status = "active",
-                EndDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(30))
+                Package = _package 
             };
 
             _session = new Session
@@ -105,8 +103,8 @@ namespace MathBridgeSystem.Tests.Services
             var dto = new CreateRescheduleRequestDto
             {
                 BookingId = _bookingId,
-                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTutorId = requestedTutorId,
+                RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(10)),
+                
                 StartTime = new TimeOnly(17, 30),
                 EndTime = new TimeOnly(19, 0),
             };
@@ -115,7 +113,6 @@ namespace MathBridgeSystem.Tests.Services
             _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
             _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
             _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(true);
-            _rescheduleRepoMock.Setup(r => r.AddAsync(It.IsAny<RescheduleRequest>())).Returns(Task.CompletedTask);
 
             // Act
             var result = await _rescheduleService.CreateRequestAsync(_parentId, dto);
@@ -124,6 +121,68 @@ namespace MathBridgeSystem.Tests.Services
             result.Status.Should().Be("pending");
             _sessionRepoMock.Verify(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Once);
             _rescheduleRepoMock.Verify(r => r.AddAsync(It.IsAny<RescheduleRequest>()), Times.Once);
+        }
+
+        // Test: Ném lỗi khi không tìm thấy Session
+        [Fact]
+        public async Task CreateRequestAsync_SessionNotFound_ThrowsKeyNotFoundException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Session)null);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Session not found.");
+        }
+
+        // Test: Ném lỗi khi không đúng Parent
+        [Fact]
+        public async Task CreateRequestAsync_NotYourChild_ThrowsUnauthorizedAccessException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            var otherParentId = Guid.NewGuid();
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(otherParentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Not your child.");
+        }
+
+        // Test: Ném lỗi khi đổi lịch buổi học trong quá khứ
+        [Fact]
+        public async Task CreateRequestAsync_PastSession_ThrowsInvalidOperationException()
+        {
+            var pastSession = new Session { Contract = _contract, SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) };
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(pastSession);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Cannot reschedule past sessions.");
+        }
+
+        // Test: Ném lỗi khi đã có request đang chờ
+        [Fact]
+        public async Task CreateRequestAsync_PendingRequestExists_ThrowsInvalidOperationException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(true); 
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Pending request exists.");
+        }
+
+        // Test: Ném lỗi khi không tìm thấy Contract
+        [Fact]
+        public async Task CreateRequestAsync_ContractNotFound_ThrowsKeyNotFoundException()
+        {
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync((Contract)null); 
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Contract not found.");
+        }
+
+        // Test: Ném lỗi khi hết lượt đổi lịch
+        [Fact]
+        public async Task CreateRequestAsync_NoRescheduleAttemptsLeft_ThrowsInvalidOperationException()
+        {
+            _contract.RescheduleCount = 2;
+            _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
+            _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
+            _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
+            Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, new CreateRescheduleRequestDto { BookingId = _bookingId });
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("No reschedule attempts left. Max: 2");
         }
 
         // Test: Ném lỗi khi Tutor được yêu cầu không rảnh
@@ -135,19 +194,17 @@ namespace MathBridgeSystem.Tests.Services
             {
                 BookingId = _bookingId,
                 RequestedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                RequestedTutorId = requestedTutorId,
                 StartTime = new TimeOnly(19, 0),
                 EndTime = new TimeOnly(20, 30),
             };
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
             _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
             _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
-            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+            _sessionRepoMock.Setup(r => r.IsTutorAvailableAsync(requestedTutorId, dto.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(false); 
 
             Func<Task> act = () => _rescheduleService.CreateRequestAsync(_parentId, dto);
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Tutor not available.");
         }
-
 
         // Test: Ném lỗi khi thời gian bắt đầu không hợp lệ
         [Fact]
