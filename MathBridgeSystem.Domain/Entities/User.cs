@@ -11,7 +11,7 @@ public partial class User
 
     public string Email { get; set; } = null!;
 
-    public string PasswordHash { get; set; } = null!;
+    public string? PasswordHash { get; set; }
 
     public string PhoneNumber { get; set; } = null!;
 
@@ -82,10 +82,6 @@ public partial class User
     public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
-
-    public virtual ICollection<SupportRequest> SupportRequestAssignedToUsers { get; set; } = new List<SupportRequest>();
-
-    public virtual ICollection<SupportRequest> SupportRequestUsers { get; set; } = new List<SupportRequest>();
 
     public virtual ICollection<TutorCenter> TutorCenters { get; set; } = new List<TutorCenter>();
 

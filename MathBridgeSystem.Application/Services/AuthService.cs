@@ -225,7 +225,8 @@ namespace MathBridgeSystem.Application.Services
             }
 
             var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
-            Console.WriteLine($"GoogleLoginAsync: JWT token generated for user: {user.UserId}");
+            Console.WriteLine($"GoogleLoginAsync: JWT token generated for user: {user.UserId}, token: {token}");
+            
             return token;
         }
         public async Task<string> ForgotPasswordAsync(ForgotPasswordRequest request)

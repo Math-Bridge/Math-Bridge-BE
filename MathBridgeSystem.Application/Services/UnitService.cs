@@ -124,7 +124,7 @@ namespace MathBridgeSystem.Application.Services
             return new UnitDto
             {
                 UnitId = unit.UnitId,
-                CurriculumId = unit.CurriculumId,
+                CurriculumId = unit.CurriculumId == null ? Guid.Empty : unit.CurriculumId.Value,
                 CurriculumName = unit.Curriculum?.CurriculumName ?? string.Empty,
                 UnitName = unit.UnitName,
                 UnitDescription = unit.UnitDescription,

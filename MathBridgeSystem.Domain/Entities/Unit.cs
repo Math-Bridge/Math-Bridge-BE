@@ -7,7 +7,7 @@ public partial class Unit
 {
     public Guid UnitId { get; set; }
 
-    public Guid CurriculumId { get; set; }
+    public Guid? CurriculumId { get; set; }
 
     public string UnitName { get; set; } = null!;
 
@@ -31,7 +31,7 @@ public partial class Unit
 
     public virtual User? CreatedByNavigation { get; set; }
 
-    public virtual Curriculum Curriculum { get; set; } = null!;
+    public virtual Curriculum? Curriculum { get; set; }
 
     public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
 
