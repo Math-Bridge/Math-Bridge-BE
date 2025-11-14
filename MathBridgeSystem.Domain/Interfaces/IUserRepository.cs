@@ -16,6 +16,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<User>> GetUsersWithLocationAsync();
         Task<bool> EmailExistsAsync(string email);
         Task<bool> RoleExistsAsync(int roleId);
+        Task<Role> GetRoleByIdAsync(int roleId);
         Task<List<User>> GetAllAsync();
         Task<bool> ExistsAsync(Guid id);
         Task<List<User>> GetTutorsAsync();

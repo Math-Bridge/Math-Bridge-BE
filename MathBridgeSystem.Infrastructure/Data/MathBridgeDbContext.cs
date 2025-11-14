@@ -42,8 +42,6 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Session> Sessions { get; set; }
 
-    public virtual DbSet<SupportRequest> SupportRequests { get; set; }
-
     public virtual DbSet<TestResult> TestResults { get; set; }
 
     public virtual DbSet<TutorCenter> TutorCenters { get; set; }
@@ -734,64 +732,6 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_booking_sessions_tutors");
         });
 
-        modelBuilder.Entity<SupportRequest>(entity =>
-        {
-            entity.HasKey(e => e.RequestId).HasName("PK__support___18D3B90FDFBEA4AD");
-
-            entity.ToTable("support_requests");
-
-            entity.HasIndex(e => e.AssignedToUserId, "IX_support_requests_assigned_to_user_id");
-
-            entity.HasIndex(e => e.Category, "IX_support_requests_category");
-
-            entity.HasIndex(e => e.CreatedDate, "IX_support_requests_created_date");
-
-            entity.HasIndex(e => e.Status, "IX_support_requests_status");
-
-            entity.HasIndex(e => e.UserId, "IX_support_requests_user_id");
-
-            entity.Property(e => e.RequestId)
-                .HasDefaultValueSql("(newid())")
-                .HasColumnName("request_id");
-            entity.Property(e => e.AdminNotes)
-                .HasMaxLength(1000)
-                .HasColumnName("admin_notes");
-            entity.Property(e => e.AssignedToUserId).HasColumnName("assigned_to_user_id");
-            entity.Property(e => e.Category)
-                .HasMaxLength(50)
-                .HasColumnName("category");
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("created_date");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Resolution).HasColumnName("resolution");
-            entity.Property(e => e.ResolvedDate)
-                .HasColumnType("datetime")
-                .HasColumnName("resolved_date");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("open")
-                .HasColumnName("status");
-            entity.Property(e => e.Subject)
-                .HasMaxLength(200)
-                .HasColumnName("subject");
-            entity.Property(e => e.UpdatedDate)
-                .HasDefaultValueSql("(getutcdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("updated_date");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.AssignedToUser).WithMany(p => p.SupportRequestAssignedToUsers)
-                .HasForeignKey(d => d.AssignedToUserId)
-                .HasConstraintName("FK_support_requests_assigned_to_user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.SupportRequestUsers)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_support_requests_user_id");
-        });
-
         modelBuilder.Entity<TestResult>(entity =>
         {
             entity.HasKey(e => e.ResultId).HasName("PK__test_res__AFB3C316774AFA46");
@@ -988,6 +928,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasOne(d => d.Curriculum).WithMany(p => p.Units)
                 .HasForeignKey(d => d.CurriculumId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_units_curriculum");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.UnitUpdatedByNavigations)
