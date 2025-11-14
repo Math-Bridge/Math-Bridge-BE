@@ -146,15 +146,19 @@ namespace MathBridgeSystem.Tests.Services
         {
             var userId = Guid.NewGuid();
 
-            var (writer, stream) = CreateMockWriter();
-            _manager.RegisterConnection(userId, writer);
-            _manager.GetActiveConnectionCount().Should().Be(1);
+            var mockWriter = new Mock<StreamWriter>(new MemoryStream());
+            mockWriter.Setup(w => w.WriteAsync(It.IsAny<string>())).ThrowsAsync(new IOException());
+            mockWriter.Setup(w => w.FlushAsync()).Returns(Task.CompletedTask); // Allow flush to succeed
+            mockWriter.Setup(w => w.DisposeAsync()).Returns(ValueTask.CompletedTask); // Allow dispose to succeed
 
-            stream.Dispose();
+            _manager.RegisterConnection(userId, mockWriter.Object);
+            _manager.GetActiveConnectionCount().Should().Be(1);
 
             await _manager.SendNotificationAsync(userId, _testNotification);
 
             _manager.GetActiveConnectionCount().Should().Be(0);
+
+            mockWriter.Object.Dispose();
         }
 
         // Test: Gửi tin nhắn broadcast cho nhiều user

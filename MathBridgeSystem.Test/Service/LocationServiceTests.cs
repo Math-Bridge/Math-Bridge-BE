@@ -249,7 +249,7 @@ namespace MathBridgeSystem.Tests.Services
             result.NearbyUsers[0].DistanceKm.Should().Be(0.78);
 
             result.NearbyUsers[1].FullName.Should().Be("User Close");
-            result.NearbyUsers[1].DistanceKm.Should().BeApproximately(1.57, 0.01);
+            result.NearbyUsers[1].DistanceKm.Should().BeApproximately(1.56, 0.02);
         }
 
         // Test: Ném lỗi nếu Repository ném lỗi

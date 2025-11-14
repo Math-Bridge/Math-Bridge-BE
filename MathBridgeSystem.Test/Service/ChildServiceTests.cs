@@ -24,12 +24,19 @@ namespace MathBridgeSystem.Tests.Services
             _childRepositoryMock = new Mock<IChildRepository>();
             _userRepositoryMock = new Mock<IUserRepository>();
             _centerRepositoryMock = new Mock<ICenterRepository>();
+
+            // Default behaviors used by multiple tests to avoid null enumerables
+            _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(It.IsAny<Guid>())).ReturnsAsync(new List<Child>());
+            _childRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Child>());
+
             _childService = new ChildService(
                 _childRepositoryMock.Object,
                 _userRepositoryMock.Object,
                 _centerRepositoryMock.Object
             );
         }
+
+
 
         // Test: Thêm trẻ thành công với request hợp lệ (không có center)
         [Fact]
