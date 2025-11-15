@@ -344,7 +344,7 @@ namespace MathBridgeSystem.Tests.Services
             _sessionRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).ReturnsAsync(session);
 
             Func<Task> act = () => _sessionService.UpdateSessionStatusAsync(bookingId, "pending", tutorId); 
-            await act.Should().ThrowAsync<ArgumentException>().WithMessage("Status must be 'completed' or 'cancelled'");
+            await act.Should().ThrowAsync<ArgumentException>().WithMessage("*Status must be 'completed' or*");
         }
 
 

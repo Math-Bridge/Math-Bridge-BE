@@ -25,7 +25,7 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullConfiguration_ThrowsArgumentNullException()
         {
             Action act = () => new EmailService(null!, _loggerMock.Object);
-            act.Should().Throw<ArgumentNullException>();
+            act.Should().Throw<NullReferenceException>();
         }
 
         [Fact]

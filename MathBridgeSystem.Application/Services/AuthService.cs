@@ -171,7 +171,7 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        public async Task<string> GoogleLoginAsync(string googleToken)
+        public async Task<LoginResponse> GoogleLoginAsync(string googleToken)
         {
             if (string.IsNullOrEmpty(googleToken))
             {
@@ -227,7 +227,14 @@ namespace MathBridgeSystem.Application.Services
             var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
             Console.WriteLine($"GoogleLoginAsync: JWT token generated for user: {user.UserId}, token: {token}");
             
-            return token;
+            
+            return new LoginResponse
+            {
+                Token = token,
+                UserId = user.UserId,
+                Role = user.Role.RoleName,
+                RoleId = user.Role.RoleId
+            };
         }
         public async Task<string> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
@@ -259,7 +266,7 @@ namespace MathBridgeSystem.Application.Services
             };
             _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
 
-            var resetLink = $"https://api.vibe88.tech/api/auth/verify-reset?oobCode={oobCode}";
+            var resetLink = $"https://web.vibe88.tech/verify-reset?oobCode={oobCode}";
 
             try
             {

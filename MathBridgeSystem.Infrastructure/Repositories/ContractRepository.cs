@@ -150,7 +150,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                         }
                     }
 
-                    if (!hasOverlap || !tutorContracts.Any())
+                    if (!hasOverlap)
                     {
                         availableTutors.Add(tutor);
                     }

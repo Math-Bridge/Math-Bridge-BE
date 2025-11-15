@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore.Query;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace MathBridgeSystem.Tests.Helpers
 {
@@ -28,13 +29,14 @@ namespace MathBridgeSystem.Tests.Helpers
         }
     }
 
+    // Simple async query provider used in many unit test helpers
     internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
     {
         private readonly IQueryProvider _inner;
 
         public TestAsyncQueryProvider(IQueryProvider inner)
         {
-            _inner = inner;
+            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
 
         public IQueryable CreateQuery(Expression expression)
@@ -49,57 +51,31 @@ namespace MathBridgeSystem.Tests.Helpers
 
         public object Execute(Expression expression)
         {
-            var converted = QueryableToEnumerableVisitor.Convert(expression);
-            return _inner.Execute(converted);
+            return _inner.Execute(expression);
         }
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var converted = QueryableToEnumerableVisitor.Convert(expression);
-            return _inner.Execute<TResult>(converted);
+            return _inner.Execute<TResult>(expression);
         }
 
         public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
         {
-            var converted = QueryableToEnumerableVisitor.Convert(expression);
-            return Execute<TResult>(converted);
-        }
+            // Execute synchronously and wrap into Task if needed
+            var result = _inner.Execute(expression);
 
-        // Converts Queryable.* calls in an expression tree to Enumerable.* calls so LINQ-to-objects can execute them
-        private class QueryableToEnumerableVisitor : ExpressionVisitor
-        {
-            public static Expression Convert(Expression expression) => new QueryableToEnumerableVisitor().Visit(expression);
+            if (typeof(TResult) == typeof(Task))
+                return (TResult)(object)Task.CompletedTask;
 
-            protected override Expression VisitMethodCall(MethodCallExpression node)
+            if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(Task<>))
             {
-                if (node.Method.DeclaringType == typeof(System.Linq.Queryable))
-                {
-                    var enumerableMethods = typeof(System.Linq.Enumerable).GetMethods().Where(m => m.Name == node.Method.Name).ToList();
-                    foreach (var m in enumerableMethods)
-                    {
-                        if (m.GetParameters().Length == node.Method.GetParameters().Length)
-                        {
-                            var gm = m;
-                            if (node.Method.IsGenericMethod)
-                            {
-                                try
-                                {
-                                    gm = m.MakeGenericMethod(node.Method.GetGenericArguments());
-                                }
-                                catch
-                                {
-                                    continue;
-                                }
-                            }
-
-                            var visitedArgs = node.Arguments.Select(Visit).ToArray();
-                            return Expression.Call(gm, visitedArgs);
-                        }
-                    }
-                }
-
-                return base.VisitMethodCall(node);
+                var valueType = typeof(TResult).GetGenericArguments()[0];
+                var fromResult = typeof(Task).GetMethod(nameof(Task.FromResult))?.MakeGenericMethod(valueType);
+                var wrapped = fromResult?.Invoke(null, new object[] { result });
+                return (TResult)wrapped!;
             }
+
+            return (TResult)result!;
         }
     }
 
@@ -122,7 +98,7 @@ namespace MathBridgeSystem.Tests.Helpers
 
         public TestAsyncEnumerator(IEnumerator<T> inner)
         {
-            _inner = inner;
+            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
 
         public T Current => _inner.Current;

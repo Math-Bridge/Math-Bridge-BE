@@ -41,6 +41,8 @@ namespace MathBridgeSystem.Tests.Services
             _sessionDbSetMock = _sessionData.AsQueryable().BuildMockDbSet();
             _contractDbSetMock = _contractData.AsQueryable().BuildMockDbSet();
             _videoConferenceDbSetMock = _videoConferenceData.AsQueryable().BuildMockDbSet();
+            _videoConferenceDbSetMock.Setup(m => m.Add(It.IsAny<VideoConferenceSession>()))
+                .Callback<VideoConferenceSession>(_videoConferenceData.Add);
 
             _contextMock.Setup(c => c.Sessions).Returns(_sessionDbSetMock.Object);
             _contextMock.Setup(c => c.Contracts).Returns(_contractDbSetMock.Object);
@@ -58,9 +60,10 @@ namespace MathBridgeSystem.Tests.Services
 
             _service = new VideoConferenceService(
                 _contextMock.Object,
-                new[] { _mockProvider.Object } 
+                new[] { _mockProvider.Object }
             );
         }
+
 
         #region CreateVideoConferenceAsync Tests
 
