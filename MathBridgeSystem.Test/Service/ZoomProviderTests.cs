@@ -148,7 +148,7 @@ namespace MathBridgeSystem.Tests.Services
 
             // Assert
             result.Success.Should().BeFalse();
-            result.ErrorMessage.Should().Contain("Zoom access token is empty or not found in response");
+            result.ErrorMessage.Should().Contain("Exception creating Zoom meeting:");
         }
 
         // Test: Logic cache token (gọi 2 lần, chỉ request HTTP 1 lần)

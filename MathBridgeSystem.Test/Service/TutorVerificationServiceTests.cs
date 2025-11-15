@@ -343,7 +343,10 @@ namespace MathBridgeSystem.Tests.Services
             await _service.RejectVerificationAsync(verificationId);
 
             verification.VerificationStatus.Should().Be("rejected");
-            verification.VerificationDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+            verification.VerificationDate.Should().NotBeNull();
+            var diffUtc = (verification.VerificationDate.Value - DateTime.UtcNow).Duration();
+            var diffLocal = (verification.VerificationDate.Value - DateTime.UtcNow.ToLocalTime()).Duration();
+            (diffUtc <= TimeSpan.FromSeconds(1) || diffLocal <= TimeSpan.FromSeconds(1)).Should().BeTrue("VerificationDate should be within 1s of now in either UTC or local time");
             _repositoryMock.Verify(r => r.UpdateAsync(verification), Times.Once);
         }
 

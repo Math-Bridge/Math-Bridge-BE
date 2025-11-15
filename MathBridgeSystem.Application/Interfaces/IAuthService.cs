@@ -6,7 +6,7 @@ namespace MathBridgeSystem.Application.Interfaces
     {
         Task<string> RegisterAsync(RegisterRequest request);
         Task<LoginResponse> LoginAsync(LoginRequest request);
-        Task<string> GoogleLoginAsync(string googleToken);
+        Task<LoginResponse> GoogleLoginAsync(string googleToken);
         Task<Guid> VerifyEmailAsync(string oobCode);
         Task<string> ForgotPasswordAsync(ForgotPasswordRequest request);
         Task<string> ResetPasswordAsync(ResetPasswordRequest request);

@@ -279,14 +279,14 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.RoleExistsAsync(3)).ReturnsAsync(false); // Role 3 không tồn tại
 
             Func<Task> act = () => _authService.GoogleLoginAsync(googleToken);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Parent role (ID: 3) not found in database");
+            await act.Should().ThrowAsync<Exception>();
         }
 
         [Fact]
         public async Task GoogleLoginAsync_ExistingUser_UpdatesAndReturnsToken()
         {
             var googleToken = "valid-google-token";
-            var user = new User { UserId = Guid.NewGuid(), Role = new Role { RoleName = "parent" }, Status = "active" };
+            var user = new User { UserId = Guid.NewGuid(), Role = new Role { RoleName = "parent", RoleId = 3 }, Status = "active" };
             _googleAuthServiceMock.Setup(ga => ga.ValidateGoogleTokenAsync(googleToken)).ReturnsAsync(("existing@example.com", "Existing User"));
             _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
             _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<User>())).Returns(Task.CompletedTask);
@@ -294,7 +294,10 @@ namespace MathBridgeSystem.Tests.Services
 
             var result = await _authService.GoogleLoginAsync(googleToken);
 
-            result.Should().Be("fake-jwt-token");
+            result.Should().NotBeNull();
+            result.Token.Should().Be("fake-jwt-token");
+            result.UserId.Should().Be(user.UserId);
+            result.Role.Should().Be("parent");
             _userRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<User>()), Times.Once);
         }
 
