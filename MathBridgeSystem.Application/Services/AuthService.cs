@@ -266,7 +266,7 @@ namespace MathBridgeSystem.Application.Services
             };
             _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
 
-            var resetLink = $"https://api.vibe88.tech/api/auth/verify-reset?oobCode={oobCode}";
+            var resetLink = $"https://web.vibe88.tech/verify-reset?oobCode={oobCode}";
 
             try
             {
