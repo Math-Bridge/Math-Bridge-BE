@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[MathBridgeSystem.Api]*</Exclude>
+          <Exclude>[MathBridgeSystem.Infrastructure]*</Exclude>
+          <Exclude>[MathBridgeSystem.*.Tests]*</Exclude>
+          <ExcludeByFile>**/ContractPdfGenerator.cs;**/EmailService.cs;**/TutorScheduleService.cs</ExcludeByFile>
+          <ExcludeByAttribute>ExcludeFromCodeCoverage</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
