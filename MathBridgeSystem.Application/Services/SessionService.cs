@@ -139,10 +139,6 @@ namespace MathBridgeSystem.Application.Services
             var currentStatus = session.Status.ToLower();
             var normalizedNewStatus = newStatus.ToLower();
 
-
-            if (normalizedNewStatus != "completed" && normalizedNewStatus != "cancelled" && normalizedNewStatus != "processing")
-                throw new ArgumentException("Status must be 'completed' or 'cancelled' or processing'.");
-
             session.Status = normalizedNewStatus;
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepository.UpdateAsync(session);
