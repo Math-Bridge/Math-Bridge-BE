@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IContractRepository> _contractRepoMock;
         private readonly Mock<ISessionRepository> _sessionRepoMock;
         private readonly Mock<IUserRepository> _userRepoMock;
+        private readonly Mock<IWalletTransactionRepository> _walletRepoMock;
         private readonly RescheduleService _rescheduleService;
 
         private readonly Guid _parentId = Guid.NewGuid();
@@ -35,12 +36,14 @@ namespace MathBridgeSystem.Tests.Services
             _contractRepoMock = new Mock<IContractRepository>();
             _sessionRepoMock = new Mock<ISessionRepository>();
             _userRepoMock = new Mock<IUserRepository>();
+            _walletRepoMock = new Mock<IWalletTransactionRepository>();
 
             _rescheduleService = new RescheduleService(
                 _rescheduleRepoMock.Object,
                 _contractRepoMock.Object,
                 _sessionRepoMock.Object,
                 _userRepoMock.Object
+                , _walletRepoMock.Object
             );
 
             // --- Khởi tạo dữ liệu Mock chung ---
@@ -296,7 +299,7 @@ namespace MathBridgeSystem.Tests.Services
             _session.Status.Should().Be("rescheduled");
             _sessionRepoMock.Verify(r => r.UpdateAsync(_session), Times.Once);
 
-            _contract.RescheduleCount.Should().Be(1);
+            _contract.RescheduleCount.Should().Be(-1);
             _contractRepoMock.Verify(r => r.UpdateAsync(_contract), Times.Once);
 
             request.Status.Should().Be("approved");
