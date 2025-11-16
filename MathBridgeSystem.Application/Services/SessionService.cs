@@ -139,8 +139,6 @@ namespace MathBridgeSystem.Application.Services
             var currentStatus = session.Status.ToLower();
             var normalizedNewStatus = newStatus.ToLower();
 
-            if (currentStatus != "processing")
-                throw new InvalidOperationException($"Session must be in 'processing' status to update. Current: {currentStatus}");
 
             if (normalizedNewStatus != "completed" && normalizedNewStatus != "cancelled" && normalizedNewStatus != "processing")
                 throw new ArgumentException("Status must be 'completed' or 'cancelled' or processing'.");
