@@ -124,5 +124,15 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
         }
+        public async Task UpdateWalletBalanceAsync(Guid userId, decimal newBalance)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user != null)
+            {
+                user.WalletBalance += newBalance;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
