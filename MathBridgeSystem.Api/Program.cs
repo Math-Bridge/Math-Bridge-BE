@@ -130,6 +130,7 @@ builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>(
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<ITestResultService, TestResultService>();
 builder.Services.AddScoped<IDailyReportService, DailyReportService>();
+builder.Services.AddScoped<IUnitService, UnitService>();
 
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
