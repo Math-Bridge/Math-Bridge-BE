@@ -144,6 +144,32 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Cancel a session and refund money to parent wallet
+        /// </summary>
+        [HttpPost("cancel-session/{sessionId}")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> CancelSessionAndRefund(Guid sessionId)
+        {
+            try
+            {
+                var result = await _rescheduleService.CancelSessionAndRefundAsync(sessionId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while cancelling the session.", details = ex.Message });
+            }
+        }
     }
 
     public class RejectRequestDto

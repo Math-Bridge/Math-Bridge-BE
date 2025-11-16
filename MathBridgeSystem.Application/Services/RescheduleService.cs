@@ -1,4 +1,4 @@
-﻿﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
+﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -16,6 +16,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly IContractRepository _contractRepo;
         private readonly ISessionRepository _sessionRepo;
         private readonly IUserRepository _userRepo;
+        private readonly IWalletTransactionRepository _walletTransactionRepo;
 
         // Valid start times: 16:00, 17:30, 19:00, 20:30
         private static readonly TimeOnly[] ValidStartTimes = new[]
@@ -30,12 +31,14 @@ namespace MathBridgeSystem.Application.Services
             IRescheduleRequestRepository rescheduleRepo,
             IContractRepository contractRepo,
             ISessionRepository sessionRepo,
-            IUserRepository userRepo)
+            IUserRepository userRepo,
+            IWalletTransactionRepository walletTransactionRepo)
         {
             _rescheduleRepo = rescheduleRepo;
             _contractRepo = contractRepo;
             _sessionRepo = sessionRepo;
             _userRepo = userRepo;
+            _walletTransactionRepo = walletTransactionRepo;
         }
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
@@ -160,7 +163,7 @@ namespace MathBridgeSystem.Application.Services
             await _sessionRepo.UpdateAsync(request.Booking);
 
             var contract = request.Booking.Contract;
-            contract.RescheduleCount += 1;
+            contract.RescheduleCount -= 1;
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
 
@@ -344,6 +347,64 @@ namespace MathBridgeSystem.Application.Services
                 OriginalEndTime = request.Booking.EndTime,
                 OriginalTutorId = request.Booking.TutorId,
                 OriginalTutorName = request.Booking.Tutor?.FullName ?? "N/A"
+            };
+        }
+
+        public async Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId)
+        {
+            // Get session with contract and package details
+            var session = await _sessionRepo.GetByIdAsync(sessionId);
+            if (session == null)
+                throw new KeyNotFoundException("Session not found.");
+
+            // Validate session status
+            if (session.Status == "cancelled")
+                throw new InvalidOperationException("Session is already cancelled.");
+
+            if (session.Status == "completed")
+                throw new InvalidOperationException("Cannot cancel a completed session.");
+
+            // Get contract with package details
+            var contract = await _contractRepo.GetByIdWithPackageAsync(session.ContractId);
+            if (contract == null)
+                throw new KeyNotFoundException("Contract not found.");
+
+            // Calculate refund amount: package price / session count
+            var refundAmount = contract.Package.Price / contract.Package.SessionCount;
+
+            // Create refund wallet transaction
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid(),
+                ParentId = contract.ParentId,
+                ContractId = contract.ContractId,
+                Amount = refundAmount,
+                TransactionType = "Refund",
+                Description = $"Refund for cancelled session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}",
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
+                Status = "Completed",
+                PaymentMethod = "Wallet"
+            };
+
+            await _walletTransactionRepo.AddAsync(transaction);
+            await _userRepo.UpdateWalletBalanceAsync(contract.ParentId, refundAmount);
+
+            // Update session status to cancelled
+            session.Status = "cancelled";
+            session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+            await _sessionRepo.UpdateAsync(session);
+
+            // Increment contract reschedule count
+            contract.RescheduleCount += 1;
+            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
+            await _contractRepo.UpdateAsync(contract);
+
+            return new RescheduleResponseDto
+            {
+                RequestId = sessionId,
+                Status = "cancelled",
+                Message = $"Session cancelled successfully. Refund amount: {refundAmount:N0} VND has been added to your wallet.",
+                ProcessedDate = DateTime.UtcNow.ToLocalTime()
             };
         }
     }

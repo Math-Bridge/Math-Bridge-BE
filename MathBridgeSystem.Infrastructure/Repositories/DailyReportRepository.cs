@@ -71,7 +71,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(d => d.Tutor)
                 .Include(d => d.Booking)
                 .Include(d => d.Unit)
-                .ThenInclude(u => u.Curriculum)
+                .ThenInclude(u=>u.Curriculum)
                 .Where(d => d.ChildId == childId)
                 .OrderBy(d => d.CreatedDate)
                 .FirstOrDefaultAsync();
