@@ -17,5 +17,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<bool> ExistsAsync(Guid id);
         Task<bool> ExistsByNameAsync(string unitName, Guid curriculumId);
         Task<int> GetMaxUnitOrderAsync(Guid curriculumId);
+        Task<List<Unit>> GetByContractIdAsync(Guid contractId);
     }
 }

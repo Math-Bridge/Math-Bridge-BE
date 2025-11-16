@@ -185,6 +185,26 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         /// <summary>
+        /// Get units by contract ID
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        /// <returns>List of units for the contract's curriculum</returns>
+        [HttpGet("by-contract/{contractId}")]
+        [Authorize]
+        public async Task<IActionResult> GetUnitsByContractId(Guid contractId)
+        {
+            try
+            {
+                var units = await _unitService.GetUnitsByContractIdAsync(contractId);
+                return Ok(new { data = units, totalCount = units.Count, contractId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving units." });
+            }
+        }
+
+        /// <summary>
         /// Get unit by name
         /// </summary>
         /// <param name="name">Unit name</param>

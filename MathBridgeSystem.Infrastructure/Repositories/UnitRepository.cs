@@ -93,5 +93,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             
             return maxOrder ?? 0;
         }
+
+        public async Task<List<Unit>> GetByContractIdAsync(Guid contractId)
+        {
+            return await _context.Units
+                .Include(u => u.Curriculum)
+                .Where(u => u.Curriculum.PaymentPackages.Any(p => p.Contracts.Any(c => c.ContractId == contractId)))
+                .OrderBy(u => u.UnitOrder)
+                .ToListAsync();
+        }
     }
 }

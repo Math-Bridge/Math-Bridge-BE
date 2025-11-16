@@ -119,6 +119,12 @@ namespace MathBridgeSystem.Application.Services
             return MapToDto(unit);
         }
 
+        public async Task<List<UnitDto>> GetUnitsByContractIdAsync(Guid contractId)
+        {
+            var units = await _unitRepository.GetByContractIdAsync(contractId);
+            return units.Select(MapToDto).ToList();
+        }
+
         private UnitDto MapToDto(Unit unit)
         {
             return new UnitDto
