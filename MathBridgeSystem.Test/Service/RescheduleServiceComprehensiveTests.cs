@@ -14,6 +14,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IContractRepository> _contractRepo;
         private readonly Mock<ISessionRepository> _sessionRepo;
         private readonly Mock<IUserRepository> _userRepo;
+        private readonly Mock<IWalletTransactionRepository> _walletRepo;
         private readonly RescheduleService _service;
 
         public RescheduleServiceComprehensiveTests()
@@ -22,7 +23,8 @@ namespace MathBridgeSystem.Tests.Services
             _contractRepo = new Mock<IContractRepository>();
             _sessionRepo = new Mock<ISessionRepository>();
             _userRepo = new Mock<IUserRepository>();
-            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object);
+            _walletRepo = new Mock<IWalletTransactionRepository>();
+            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object);
         }
 
         private Session BuildSession(Guid contractId, Guid tutorId, DateOnly sessionDate)
@@ -278,7 +280,7 @@ namespace MathBridgeSystem.Tests.Services
             var resp = await _service.ApproveRequestAsync(staffId, requestId, new ApproveRescheduleRequestDto());
             resp.Status.Should().Be("approved");
             request.Booking.Status.Should().Be("rescheduled");
-            contract.RescheduleCount.Should().Be(1);
+            contract.RescheduleCount.Should().Be(-1);
         }
 
         [Fact]

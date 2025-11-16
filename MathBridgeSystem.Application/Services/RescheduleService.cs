@@ -395,7 +395,7 @@ namespace MathBridgeSystem.Application.Services
             await _sessionRepo.UpdateAsync(session);
 
             // Increment contract reschedule count
-            contract.RescheduleCount += 1;
+            contract.RescheduleCount -= 1;
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
 

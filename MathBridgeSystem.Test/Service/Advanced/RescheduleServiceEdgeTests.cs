@@ -18,8 +18,9 @@ namespace MathBridgeSystem.Test.Service.Advanced
         private readonly Mock<IContractRepository> _contractRepo = new();
         private readonly Mock<ISessionRepository> _sessionRepo = new();
         private readonly Mock<IUserRepository> _userRepo = new();
+        private readonly Mock<IWalletTransactionRepository> _walletRepo = new();
 
-        private RescheduleService CreateService() => new RescheduleService(_reqRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object);
+        private RescheduleService CreateService() => new RescheduleService(_reqRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object);
 
         private (Session session, Contract contract) BuildSessionContract(Guid parentId, Guid tutorId)
         {
