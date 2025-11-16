@@ -70,7 +70,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Contract is not active.");
             if(contract.EndDate < dto.RequestedDate)
                 throw new InvalidOperationException("Requested date exceeds contract end date.");
-            if (contract.RescheduleCount >= contract.Package.MaxReschedule)
+            if (contract.RescheduleCount ==0)
                 throw new InvalidOperationException($"No reschedule attempts left. Max: {contract.Package.MaxReschedule}");
             
 
@@ -394,7 +394,7 @@ namespace MathBridgeSystem.Application.Services
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(session);
 
-            // Increment contract reschedule count
+            
             contract.RescheduleCount -= 1;
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
