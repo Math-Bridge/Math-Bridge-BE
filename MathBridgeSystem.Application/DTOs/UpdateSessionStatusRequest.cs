@@ -10,8 +10,6 @@ namespace MathBridgeSystem.Application.DTOs
     public class UpdateSessionStatusRequest
     {
         [Required(ErrorMessage = "Status is required")]
-        [RegularExpression("^(completed|cancelled)$",
-            ErrorMessage = "Status must be 'completed' or 'cancelled'")]
         public string Status { get; set; } = null!;
     }
 }

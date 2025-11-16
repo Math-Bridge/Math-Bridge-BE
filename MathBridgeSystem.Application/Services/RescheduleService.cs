@@ -350,8 +350,19 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        public async Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId)
+        public async Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId, Guid rescheduleRequestId)
         {
+            var rescheduleRequest = await _rescheduleRepo.GetByIdWithDetailsAsync(rescheduleRequestId);
+            if (rescheduleRequest == null)
+                throw new KeyNotFoundException("Reschedule request not found.");
+
+            if (rescheduleRequest.BookingId != sessionId)
+                throw new InvalidOperationException("Reschedule request does not belong to this session.");
+
+            if (rescheduleRequest.Status != "pending")
+                throw new InvalidOperationException($"Reschedule request is not pending (current status: {rescheduleRequest.Status}).");
+
+
             // Get session with contract and package details
             var session = await _sessionRepo.GetByIdAsync(sessionId);
             if (session == null)
@@ -398,6 +409,10 @@ namespace MathBridgeSystem.Application.Services
             contract.RescheduleCount -= 1;
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
+                rescheduleRequest.Status = "approved";
+                rescheduleRequest.ProcessedDate = DateTime.UtcNow.ToLocalTime();
+                await _rescheduleRepo.UpdateAsync(rescheduleRequest);
+
 
             return new RescheduleResponseDto
             {
