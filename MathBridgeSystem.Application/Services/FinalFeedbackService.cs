@@ -12,10 +12,14 @@ namespace MathBridgeSystem.Application.Services
     public class FinalFeedbackService : IFinalFeedbackService
     {
         private readonly IFinalFeedbackRepository _feedbackRepository;
+        private readonly IContractRepository _contractRepository;
+        private readonly IUserRepository _userRepository;
 
-        public FinalFeedbackService(IFinalFeedbackRepository feedbackRepository)
+        public FinalFeedbackService(IFinalFeedbackRepository feedbackRepository, IContractRepository contractRepository, IUserRepository userRepository)
         {
-            _feedbackRepository = feedbackRepository ?? throw new ArgumentNullException(nameof(feedbackRepository));
+            _feedbackRepository = feedbackRepository;
+            _userRepository = userRepository;    
+            _contractRepository = contractRepository;
         }
 
         public async Task<FinalFeedbackDto?> GetByIdAsync(Guid feedbackId)
@@ -62,6 +66,43 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<FinalFeedbackDto> CreateAsync(CreateFinalFeedbackRequest request)
         {
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if(user == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+            if(user.RoleId == 2 && !request.FeedbackProviderType.Equals("parent"))
+            {                 
+                throw new InvalidOperationException("Feedback provider type mismatch for tutor.");
+            }
+            if(user.RoleId == 3 && !request.FeedbackProviderType.Equals("tutor"))
+            {
+                throw new InvalidOperationException("Feedback provider type mismatch for parent.");
+            }
+            var contract = await _contractRepository.GetByIdAsync(request.ContractId);
+            if(contract == null)
+            {
+                throw new InvalidOperationException("Contract not found.");
+            }
+            if(contract.MainTutorId != request.UserId && contract.ParentId != request.UserId)
+            {
+                throw new InvalidOperationException("User is not associated with the specified contract.");
+            }
+            if(request.FeedbackProviderType == "parent" && contract.MainTutorId != request.UserId)
+            {
+                throw new InvalidOperationException("Tutor feedback can only be provided by the parent of the contract.");
+            }
+            if(request.FeedbackProviderType == "tutor" && contract.ParentId != request.UserId)
+            {
+                throw new InvalidOperationException("Child feedback can only be provided by the tutor associated with the contract.");
+            }
+            var feedbacks = await _feedbackRepository.GetByContractIdAsync(request.ContractId);
+            var confeedbacks = feedbacks.Where(f => f.ContractId == request.ContractId && f.FeedbackProviderType == request.FeedbackProviderType).ToList();
+            if (confeedbacks.Any())
+            {
+                throw new InvalidOperationException("Feedback for this contract already exists.");
+            }
+
             var feedback = new FinalFeedback
             {
                 FeedbackId = Guid.NewGuid(),
@@ -79,7 +120,7 @@ namespace MathBridgeSystem.Application.Services
                 ContractObjectivesMet = request.ContractObjectivesMet,
                 ImprovementSuggestions = request.ImprovementSuggestions,
                 AdditionalComments = request.AdditionalComments,
-                FeedbackStatus = "Submitted",
+                FeedbackStatus = "active",
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
