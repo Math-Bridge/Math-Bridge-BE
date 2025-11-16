@@ -146,15 +146,15 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         /// <summary>
-        /// Cancel a session and refund money to parent wallet
+        /// Cancel a session and refund money to parent wallet. Optionally approve a reschedule request.
         /// </summary>
         [HttpPost("cancel-session/{sessionId}")]
         [Authorize(Roles = "staff,admin")]
-        public async Task<IActionResult> CancelSessionAndRefund(Guid sessionId)
+        public async Task<IActionResult> CancelSessionAndRefund(Guid sessionId, [FromQuery] Guid rescheduleRequestId )
         {
             try
             {
-                var result = await _rescheduleService.CancelSessionAndRefundAsync(sessionId);
+                var result = await _rescheduleService.CancelSessionAndRefundAsync(sessionId, rescheduleRequestId);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)

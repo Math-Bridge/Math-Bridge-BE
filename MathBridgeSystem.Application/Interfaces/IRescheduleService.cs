@@ -1,4 +1,4 @@
-﻿﻿using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,6 +13,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId);
         Task<RescheduleRequestDto?> GetByIdAsync(Guid requestId, Guid userId, string role);
         Task<IEnumerable<RescheduleRequestDto>> GetAllAsync(Guid? parentId = null);
-        Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId);
+        Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId, Guid rescheduleRequestId );
     }
 }
