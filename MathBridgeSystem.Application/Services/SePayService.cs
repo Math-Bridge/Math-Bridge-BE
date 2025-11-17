@@ -1,3 +1,4 @@
+using System.Globalization;
 using MathBridgeSystem.Application.DTOs.SePay;
 using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
@@ -288,7 +289,7 @@ public class SePayService : ISePayService
                         user.Email,
                         user.FullName,
                         orderReference,
-                        walletTransaction.Amount.ToString("C"),
+                        walletTransaction.Amount.ToString("C", CultureInfo.GetCultureInfo("vi-VN")),
                         webhookData.TransactionDate.ToString("yyyy-MM-dd"),
                         $"https://mathbridge.com/transactions/{walletTransaction.TransactionId}"
                     );
@@ -306,7 +307,7 @@ public class SePayService : ISePayService
                     {
                         UserId = walletTransaction.ParentId,
                         Title = "Wallet Top-Up Successful",
-                        Message = $"Your wallet has been topped up with {walletTransaction.Amount:C}. Transaction ID: {orderReference}",
+                        Message = $"Your wallet has been topped up with {walletTransaction.Amount.ToString("C", CultureInfo.GetCultureInfo("vi-VN"))}. Transaction ID: {orderReference}",
                         NotificationType = "WalletTopUp"
                     });
                     _logger.LogInformation("Wallet top-up notification created for user {UserId}", walletTransaction.ParentId);
