@@ -30,7 +30,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
                 ParentId = parentId,
                 Status = "active",
                 Package = new PaymentPackage { MaxReschedule = 2 },
-                RescheduleCount = 0,
+                RescheduleCount = 2,  // Start with some attempts available
                 EndDate = DateOnly.FromDateTime(DateTime.Today.AddDays(30))
             };
             var session = new Session
@@ -137,7 +137,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
             var parentId = Guid.NewGuid();
             var tutorId = Guid.NewGuid();
             var (session, contract) = BuildSessionContract(parentId, tutorId);
-            contract.RescheduleCount = 2; // equals max
+            contract.RescheduleCount = 0; // No attempts left
             _sessionRepo.Setup(s => s.GetByIdAsync(session.BookingId)).ReturnsAsync(session);
             _reqRepo.Setup(r => r.HasPendingRequestForBookingAsync(session.BookingId)).ReturnsAsync(false);
             _contractRepo.Setup(c => c.GetByIdWithPackageAsync(session.ContractId)).ReturnsAsync(contract);

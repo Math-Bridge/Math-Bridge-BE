@@ -58,7 +58,9 @@ namespace MathBridgeSystem.Tests.Services
                 _contractRepositoryMock.Object,
                 _packageRepositoryMock.Object,
                 _configurationMock.Object,
-                _loggerMock.Object
+                _loggerMock.Object,
+                new Mock<IEmailService>().Object,
+                new Mock<INotificationService>().Object
             );
         }
 

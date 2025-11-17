@@ -192,7 +192,7 @@ namespace MathBridgeSystem.Tests.Services
                 Status = "active",
                 EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
                 Package = new PaymentPackage { MaxReschedule = 3 },
-                RescheduleCount = 3
+                RescheduleCount = 0  // Zero attempts left should throw
             });
 
             await FluentActions.Invoking(() => _service.CreateRequestAsync(_parentId, dto))
@@ -220,7 +220,7 @@ namespace MathBridgeSystem.Tests.Services
                 Status = "active",
                 EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
                 Package = new PaymentPackage { MaxReschedule = 3 },
-                RescheduleCount = 0
+                RescheduleCount = 2  // Some attempts left should succeed
             });
             _resRepo.Setup(r => r.AddAsync(It.IsAny<RescheduleRequest>())).Returns(Task.CompletedTask);
 

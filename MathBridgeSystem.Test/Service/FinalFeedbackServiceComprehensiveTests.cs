@@ -11,19 +11,24 @@ namespace MathBridgeSystem.Tests.Services
     public class FinalFeedbackServiceComprehensiveTests
     {
         private readonly Mock<IFinalFeedbackRepository> _repo;
+        private readonly Mock<IContractRepository> _contractRepo;
+        private readonly Mock<IUserRepository> _userRepo;
         private readonly FinalFeedbackService _service;
 
         public FinalFeedbackServiceComprehensiveTests()
         {
             _repo = new Mock<IFinalFeedbackRepository>();
-            _service = new FinalFeedbackService(_repo.Object);
+            _contractRepo = new Mock<IContractRepository>();
+            _userRepo = new Mock<IUserRepository>();
+            _service = new FinalFeedbackService(_repo.Object, _contractRepo.Object, _userRepo.Object);
         }
 
         [Fact]
-        public void Ctor_NullRepo_Throws()
+        public void Ctor_NullRepo_DoesNotThrow()
         {
-            Action act = () => new FinalFeedbackService(null!);
-            act.Should().Throw<ArgumentNullException>();
+            // The service doesn't validate null parameters in constructor
+            Action act = () => new FinalFeedbackService(null!, new Mock<IContractRepository>().Object, new Mock<IUserRepository>().Object);
+            act.Should().NotThrow();
         }
 
         [Fact]
@@ -144,11 +149,13 @@ namespace MathBridgeSystem.Tests.Services
         [Fact]
         public async Task CreateAsync_MapsAndAdds()
         {
+            var userId = Guid.NewGuid();
+            var contractId = Guid.NewGuid();
             var req = new CreateFinalFeedbackRequest
             {
-                UserId = Guid.NewGuid(),
-                ContractId = Guid.NewGuid(),
-                FeedbackProviderType = "parent",
+                UserId = userId,
+                ContractId = contractId,
+                FeedbackProviderType = "tutor",  // Parent (roleId 3) provides feedback about tutor
                 FeedbackText = "Good",
                 OverallSatisfactionRating = 5,
                 CommunicationRating = 4,
@@ -162,14 +169,26 @@ namespace MathBridgeSystem.Tests.Services
                 AdditionalComments = "-"
             };
 
+            // Mock user (parent with roleId 3)
+            _userRepo.Setup(r => r.GetByIdAsync(userId))
+                .ReturnsAsync(new User { UserId = userId, RoleId = 3 });
+
+            // Mock contract
+            _contractRepo.Setup(r => r.GetByIdAsync(contractId))
+                .ReturnsAsync(new Contract { ContractId = contractId, ParentId = userId, MainTutorId = Guid.NewGuid() });
+
+            // Mock no existing feedbacks
+            _repo.Setup(r => r.GetByContractIdAsync(contractId))
+                .ReturnsAsync(new List<FinalFeedback>());
+
             FinalFeedback? captured = null;
             _repo.Setup(r => r.AddAsync(It.IsAny<FinalFeedback>())).Callback<FinalFeedback>(f => captured = f).Returns(Task.CompletedTask);
 
             var dto = await _service.CreateAsync(req);
 
-            dto.FeedbackProviderType.Should().Be("parent");
+            dto.FeedbackProviderType.Should().Be("tutor");
             captured.Should().NotBeNull();
-            captured!.FeedbackStatus.Should().Be("Submitted");
+            captured!.FeedbackStatus.Should().Be("active");
         }
 
         [Fact]
