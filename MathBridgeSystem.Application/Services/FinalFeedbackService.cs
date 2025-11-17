@@ -71,14 +71,6 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new InvalidOperationException("User not found.");
             }
-            if(user.RoleId == 2 && !request.FeedbackProviderType.Equals("parent"))
-            {                 
-                throw new InvalidOperationException("Feedback provider type mismatch for tutor.");
-            }
-            if(user.RoleId == 3 && !request.FeedbackProviderType.Equals("tutor"))
-            {
-                throw new InvalidOperationException("Feedback provider type mismatch for parent.");
-            }
             var contract = await _contractRepository.GetByIdAsync(request.ContractId);
             if(contract == null)
             {
@@ -87,14 +79,6 @@ namespace MathBridgeSystem.Application.Services
             if(contract.MainTutorId != request.UserId && contract.ParentId != request.UserId)
             {
                 throw new InvalidOperationException("User is not associated with the specified contract.");
-            }
-            if(request.FeedbackProviderType == "parent" && contract.MainTutorId != request.UserId)
-            {
-                throw new InvalidOperationException("Tutor feedback can only be provided by the parent of the contract.");
-            }
-            if(request.FeedbackProviderType == "tutor" && contract.ParentId != request.UserId)
-            {
-                throw new InvalidOperationException("Child feedback can only be provided by the tutor associated with the contract.");
             }
             var feedbacks = await _feedbackRepository.GetByContractIdAsync(request.ContractId);
             var confeedbacks = feedbacks.Where(f => f.ContractId == request.ContractId && f.FeedbackProviderType == request.FeedbackProviderType).ToList();
@@ -108,7 +92,7 @@ namespace MathBridgeSystem.Application.Services
                 FeedbackId = Guid.NewGuid(),
                 UserId = request.UserId,
                 ContractId = request.ContractId,
-                FeedbackProviderType = request.FeedbackProviderType,
+                FeedbackProviderType = "parent",
                 FeedbackText = request.FeedbackText,
                 OverallSatisfactionRating = request.OverallSatisfactionRating,
                 CommunicationRating = request.CommunicationRating,
