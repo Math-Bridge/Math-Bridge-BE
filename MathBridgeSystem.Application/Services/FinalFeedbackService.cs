@@ -80,14 +80,6 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new InvalidOperationException("User is not associated with the specified contract.");
             }
-            if(request.FeedbackProviderType == "parent" && contract.MainTutorId != request.UserId)
-            {
-                throw new InvalidOperationException("Tutor feedback can only be provided by the parent of the contract.");
-            }
-            if(request.FeedbackProviderType == "tutor" && contract.ParentId != request.UserId)
-            {
-                throw new InvalidOperationException("Child feedback can only be provided by the tutor associated with the contract.");
-            }
             var feedbacks = await _feedbackRepository.GetByContractIdAsync(request.ContractId);
             var confeedbacks = feedbacks.Where(f => f.ContractId == request.ContractId && f.FeedbackProviderType == request.FeedbackProviderType).ToList();
             if (confeedbacks.Any())
@@ -100,7 +92,7 @@ namespace MathBridgeSystem.Application.Services
                 FeedbackId = Guid.NewGuid(),
                 UserId = request.UserId,
                 ContractId = request.ContractId,
-                FeedbackProviderType = "tutor",
+                FeedbackProviderType = "parent",
                 FeedbackText = request.FeedbackText,
                 OverallSatisfactionRating = request.OverallSatisfactionRating,
                 CommunicationRating = request.CommunicationRating,
