@@ -1,4 +1,5 @@
 using MathBridgeSystem.Application.DTOs.SePay;
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +22,8 @@ public class SePayService : ISePayService
     private readonly IPackageRepository _packageRepository;
     private readonly IConfiguration _configuration;
     private readonly ILogger<SePayService> _logger;
+    private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     // SePay configuration keys
     private readonly string _bankCode;
@@ -36,7 +39,9 @@ public class SePayService : ISePayService
         IContractRepository contractRepository,
         IPackageRepository packageRepository,
         IConfiguration configuration,
-        ILogger<SePayService> logger)
+        ILogger<SePayService> logger,
+        IEmailService emailService,
+        INotificationService notificationService)
     {
         _sePayRepository = sePayRepository;
         _walletTransactionRepository = walletTransactionRepository;
@@ -45,6 +50,8 @@ public class SePayService : ISePayService
         _packageRepository = packageRepository;
         _configuration = configuration;
         _logger = logger;
+        _emailService = emailService;
+        _notificationService = notificationService;
 
         // Load configuration
         _bankCode = _configuration["SePay:BankCode"]?? "";
@@ -270,10 +277,45 @@ public class SePayService : ISePayService
             {
                 user.WalletBalance += walletTransaction.Amount;
                 await _userRepository.UpdateAsync(user);
-            }
 
-            _logger.LogInformation("Successfully processed SePay webhook for transaction {Code}, updated wallet balance for user {UserId}", 
-                webhookData.Code, walletTransaction.ParentId);
+                _logger.LogInformation("Successfully processed SePay webhook for transaction {Code}, updated wallet balance for user {UserId}", 
+                    webhookData.Code, walletTransaction.ParentId);
+
+                // Send email notification for wallet top-up
+                try
+                {
+                    await _emailService.SendInvoiceAsync(
+                        user.Email,
+                        user.FullName,
+                        orderReference,
+                        walletTransaction.Amount.ToString("C"),
+                        webhookData.TransactionDate.ToString("yyyy-MM-dd"),
+                        $"https://mathbridge.com/transactions/{walletTransaction.TransactionId}"
+                    );
+                    _logger.LogInformation("Wallet top-up email sent to {Email} for transaction {Code}", user.Email, webhookData.Code);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(emailEx, "Failed to send wallet top-up email for transaction {Code}", webhookData.Code);
+                }
+
+                // Create in-app notification for wallet top-up
+                try
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                    {
+                        UserId = walletTransaction.ParentId,
+                        Title = "Wallet Top-Up Successful",
+                        Message = $"Your wallet has been topped up with {walletTransaction.Amount:C}. Transaction ID: {orderReference}",
+                        NotificationType = "WalletTopUp"
+                    });
+                    _logger.LogInformation("Wallet top-up notification created for user {UserId}", walletTransaction.ParentId);
+                }
+                catch (Exception notificationEx)
+                {
+                    _logger.LogError(notificationEx, "Failed to create wallet top-up notification for transaction {Code}", webhookData.Code);
+                }
+            }
 
             return new SePayWebhookResultDto
             {
@@ -522,6 +564,47 @@ public class SePayService : ISePayService
             await _contractRepository.UpdateAsync(contract);
 
             _logger.LogInformation("Successfully processed contract payment webhook for contract {ContractId}, updated status to Active", contractId);
+
+            // Get parent user for sending email/notification
+            var parent = await _userRepository.GetByIdAsync(contract.ParentId);
+            if (parent != null)
+            {
+                // Send email notification for contract payment
+                try
+                {
+                    await _emailService.SendInvoiceAsync(
+                        parent.Email,
+                        parent.FullName,
+                        sePayTransaction.OrderReference ?? "",
+                        sePayTransaction.TransferAmount.ToString("C"),
+                        webhookData.TransactionDate.ToString("yyyy-MM-dd"),
+                        $"https://mathbridge.com/contracts/{contractId}"
+                    );
+                    _logger.LogInformation("Contract payment email sent to {Email} for contract {ContractId}", parent.Email, contractId);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(emailEx, "Failed to send contract payment email for contract {ContractId}", contractId);
+                }
+
+                // Create in-app notification for contract payment
+                try
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                    {
+                        UserId = contract.ParentId,
+                        ContractId = contractId,
+                        Title = "Contract Payment Successful",
+                        Message = $"Payment of {sePayTransaction.TransferAmount:C} for contract has been received. Your contract is now pending approval. Order Reference: {sePayTransaction.OrderReference}",
+                        NotificationType = "ContractPayment"
+                    });
+                    _logger.LogInformation("Contract payment notification created for user {UserId}, contract {ContractId}", contract.ParentId, contractId);
+                }
+                catch (Exception notificationEx)
+                {
+                    _logger.LogError(notificationEx, "Failed to create contract payment notification for contract {ContractId}", contractId);
+                }
+            }
 
             return new SePayWebhookResultDto
             {
