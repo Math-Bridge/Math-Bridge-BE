@@ -53,7 +53,7 @@ namespace MathBridgeSystem.Tests.Services
             {
                 ContractId = _contractId,
                 ParentId = _parentId,
-                RescheduleCount = 0,
+                RescheduleCount = 2,
                 Package = _package,
                 Status = "active",
                 EndDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime().AddDays(30))
@@ -184,7 +184,7 @@ namespace MathBridgeSystem.Tests.Services
         [Fact]
         public async Task CreateRequestAsync_NoRescheduleAttemptsLeft_ThrowsInvalidOperationException()
         {
-            _contract.RescheduleCount = 2;
+            _contract.RescheduleCount = 0;  // No attempts left
             _sessionRepoMock.Setup(r => r.GetByIdAsync(_bookingId)).ReturnsAsync(_session);
             _rescheduleRepoMock.Setup(r => r.HasPendingRequestForBookingAsync(_bookingId)).ReturnsAsync(false);
             _contractRepoMock.Setup(r => r.GetByIdWithPackageAsync(_contractId)).ReturnsAsync(_contract);
@@ -299,7 +299,7 @@ namespace MathBridgeSystem.Tests.Services
             _session.Status.Should().Be("rescheduled");
             _sessionRepoMock.Verify(r => r.UpdateAsync(_session), Times.Once);
 
-            _contract.RescheduleCount.Should().Be(-1);
+            _contract.RescheduleCount.Should().Be(1);  // Started at 2, decremented to 1
             _contractRepoMock.Verify(r => r.UpdateAsync(_contract), Times.Once);
 
             request.Status.Should().Be("approved");

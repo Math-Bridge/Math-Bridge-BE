@@ -22,6 +22,8 @@ namespace MathBridgeSystem.Test.Service.Advanced
         private readonly Mock<IContractRepository> _contractRepo = new();
         private readonly Mock<IPackageRepository> _packageRepo = new();
         private readonly Mock<ILogger<SePayService>> _logger = new();
+        private readonly Mock<IEmailService> _emailService = new();
+        private readonly Mock<INotificationService> _notificationService = new();
 
         private SePayService CreateService(IConfiguration? cfg = null) => new SePayService(
             _sepayRepo.Object,
@@ -30,7 +32,9 @@ namespace MathBridgeSystem.Test.Service.Advanced
             _contractRepo.Object,
             _packageRepo.Object,
             cfg ?? new ConfigurationBuilder().AddInMemoryCollection().Build(),
-            _logger.Object
+            _logger.Object,
+            _emailService.Object,
+            _notificationService.Object
         );
 
         [Fact]
