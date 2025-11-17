@@ -186,7 +186,7 @@ namespace MathBridgeSystem.Tests.Services
 
             var dto = await _service.CreateAsync(req);
 
-            dto.FeedbackProviderType.Should().Be("tutor");
+            dto.FeedbackProviderType.Should().Be("parent");
             captured.Should().NotBeNull();
             captured!.FeedbackStatus.Should().Be("active");
         }
