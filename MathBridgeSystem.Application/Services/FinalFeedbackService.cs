@@ -71,14 +71,6 @@ namespace MathBridgeSystem.Application.Services
             {
                 throw new InvalidOperationException("User not found.");
             }
-            if(user.RoleId == 2 && !request.FeedbackProviderType.Equals("parent"))
-            {                 
-                throw new InvalidOperationException("Feedback provider type mismatch for tutor.");
-            }
-            if(user.RoleId == 3 && !request.FeedbackProviderType.Equals("tutor"))
-            {
-                throw new InvalidOperationException("Feedback provider type mismatch for parent.");
-            }
             var contract = await _contractRepository.GetByIdAsync(request.ContractId);
             if(contract == null)
             {
@@ -108,7 +100,7 @@ namespace MathBridgeSystem.Application.Services
                 FeedbackId = Guid.NewGuid(),
                 UserId = request.UserId,
                 ContractId = request.ContractId,
-                FeedbackProviderType = request.FeedbackProviderType,
+                FeedbackProviderType = "tutor",
                 FeedbackText = request.FeedbackText,
                 OverallSatisfactionRating = request.OverallSatisfactionRating,
                 CommunicationRating = request.CommunicationRating,
