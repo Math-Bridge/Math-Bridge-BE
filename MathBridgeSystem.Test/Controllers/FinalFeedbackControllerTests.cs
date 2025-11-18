@@ -8,7 +8,7 @@ using Assert = Xunit.Assert;
 using System;
 using System.Collections.Generic;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class FinalFeedbackControllerTests
     {

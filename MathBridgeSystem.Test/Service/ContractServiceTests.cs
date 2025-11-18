@@ -80,7 +80,9 @@ namespace MathBridgeSystem.Tests.Services
                 PackageId = Guid.NewGuid(),
                 DaysOfWeeks = 62,
                 Status = "pending",
-                MainTutorId = null 
+                MainTutorId = null,
+                IsOnline = true, // ensure no center validation for offline
+                CenterId = Guid.NewGuid()
             };
             var package = new PaymentPackage { SessionCount = 10, MaxReschedule = 2 };
             _packageRepositoryMock.Setup(repo => repo.GetByIdAsync(request.PackageId)).ReturnsAsync(package);

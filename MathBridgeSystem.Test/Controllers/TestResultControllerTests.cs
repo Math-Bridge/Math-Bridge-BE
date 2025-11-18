@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class TestResultControllerTests
     {
