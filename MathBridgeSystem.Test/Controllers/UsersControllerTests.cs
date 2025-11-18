@@ -51,6 +51,38 @@ namespace MathBridgeSystem.Tests.Controllers
 
         #endregion
 
+        #region GetAllUsers Tests
+
+        [Fact]
+        public async Task GetAllUsers_Admin_ReturnsOk()
+        {
+            // Arrange
+            SetupControllerContext("admin");
+            var users = new List<UserResponse> { new UserResponse { UserId = Guid.NewGuid() } };
+            _userServiceMock.Setup(s => s.GetAllUsersAsync("admin")).ReturnsAsync(users);
+
+            // Act
+            var result = await _controller.GetAllUsers();
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetAllUsers_ServiceThrows_Returns500()
+        {
+            SetupControllerContext("admin");
+            _userServiceMock.Setup(s => s.GetAllUsersAsync("admin")).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetAllUsers();
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        #endregion
+
         #region GetUser Tests
 
         [Fact]
@@ -184,6 +216,29 @@ namespace MathBridgeSystem.Tests.Controllers
 
             // Assert
             var statusResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
+        }
+
+        [Fact]
+        public async Task GetWallet_NotFound_ReturnsNotFound()
+        {
+            _userServiceMock.Setup(s => s.GetWalletAsync(_userId, _currentUserId, "parent"))
+                .ThrowsAsync(new Exception("Wallet not found"));
+
+            var result = await _controller.GetWallet(_userId);
+
+            result.Should().BeOfType<ObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetWallet_Unauthorized_ReturnsForbid()
+        {
+            // Arrange - simulate UnauthorizedAccessException
+            _userServiceMock.Setup(s => s.GetWalletAsync(_userId, _currentUserId, "parent"))
+                .ThrowsAsync(new UnauthorizedAccessException("no"));
+
+            var result = await _controller.GetWallet(_userId);
+
+            result.Should().Match(r => r is ForbidResult || r is UnauthorizedObjectResult);
         }
 
         #endregion

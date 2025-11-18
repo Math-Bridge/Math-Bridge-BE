@@ -4,6 +4,8 @@ using MathBridgeSystem.Application.DTOs.Statistics;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MathBridgeSystem.Tests.Controllers
@@ -218,6 +220,252 @@ namespace MathBridgeSystem.Tests.Controllers
             // Assert
             var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
             statusResult.StatusCode.Should().Be(500);
+        }
+
+        #endregion
+
+        #region Session Statistics Tests
+
+        [Fact]
+        public async Task GetSessionStatistics_ReturnsOk()
+        {
+            var stats = new SessionStatisticsDto { TotalSessions = 10, CompletedSessions = 7 };
+            _statisticsServiceMock.Setup(s => s.GetSessionStatisticsAsync()).ReturnsAsync(stats);
+
+            var result = await _controller.GetSessionStatistics();
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<SessionStatisticsDto>();
+        }
+
+        [Fact]
+        public async Task GetSessionStatistics_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetSessionStatisticsAsync()).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetSessionStatistics();
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetSessionOnlineVsOffline_ReturnsOk()
+        {
+            var dto = new SessionOnlineVsOfflineDto { OnlineSessions = 5, OfflineSessions = 5, OnlinePercentage = 50, OfflinePercentage = 50 };
+            _statisticsServiceMock.Setup(s => s.GetSessionOnlineVsOfflineAsync()).ReturnsAsync(dto);
+
+            var result = await _controller.GetSessionOnlineVsOffline();
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<SessionOnlineVsOfflineDto>();
+        }
+
+        [Fact]
+        public async Task GetSessionOnlineVsOffline_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetSessionOnlineVsOfflineAsync()).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetSessionOnlineVsOffline();
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetSessionTrends_ValidDates_ReturnsOk()
+        {
+            var start = new DateTime(2024,1,1);
+            var end = new DateTime(2024,1,31);
+            var dto = new SessionTrendStatisticsDto { Trends = new List<SessionTrendDto> { new SessionTrendDto { Date = start, SessionCount = 1 } }, TotalSessionsInPeriod = 1 };
+            _statisticsServiceMock.Setup(s => s.GetSessionTrendsAsync(start, end)).ReturnsAsync(dto);
+
+            var result = await _controller.GetSessionTrends(start, end);
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<SessionTrendStatisticsDto>();
+        }
+
+        [Fact]
+        public async Task GetSessionTrends_InvalidDates_ReturnsBadRequest()
+        {
+            var start = new DateTime(2024,12,1);
+            var end = new DateTime(2024,1,1);
+
+            var result = await _controller.GetSessionTrends(start, end);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetSessionTrends_ServiceThrows_Returns500()
+        {
+            var start = new DateTime(2024,1,1);
+            var end = new DateTime(2024,1,31);
+            _statisticsServiceMock.Setup(s => s.GetSessionTrendsAsync(start, end)).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetSessionTrends(start, end);
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        #endregion
+
+        #region Tutor Statistics Tests
+
+        [Fact]
+        public async Task GetTutorStatistics_ReturnsOk()
+        {
+            var dto = new TutorStatisticsDto { TotalTutors = 20, AverageRating = 4.5m };
+            _statisticsServiceMock.Setup(s => s.GetTutorStatisticsAsync()).ReturnsAsync(dto);
+
+            var result = await _controller.GetTutorStatistics();
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<TutorStatisticsDto>();
+        }
+
+        [Fact]
+        public async Task GetTutorStatistics_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetTutorStatisticsAsync()).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetTutorStatistics();
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetTopRatedTutors_ValidLimit_ReturnsOk()
+        {
+            var dto = new TopRatedTutorsListDto { Tutors = new List<TopRatedTutorDto> { new TopRatedTutorDto() }, TotalTutors = 1 };
+            _statisticsServiceMock.Setup(s => s.GetTopRatedTutorsAsync(5)).ReturnsAsync(dto);
+
+            var result = await _controller.GetTopRatedTutors(5);
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<TopRatedTutorsListDto>();
+        }
+
+        [Fact]
+        public async Task GetTopRatedTutors_InvalidLimit_ReturnsBadRequest()
+        {
+            var result = await _controller.GetTopRatedTutors(0);
+            result.Should().BeOfType<BadRequestObjectResult>();
+
+            result = await _controller.GetTopRatedTutors(101);
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetTopRatedTutors_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetTopRatedTutorsAsync(10)).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetTopRatedTutors(10);
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetMostActiveTutors_ValidLimit_ReturnsOk()
+        {
+            var dto = new MostActiveTutorsListDto { Tutors = new List<TutorSessionCountDto> { new TutorSessionCountDto() }, TotalTutors = 1 };
+            _statisticsServiceMock.Setup(s => s.GetMostActiveTutorsAsync(5)).ReturnsAsync(dto);
+
+            var result = await _controller.GetMostActiveTutors(5);
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<MostActiveTutorsListDto>();
+        }
+
+        [Fact]
+        public async Task GetMostActiveTutors_InvalidLimit_ReturnsBadRequest()
+        {
+            var result = await _controller.GetMostActiveTutors(0);
+            result.Should().BeOfType<BadRequestObjectResult>();
+
+            result = await _controller.GetMostActiveTutors(101);
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetMostActiveTutors_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetMostActiveTutorsAsync(10)).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetMostActiveTutors(10);
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        #endregion
+
+        #region Financial Statistics Tests
+
+        [Fact]
+        public async Task GetRevenueStatistics_ReturnsOk()
+        {
+            var dto = new RevenueStatisticsDto { TotalRevenue = 10000m, TotalTransactions = 5 };
+            _statisticsServiceMock.Setup(s => s.GetRevenueStatisticsAsync()).ReturnsAsync(dto);
+
+            var result = await _controller.GetRevenueStatistics();
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<RevenueStatisticsDto>();
+        }
+
+        [Fact]
+        public async Task GetRevenueStatistics_ServiceThrows_Returns500()
+        {
+            _statisticsServiceMock.Setup(s => s.GetRevenueStatisticsAsync()).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetRevenueStatistics();
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetRevenueTrends_ValidDates_ReturnsOk()
+        {
+            var start = new DateTime(2024,1,1);
+            var end = new DateTime(2024,1,31);
+            var dto = new RevenueTrendStatisticsDto { Trends = new List<RevenueTrendDto> { new RevenueTrendDto { Date = start, Revenue = 100m } }, TotalRevenueInPeriod = 100 };
+            _statisticsServiceMock.Setup(s => s.GetRevenueTrendsAsync(start, end)).ReturnsAsync(dto);
+
+            var result = await _controller.GetRevenueTrends(start, end);
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeAssignableTo<RevenueTrendStatisticsDto>();
+        }
+
+        [Fact]
+        public async Task GetRevenueTrends_InvalidDates_ReturnsBadRequest()
+        {
+            var start = new DateTime(2024,12,1);
+            var end = new DateTime(2024,1,1);
+
+            var result = await _controller.GetRevenueTrends(start, end);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetRevenueTrends_ServiceThrows_Returns500()
+        {
+            var start = new DateTime(2024,1,1);
+            var end = new DateTime(2024,1,31);
+            _statisticsServiceMock.Setup(s => s.GetRevenueTrendsAsync(start, end)).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.GetRevenueTrends(start, end);
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
         }
 
         #endregion

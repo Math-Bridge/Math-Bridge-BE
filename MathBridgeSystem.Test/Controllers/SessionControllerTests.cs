@@ -5,7 +5,10 @@ using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using System;
+using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MathBridgeSystem.Tests.Controllers
@@ -254,6 +257,311 @@ namespace MathBridgeSystem.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        #endregion
+
+        #region GetSessionsByTutor Tests
+
+        [Fact]
+        public async Task GetSessionsByTutor_StaffWithoutTutorId_ReturnsBadRequest()
+        {
+            // Arrange - staff role
+            SetupControllerContext("staff");
+
+            // Act
+            var result = await _controller.GetSessionsByTutor(null);
+
+            // Assert
+            var bad = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+            bad.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetSessionsByTutor_StaffWithTutorId_ReturnsOk()
+        {
+            // Arrange
+            SetupControllerContext("staff");
+            var tutorId = Guid.NewGuid();
+            var sessions = new List<SessionDto> { new SessionDto { BookingId = Guid.NewGuid() } };
+            _sessionServiceMock.Setup(s => s.GetSessionsByTutorIdAsync(tutorId)).ReturnsAsync(sessions);
+
+            // Act
+            var result = await _controller.GetSessionsByTutor(tutorId);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+            _sessionServiceMock.Verify(s => s.GetSessionsByTutorIdAsync(tutorId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetSessionsByTutor_TutorWithDifferentTutorId_ReturnsForbid()
+        {
+            // Arrange
+            SetupControllerContext("tutor");
+            var other = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.GetSessionsByTutor(other);
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task GetSessionsByTutor_TutorWithoutTutorId_UsesCurrentUser_ReturnsOk()
+        {
+            // Arrange
+            SetupControllerContext("tutor");
+            var sessions = new List<SessionDto> { new SessionDto { BookingId = Guid.NewGuid() } };
+            _sessionServiceMock.Setup(s => s.GetSessionsByTutorIdAsync(_userId)).ReturnsAsync(sessions);
+
+            // Act
+            var result = await _controller.GetSessionsByTutor(null);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+            _sessionServiceMock.Verify(s => s.GetSessionsByTutorIdAsync(_userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetSessionsByTutor_ServiceThrowsException_ReturnsBadRequest()
+        {
+            // Arrange
+            SetupControllerContext("tutor");
+            _sessionServiceMock.Setup(s => s.GetSessionsByTutorIdAsync(_userId)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetSessionsByTutor(null);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        #endregion
+
+        #region UpdateSessionTutor Tests
+
+        [Fact]
+        public async Task UpdateSessionTutor_ModelStateInvalid_ReturnsBadRequest()
+        {
+            // Arrange
+            _controller.ModelState.AddModelError("NewTutorId", "Required");
+
+            // Act
+            var result = await _controller.UpdateSessionTutor(Guid.NewGuid(), new UpdateSessionTutorRequest());
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_Success_ReturnsOk()
+        {
+            // Arrange
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            var newTutor = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, newTutor, _userId)).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = newTutor });
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+            _sessionServiceMock.Verify(s => s.UpdateSessionTutorAsync(bookingId, newTutor, _userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_NotFound_ReturnsNotFound()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, It.IsAny<Guid>(), _userId))
+                .ThrowsAsync(new KeyNotFoundException("not found"));
+
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = Guid.NewGuid() });
+
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_Unauthorized_ReturnsForbid()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, It.IsAny<Guid>(), _userId))
+                .ThrowsAsync(new UnauthorizedAccessException("no"));
+
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = Guid.NewGuid() });
+
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_InvalidOperation_ReturnsBadRequest()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, It.IsAny<Guid>(), _userId))
+                .ThrowsAsync(new InvalidOperationException("bad"));
+
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = Guid.NewGuid() });
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_ArgumentException_ReturnsBadRequest()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, It.IsAny<Guid>(), _userId))
+                .ThrowsAsync(new ArgumentException("arg"));
+
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = Guid.NewGuid() });
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionTutor_ServerError_Returns500()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionTutorAsync(bookingId, It.IsAny<Guid>(), _userId))
+                .ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.UpdateSessionTutor(bookingId, new UpdateSessionTutorRequest { NewTutorId = Guid.NewGuid() });
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        #endregion
+
+        #region UpdateSessionStatus Tests
+
+        [Fact]
+        public async Task UpdateSessionStatus_ModelStateInvalid_ReturnsBadRequest()
+        {
+            _controller.ModelState.AddModelError("Status", "Required");
+
+            var result = await _controller.UpdateSessionStatus(Guid.NewGuid(), new UpdateSessionStatusRequest());
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_NonStaffWithoutSession_Forbid()
+        {
+            // Arrange as tutor
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync((SessionDto)null!);
+
+            // Act
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_Staff_Success_ReturnsOk()
+        {
+            SetupControllerContext("staff");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ReturnsAsync(true);
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+            _sessionServiceMock.Verify(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_Tutor_Success_ReturnsOk()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ReturnsAsync(true);
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_NotFound_ReturnsNotFound()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ThrowsAsync(new KeyNotFoundException());
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_Unauthorized_ReturnsForbid()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ThrowsAsync(new UnauthorizedAccessException("no"));
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_InvalidOperation_ReturnsBadRequest()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ThrowsAsync(new InvalidOperationException("bad"));
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_ArgumentException_ReturnsBadRequest()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ThrowsAsync(new ArgumentException("bad"));
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task UpdateSessionStatus_ServerError_Returns500()
+        {
+            SetupControllerContext("tutor");
+            var bookingId = Guid.NewGuid();
+            _sessionServiceMock.Setup(s => s.GetSessionForTutorCheckAsync(bookingId, _userId)).ReturnsAsync(new SessionDto { BookingId = bookingId });
+            _sessionServiceMock.Setup(s => s.UpdateSessionStatusAsync(bookingId, "done", _userId)).ThrowsAsync(new Exception("boom"));
+
+            var result = await _controller.UpdateSessionStatus(bookingId, new UpdateSessionStatusRequest { Status = "done" });
+
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
         }
 
         #endregion

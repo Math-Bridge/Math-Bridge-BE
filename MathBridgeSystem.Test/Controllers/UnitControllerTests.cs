@@ -201,5 +201,239 @@ namespace MathBridgeSystem.Tests.Controllers
             var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
             statusCodeResult.StatusCode.Should().Be(500);
         }
+
+        [Fact]
+        public async Task DeleteUnit_Success_ReturnsNoContent()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.DeleteUnitAsync(id)).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.DeleteUnit(id);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Fact]
+        public async Task DeleteUnit_NotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.DeleteUnitAsync(id)).ThrowsAsync(new InvalidOperationException("not found"));
+
+            // Act
+            var result = await _controller.DeleteUnit(id);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+
+        [Fact]
+        public async Task DeleteUnit_ServerError_Returns500()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.DeleteUnitAsync(id)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.DeleteUnit(id);
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetUnitById_Found_ReturnsOk()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var dto = new UnitDto { UnitId = id, UnitName = "A" };
+            _unitServiceMock.Setup(s => s.GetUnitByIdAsync(id)).ReturnsAsync(dto);
+
+            // Act
+            var result = await _controller.GetUnitById(id);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().Be(dto);
+        }
+
+        [Fact]
+        public async Task GetUnitById_NotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.GetUnitByIdAsync(id)).ReturnsAsync((UnitDto?)null);
+
+            // Act
+            var result = await _controller.GetUnitById(id);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetUnitById_ServerError_Returns500()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.GetUnitByIdAsync(id)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetUnitById(id);
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetAllUnits_ReturnsOk()
+        {
+            // Arrange
+            var list = new List<UnitDto> { new UnitDto { UnitId = Guid.NewGuid() } };
+            _unitServiceMock.Setup(s => s.GetAllUnitsAsync()).ReturnsAsync(list);
+
+            // Act
+            var result = await _controller.GetAllUnits();
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetAllUnits_ServerError_Returns500()
+        {
+            // Arrange
+            _unitServiceMock.Setup(s => s.GetAllUnitsAsync()).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetAllUnits();
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetUnitsByCurriculumId_ReturnsOk()
+        {
+            // Arrange
+            var curriculumId = Guid.NewGuid();
+            var list = new List<UnitDto> { new UnitDto { UnitId = Guid.NewGuid() } };
+            _unitServiceMock.Setup(s => s.GetUnitsByCurriculumIdAsync(curriculumId)).ReturnsAsync(list);
+
+            // Act
+            var result = await _controller.GetUnitsByCurriculumId(curriculumId);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetUnitsByCurriculumId_ServerError_Returns500()
+        {
+            // Arrange
+            var curriculumId = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.GetUnitsByCurriculumIdAsync(curriculumId)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetUnitsByCurriculumId(curriculumId);
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetUnitsByContractId_ReturnsOk()
+        {
+            // Arrange
+            var contractId = Guid.NewGuid();
+            var list = new List<UnitDto> { new UnitDto { UnitId = Guid.NewGuid() } };
+            _unitServiceMock.Setup(s => s.GetUnitsByContractIdAsync(contractId)).ReturnsAsync(list);
+
+            // Act
+            var result = await _controller.GetUnitsByContractId(contractId);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetUnitsByContractId_ServerError_Returns500()
+        {
+            // Arrange
+            var contractId = Guid.NewGuid();
+            _unitServiceMock.Setup(s => s.GetUnitsByContractIdAsync(contractId)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetUnitsByContractId(contractId);
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
+
+        [Fact]
+        public async Task GetUnitByName_Valid_ReturnsOk()
+        {
+            // Arrange
+            var name = "Algebra";
+            var dto = new UnitDto { UnitId = Guid.NewGuid(), UnitName = name };
+            _unitServiceMock.Setup(s => s.GetUnitByNameAsync(name)).ReturnsAsync(dto);
+
+            // Act
+            var result = await _controller.GetUnitByName(name);
+
+            // Assert
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().Be(dto);
+        }
+
+        [Fact]
+        public async Task GetUnitByName_EmptyName_ReturnsBadRequest()
+        {
+            // Act
+            var result = await _controller.GetUnitByName("   ");
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetUnitByName_NotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var name = "Unknown";
+            _unitServiceMock.Setup(s => s.GetUnitByNameAsync(name)).ReturnsAsync((UnitDto?)null);
+
+            // Act
+            var result = await _controller.GetUnitByName(name);
+
+            // Assert
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+
+        [Fact]
+        public async Task GetUnitByName_ServerError_Returns500()
+        {
+            // Arrange
+            var name = "Algebra";
+            _unitServiceMock.Setup(s => s.GetUnitByNameAsync(name)).ThrowsAsync(new Exception("boom"));
+
+            // Act
+            var result = await _controller.GetUnitByName(name);
+
+            // Assert
+            var obj = result.Should().BeOfType<ObjectResult>().Subject;
+            obj.StatusCode.Should().Be(500);
+        }
     }
 }
