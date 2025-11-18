@@ -19,8 +19,29 @@ namespace MathBridgeSystem.Test.Controllers
             _controller = new AdminPackageController(_mockPackageService.Object);
         }
 
+        #region Constructor Tests
         [Fact]
-        public async Task CreatePackage_ValidRequest_ReturnsOk()
+        public void Constructor_NullPackageService_ThrowsArgumentNullException()
+        {
+            // Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new AdminPackageController(null!));
+        }
+
+        [Fact]
+        public void Constructor_ValidPackageService_CreatesInstance()
+        {
+            // Arrange & Act
+            var controller = new AdminPackageController(_mockPackageService.Object);
+
+            // Assert
+            Assert.NotNull(controller);
+        }
+        #endregion
+
+        #region CreatePackage Tests
+        [Fact]
+        public async Task CreatePackage_ValidRequest_ReturnsOkWithPackageId()
         {
             // Arrange
             var request = new CreatePackageRequest
@@ -49,30 +70,100 @@ namespace MathBridgeSystem.Test.Controllers
         }
 
         [Fact]
-        public async Task CreatePackage_InvalidArgument_ReturnsBadRequest()
+        public async Task CreatePackage_InvalidModelState_ReturnsBadRequest()
         {
             // Arrange
             var request = new CreatePackageRequest();
-            _mockPackageService.Setup(s => s.CreatePackageAsync(request))
-                .ThrowsAsync(new ArgumentException("Invalid package data"));
+            _controller.ModelState.AddModelError("PackageName", "Package name is required");
 
             // Act
             var result = await _controller.CreatePackage(request);
 
             // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<SerializableError>(badRequestResult.Value);
+            _mockPackageService.Verify(s => s.CreatePackageAsync(It.IsAny<CreatePackageRequest>()), Times.Never);
         }
 
         [Fact]
-        public async Task UpdatePackage_ValidRequest_ReturnsOk()
+        public async Task CreatePackage_ArgumentException_ReturnsBadRequestWithErrorMessage()
+        {
+            // Arrange
+            var request = new CreatePackageRequest
+            {
+                PackageName = "Test Package"
+            };
+            var errorMessage = "Invalid package data";
+            _mockPackageService.Setup(s => s.CreatePackageAsync(request))
+                .ThrowsAsync(new ArgumentException(errorMessage));
+
+            // Act
+            var result = await _controller.CreatePackage(request);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task CreatePackage_KeyNotFoundException_ReturnsNotFoundWithErrorMessage()
+        {
+            // Arrange
+            var request = new CreatePackageRequest
+            {
+                PackageName = "Test Package",
+                CurriculumId = Guid.NewGuid()
+            };
+            var errorMessage = "Curriculum not found";
+            _mockPackageService.Setup(s => s.CreatePackageAsync(request))
+                .ThrowsAsync(new KeyNotFoundException(errorMessage));
+
+            // Act
+            var result = await _controller.CreatePackage(request);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+        }
+
+        [Fact]
+        public async Task CreatePackage_GenericException_ReturnsInternalServerError()
+        {
+            // Arrange
+            var request = new CreatePackageRequest
+            {
+                PackageName = "Test Package"
+            };
+            var errorMessage = "Database connection failed";
+            _mockPackageService.Setup(s => s.CreatePackageAsync(request))
+                .ThrowsAsync(new Exception(errorMessage));
+
+            // Act
+            var result = await _controller.CreatePackage(request);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+            Assert.NotNull(statusCodeResult.Value);
+        }
+        #endregion
+
+        #region UpdatePackage Tests
+        [Fact]
+        public async Task UpdatePackage_ValidRequest_ReturnsOkWithUpdatedPackage()
         {
             // Arrange
             var packageId = Guid.NewGuid();
             var request = new UpdatePackageRequest 
             { 
-                PackageName = "Updated Package" 
+                PackageName = "Updated Package",
+                Price = 1500
             };
-            var updatedPackage = new PaymentPackageDto { PackageId = packageId };
+            var updatedPackage = new PaymentPackageDto 
+            { 
+                PackageId = packageId,
+                PackageName = "Updated Package"
+            };
             _mockPackageService.Setup(s => s.UpdatePackageAsync(packageId, request))
                 .ReturnsAsync(updatedPackage);
 
@@ -82,9 +173,93 @@ namespace MathBridgeSystem.Test.Controllers
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.NotNull(okResult.Value);
+            var returnedPackage = Assert.IsType<PaymentPackageDto>(okResult.Value);
+            Assert.Equal(packageId, returnedPackage.PackageId);
             _mockPackageService.Verify(s => s.UpdatePackageAsync(packageId, request), Times.Once);
         }
 
+        [Fact]
+        public async Task UpdatePackage_InvalidModelState_ReturnsBadRequest()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var request = new UpdatePackageRequest();
+            _controller.ModelState.AddModelError("PackageName", "Package name is required");
+
+            // Act
+            var result = await _controller.UpdatePackage(packageId, request);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<SerializableError>(badRequestResult.Value);
+            _mockPackageService.Verify(s => s.UpdatePackageAsync(It.IsAny<Guid>(), It.IsAny<UpdatePackageRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdatePackage_PackageNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var request = new UpdatePackageRequest 
+            { 
+                PackageName = "Updated Package" 
+            };
+            _mockPackageService.Setup(s => s.UpdatePackageAsync(packageId, request))
+                .ThrowsAsync(new KeyNotFoundException());
+
+            // Act
+            var result = await _controller.UpdatePackage(packageId, request);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+        }
+
+        [Fact]
+        public async Task UpdatePackage_ArgumentException_ReturnsBadRequestWithErrorMessage()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var request = new UpdatePackageRequest 
+            { 
+                PackageName = "" 
+            };
+            var errorMessage = "Package name cannot be empty";
+            _mockPackageService.Setup(s => s.UpdatePackageAsync(packageId, request))
+                .ThrowsAsync(new ArgumentException(errorMessage));
+
+            // Act
+            var result = await _controller.UpdatePackage(packageId, request);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task UpdatePackage_GenericException_ReturnsInternalServerError()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var request = new UpdatePackageRequest 
+            { 
+                PackageName = "Test Package" 
+            };
+            var errorMessage = "Database error";
+            _mockPackageService.Setup(s => s.UpdatePackageAsync(packageId, request))
+                .ThrowsAsync(new Exception(errorMessage));
+
+            // Act
+            var result = await _controller.UpdatePackage(packageId, request);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+            Assert.NotNull(statusCodeResult.Value);
+        }
+        #endregion
+
+        #region DeletePackage Tests
         [Fact]
         public async Task DeletePackage_ValidId_ReturnsNoContent()
         {
@@ -102,7 +277,7 @@ namespace MathBridgeSystem.Test.Controllers
         }
 
         [Fact]
-        public async Task DeletePackage_NotFound_ReturnsNotFound()
+        public async Task DeletePackage_PackageNotFound_ReturnsNotFoundWithErrorMessage()
         {
             // Arrange
             var packageId = Guid.NewGuid();
@@ -113,15 +288,44 @@ namespace MathBridgeSystem.Test.Controllers
             var result = await _controller.DeletePackage(packageId);
 
             // Assert
-            Assert.IsType<NotFoundObjectResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
         }
 
         [Fact]
-        public void Constructor_NullPackageService_ThrowsArgumentNullException()
+        public async Task DeletePackage_InvalidOperation_ReturnsConflictWithErrorMessage()
         {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var errorMessage = "Cannot delete package with active subscriptions";
+            _mockPackageService.Setup(s => s.DeletePackageAsync(packageId))
+                .ThrowsAsync(new InvalidOperationException(errorMessage));
+
+            // Act
+            var result = await _controller.DeletePackage(packageId);
+
             // Assert
-            Assert.Throws<ArgumentNullException>(() =>
-                new AdminPackageController(null!));
+            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+            Assert.NotNull(conflictResult.Value);
         }
+
+        [Fact]
+        public async Task DeletePackage_GenericException_ReturnsInternalServerError()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var errorMessage = "Unexpected error occurred";
+            _mockPackageService.Setup(s => s.DeletePackageAsync(packageId))
+                .ThrowsAsync(new Exception(errorMessage));
+
+            // Act
+            var result = await _controller.DeletePackage(packageId);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+            Assert.NotNull(statusCodeResult.Value);
+        }
+        #endregion
     }
 }

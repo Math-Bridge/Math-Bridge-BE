@@ -100,7 +100,10 @@ namespace MathBridgeSystem.Application.Services
                 Status = request.Status.ToLower(),
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
-
+            if (!contract.IsOnline && request.CenterId == null)
+            {
+                throw new ArgumentException("CenterId is required for offline contracts.");
+            }
             await _contractRepository.AddAsync(contract);
 
             // Tạo buổi học

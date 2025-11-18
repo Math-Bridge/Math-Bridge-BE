@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
 using Assert = Xunit.Assert;
+using System;
+using System.Collections.Generic;
 
 namespace MathBridgeSystem.Test.Controllers
 {
@@ -160,6 +162,152 @@ namespace MathBridgeSystem.Test.Controllers
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        // New tests for remaining endpoints
+        [Fact]
+        public async Task GetByProviderType_ReturnsOk()
+        {
+            // Arrange
+            var providerType = "tutor";
+            var feedbacks = new List<FinalFeedbackDto> { new FinalFeedbackDto { FeedbackId = Guid.NewGuid(), FeedbackProviderType = providerType } };
+            _mockFeedbackService.Setup(s => s.GetByProviderTypeAsync(providerType)).ReturnsAsync(feedbacks);
+
+            // Act
+            var result = await _controller.GetByProviderType(providerType);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<List<FinalFeedbackDto>>(okResult.Value);
+            Assert.Single(returnValue);
+        }
+
+        [Fact]
+        public async Task GetByStatus_ReturnsOk()
+        {
+            // Arrange
+            var status = "approved";
+            var feedbacks = new List<FinalFeedbackDto> { new FinalFeedbackDto { FeedbackId = Guid.NewGuid(), FeedbackStatus = status } };
+            _mockFeedbackService.Setup(s => s.GetByStatusAsync(status)).ReturnsAsync(feedbacks);
+
+            // Act
+            var result = await _controller.GetByStatus(status);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<List<FinalFeedbackDto>>(okResult.Value);
+            Assert.Single(returnValue);
+        }
+
+        [Fact]
+        public async Task Create_ReturnsCreated()
+        {
+            // Arrange
+            var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
+            var created = new FinalFeedbackDto { FeedbackId = Guid.NewGuid() };
+            _mockFeedbackService.Setup(s => s.CreateAsync(request)).ReturnsAsync(created);
+
+            // Act
+            var result = await _controller.Create(request);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var returnValue = Assert.IsType<FinalFeedbackDto>(createdResult.Value);
+            Assert.Equal(created.FeedbackId, returnValue.FeedbackId);
+            _mockFeedbackService.Verify(s => s.CreateAsync(request), Times.Once);
+        }
+
+        [Fact]
+        public async Task Create_Exception_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
+            _mockFeedbackService.Setup(s => s.CreateAsync(request)).ThrowsAsync(new Exception("bad"));
+
+            // Act
+            var result = await _controller.Create(request);
+
+            // Assert
+            var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.NotNull(bad.Value);
+        }
+
+        [Fact]
+        public async Task Update_Success_ReturnsOk()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = new UpdateFinalFeedbackRequest { FeedbackText = "ok" };
+            var updated = new FinalFeedbackDto { FeedbackId = id };
+            _mockFeedbackService.Setup(s => s.UpdateAsync(id, request)).ReturnsAsync(updated);
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<FinalFeedbackDto>(okResult.Value);
+            Assert.Equal(id, returnValue.FeedbackId);
+        }
+
+        [Fact]
+        public async Task Update_NotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = new UpdateFinalFeedbackRequest();
+            _mockFeedbackService.Setup(s => s.UpdateAsync(id, request)).ReturnsAsync((FinalFeedbackDto?)null);
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task Update_Exception_ReturnsBadRequest()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = new UpdateFinalFeedbackRequest();
+            _mockFeedbackService.Setup(s => s.UpdateAsync(id, request)).ThrowsAsync(new Exception("bad"));
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.NotNull(bad.Value);
+        }
+
+        [Fact]
+        public async Task Delete_Success_ReturnsOk()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _mockFeedbackService.Setup(s => s.DeleteAsync(id)).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+        }
+
+        [Fact]
+        public async Task Delete_NotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _mockFeedbackService.Setup(s => s.DeleteAsync(id)).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]

@@ -152,7 +152,21 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
                     if (!hasOverlap)
                     {
-                        availableTutors.Add(tutor);
+                        if (inputContract.IsOnline && inputContract.Child.CenterId == null)
+                        {
+                            availableTutors.Add(tutor);
+                        }
+                        else if (!inputContract.IsOnline && inputContract.Child.CenterId != null)
+                        {
+                            // For offline contracts, ensure tutor is associated with the child's center
+                            var childCenterId = inputContract.Child.CenterId;
+                            var tutorCenterIds = tutor.TutorCenters.Select(tc => tc.CenterId).ToList();
+                            if (childCenterId.HasValue && tutorCenterIds.Contains(childCenterId.Value))
+                            {
+                                availableTutors.Add(tutor);
+                            }
+
+                        }
                     }
                 }
 
@@ -207,6 +221,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
                 if (!dateOverlap)
                     return false;
+                
 
                 // All overlap conditions met - check for the 1h30m exception rule
                 // If input contract's StartTime is at least 90 minutes after existing contract's EndTime, no overlap
