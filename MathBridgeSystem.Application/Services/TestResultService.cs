@@ -75,7 +75,8 @@ namespace MathBridgeSystem.Application.Services
                 Notes = testResult.Notes,
                 CreatedDate = testResult.CreatedDate,
                 UpdatedDate = testResult.UpdatedDate,
-                ContractId = testResult.ContractId
+                ContractId = testResult.ContractId,
+                BookingId = testResult.BookingId
             };
         }
     }
