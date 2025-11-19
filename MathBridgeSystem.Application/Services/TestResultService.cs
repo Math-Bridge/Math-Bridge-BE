@@ -36,6 +36,7 @@ namespace MathBridgeSystem.Application.Services
                 Score = request.Score,
                 Notes = request.Notes,
                 ContractId = request.ContractId,
+                BookingId = request.BookingId,
                 CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 UpdatedDate = DateTime.UtcNow.ToLocalTime()
             };
@@ -55,6 +56,8 @@ namespace MathBridgeSystem.Application.Services
                 testResult.Notes = request.Notes;
             if (request.ContractId.HasValue)
                 testResult.ContractId = request.ContractId.Value;
+            if (request.BookingId.HasValue)
+                testResult.BookingId = request.BookingId.Value;
             testResult.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _testResultRepository.UpdateAsync(testResult);
         }
