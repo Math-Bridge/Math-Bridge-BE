@@ -45,6 +45,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
         public string? Notes { get; set; }
 
         public Guid? ContractId { get; set; }
+        public Guid? BookingId { get; set; }
     }
 }
 
