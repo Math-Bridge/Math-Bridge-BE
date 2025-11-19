@@ -8,7 +8,7 @@ using Moq;
 using System.Security.Claims;
 using Xunit;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class WalletTransactionControllerTests
     {
@@ -88,6 +88,18 @@ namespace MathBridgeSystem.Test.Controllers
             var result = await _controller.GetWalletBalance(parentId);
 
             result.Should().BeOfType<ForbidResult>();
+        }
+
+        [Fact]
+        public async Task GetWallet_NotFound_ReturnsNotFound()
+        {
+            var parentId = Guid.NewGuid();
+            _serviceMock.Setup(s => s.GetParentWalletBalanceAsync(parentId)).ThrowsAsync(new KeyNotFoundException("not"));
+
+            SetupUser("admin");
+            var result = await _controller.GetWalletBalance(parentId);
+
+            result.Should().BeOfType<NotFoundObjectResult>();
         }
 
         [Fact]

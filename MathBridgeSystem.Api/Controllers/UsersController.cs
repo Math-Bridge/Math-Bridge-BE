@@ -173,6 +173,31 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = errorMessage });
             }
         }
+        [HttpPost("/wallet/deduct")]
+        public async Task<IActionResult> DeductWallet([FromBody] DeductWalletRequest request)
+        {
+            var id = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("Invalid token"));
+                var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(currentUserRole))
+                    return Unauthorized(new { error = "Role not found in token" });
+
+                var result = await _userService.DeductWalletAsync(id, request, currentUserId, currentUserRole);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in DeductWallet: {ex.ToString()}");
+
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while deducting from wallet" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
     }
 }
 

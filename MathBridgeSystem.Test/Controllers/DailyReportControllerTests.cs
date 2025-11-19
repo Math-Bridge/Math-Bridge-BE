@@ -10,7 +10,7 @@ using Xunit;
 using Assert = Xunit.Assert;
 using System.Collections.Generic;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class DailyReportControllerTests
     {

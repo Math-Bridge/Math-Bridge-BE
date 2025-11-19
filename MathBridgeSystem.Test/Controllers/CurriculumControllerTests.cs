@@ -7,7 +7,7 @@ using Moq;
 using Xunit;
 using Assert = Xunit.Assert;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class CurriculumControllerTests
     {

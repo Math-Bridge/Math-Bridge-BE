@@ -226,7 +226,7 @@ namespace MathBridgeSystem.Tests.Controllers
 
             var result = await _controller.GetWallet(_userId);
 
-            result.Should().BeOfType<ObjectResult>();
+            result.Should().BeOfType<NotFoundObjectResult>();
         }
 
         [Fact]

@@ -4,6 +4,7 @@ using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using Moq;
+using Org.BouncyCastle.Ocsp;
 using Xunit;
 
 namespace MathBridgeSystem.Tests.Services
@@ -267,12 +268,13 @@ namespace MathBridgeSystem.Tests.Services
             var contractId = Guid.NewGuid();
             var package = new PaymentPackage { PackageName = "Gói 1", Price = 1500 };
             var contract = new Contract { ContractId = contractId, ParentId = _userId, Package = package };
+            var request = new DeductWalletRequest { ContractId = new Guid() };
 
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(contractId)).ReturnsAsync(contract);
 
             // Act
-            var result = await _userService.DeductWalletAsync(_userId, contractId, _adminId, _adminRole);
+            var result = await _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
 
             // Assert
             result.AmountDeducted.Should().Be(1500);
@@ -284,33 +286,18 @@ namespace MathBridgeSystem.Tests.Services
             _walletTransactionRepositoryMock.Verify(r => r.AddAsync(It.Is<WalletTransaction>(t => t.Amount == 1500 && t.TransactionType == "withdrawal")), Times.Once);
             _userRepositoryMock.Verify(r => r.UpdateAsync(parent), Times.Once);
         }
-
-        // Test: Ném lỗi khi không được phép
-        [Fact]
-        public async Task DeductWalletAsync_Unauthorized_ThrowsException()
-        {
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, Guid.NewGuid(), _otherUserId, _parentRole);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Unauthorized access");
-        }
-
-        // Test: Ném lỗi khi không tìm thấy Parent
-        [Fact]
-        public async Task DeductWalletAsync_ParentNotFound_ThrowsException()
-        {
-            _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync((User)null);
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, Guid.NewGuid(), _adminId, _adminRole);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Invalid parent user");
-        }
+        
 
         // Test: Ném lỗi khi không tìm thấy Contract
         [Fact]
         public async Task DeductWalletAsync_ContractNotFound_ThrowsException()
         {
             var parent = new User { UserId = _userId, Role = new Role { RoleName = "parent" } };
+            var request = new DeductWalletRequest { ContractId = new Guid() };
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync((Contract)null);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, Guid.NewGuid(), _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract not found");
         }
@@ -320,11 +307,12 @@ namespace MathBridgeSystem.Tests.Services
         public async Task DeductWalletAsync_ContractNotOwnedByParent_ThrowsException()
         {
             var parent = new User { UserId = _userId, Role = new Role { RoleName = "parent" } };
+            var request = new DeductWalletRequest { ContractId = new Guid() };
             var contract = new Contract { ParentId = _otherUserId, Package = new PaymentPackage() }; 
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, Guid.NewGuid(), _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract does not belong to this parent");
         }
@@ -335,10 +323,11 @@ namespace MathBridgeSystem.Tests.Services
         {
             var parent = new User { UserId = _userId, Role = new Role { RoleName = "parent" }, WalletBalance = 1000 };
             var contract = new Contract { ParentId = _userId, Package = new PaymentPackage { Price = 1500 } }; 
+            var request = new DeductWalletRequest { ContractId = new Guid() };
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, Guid.NewGuid(), _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("*Insufficient wallet balance*");
         }

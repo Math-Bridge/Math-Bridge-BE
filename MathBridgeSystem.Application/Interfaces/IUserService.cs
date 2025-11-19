@@ -10,7 +10,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<Guid> AdminCreateUserAsync(RegisterRequest request, string currentUserRole);
         Task<Guid> UpdateUserStatusAsync(Guid id, UpdateStatusRequest request, string currentUserRole);
 
-        Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid id, Guid currentUserId, string currentUserRole);
+        Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, DeductWalletRequest request, Guid currentUserId, string currentUserRole);
         
         Task<IEnumerable<UserResponse>> GetAllUsersAsync(string currentUserRole);
     }

@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MathBridgeSystem.Application.DTOs;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class SchoolControllerTests
     {

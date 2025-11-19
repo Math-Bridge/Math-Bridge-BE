@@ -10,7 +10,7 @@ using System.Security.Claims;
 using Xunit;
 using Assert = Xunit.Assert;
 
-namespace MathBridgeSystem.Test.Controllers
+namespace MathBridgeSystem.Tests.Controllers
 {
     public class SePayControllerTests
     {
