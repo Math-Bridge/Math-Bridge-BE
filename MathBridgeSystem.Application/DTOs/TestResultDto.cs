@@ -30,6 +30,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
 
         [Required]
         public Guid ContractId { get; set; }
+        public Guid? BookingId { get; set; }
     }
 
     public class UpdateTestResultRequest
