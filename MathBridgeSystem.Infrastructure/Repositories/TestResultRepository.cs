@@ -21,7 +21,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<TestResult> GetByIdAsync(Guid id)
         {
             return await _context.TestResults
-                .Include(t => t.Contract)
+                .Include(t => t.Contract).Include(t => t.Booking)
                 .FirstOrDefaultAsync(t => t.ResultId == id);
         }
 

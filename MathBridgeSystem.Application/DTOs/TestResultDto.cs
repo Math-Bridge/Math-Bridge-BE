@@ -12,6 +12,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public Guid? ContractId { get; set; }
+        public Guid? BookingId { get; set; }
     }
 
     public class CreateTestResultRequest
@@ -29,6 +30,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
 
         [Required]
         public Guid ContractId { get; set; }
+        public Guid? BookingId { get; set; }
     }
 
     public class UpdateTestResultRequest
@@ -43,6 +45,7 @@ namespace MathBridgeSystem.Application.DTOs.TestResult
         public string? Notes { get; set; }
 
         public Guid? ContractId { get; set; }
+        public Guid? BookingId { get; set; }
     }
 }
 
