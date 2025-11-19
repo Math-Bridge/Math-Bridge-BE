@@ -7,5 +7,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<TutorDto> GetTutorByIdAsync(Guid id, Guid currentUserId, string currentUserRole);
         Task<Guid> UpdateTutorAsync(Guid id, UpdateTutorRequest request, Guid currentUserId, string currentUserRole);
         Task<List<TutorDto>> GetAllTutorsAsync();
+        Task<List<TutorInCenterDto>> GetTutorsNotAssignedToAnyCenterAsync();
     }
 }
