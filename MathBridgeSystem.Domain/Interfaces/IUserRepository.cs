@@ -23,5 +23,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<User>> GetTutorsByCenterAsync(Guid centerId);
         Task<User> GetTutorWithVerificationAsync(Guid tutorId);
         Task UpdateWalletBalanceAsync(Guid userId, decimal newBalance);
+        Task<List<User>> GetTutorsNotAssignedToAnyCenterAsync();
     }
 }

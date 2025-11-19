@@ -76,5 +76,19 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [HttpGet("unassigned-to-center")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<ActionResult<List<TutorInCenterDto>>> GetTutorsNotAssignedToAnyCenter()
+        {
+            try
+            {
+                var tutors = await _tutorService.GetTutorsNotAssignedToAnyCenterAsync();
+                return Ok(tutors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error when getting list of tutors without center", details = ex.Message });
+            }
+        }
     }
 }

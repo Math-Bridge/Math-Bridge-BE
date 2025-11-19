@@ -1,4 +1,4 @@
-using MathBridgeSystem.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -133,6 +133,24 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
             }
+        }
+        public async Task<List<User>> GetTutorsNotAssignedToAnyCenterAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.TutorVerification)
+                .Include(u => u.TutorCenters)
+                .Where(u => u.Role.RoleName == "tutor")
+                .Where(u => u.Status == "active")
+                .Where(u =>
+                    //Không có bản ghi TutorCenter nào
+                    !u.TutorCenters.Any()
+                    ||
+                    //Có bản ghi nhưng CenterId = NULL (dữ liệu cũ bị lỗi)
+                    u.TutorCenters.Any() && u.TutorCenters.All(tc => tc.CenterId == null)
+                )
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
         }
     }
 }
