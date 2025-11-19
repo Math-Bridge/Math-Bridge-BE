@@ -100,8 +100,9 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             try
             {
-                // Get the input contract with all required properties
+                // FIX: Include Child to avoid NullReferenceException
                 var inputContract = await _context.Contracts
+                    .Include(c => c.Child) 
                     .FirstOrDefaultAsync(c => c.ContractId == contractId);
 
                 if (inputContract == null)
@@ -115,34 +116,32 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 if (!inputContract.EndTime.HasValue)
                     throw new InvalidOperationException("Contract must have EndTime defined.");
 
-                // Get all tutors (Users with Tutor role) - RoleId 3 is typically tutor
+                // Get all active tutors who are assigned to at least one center
                 var tutors = await _context.Users
                     .Include(u => u.FinalFeedbacks)
                     .Include(u => u.Role)
+                    .Include(u => u.TutorCenters)
                     .Include(u => u.ContractMainTutors)
                     .Include(u => u.ContractSubstituteTutor1s)
                     .Include(u => u.ContractSubstituteTutor2s)
-                    .Where(u => u.Role.RoleName == "tutor" && u.Status != "inactive" && u.TutorCenters.Count >0)
+                    .Where(u => u.Role.RoleName == "tutor"
+                             && u.Status == "active"
+                             && u.TutorCenters.Any())
                     .ToListAsync();
 
-                var inputDaysOfWeeks = inputContract.DaysOfWeeks.Value;
-
-                // Filter out tutors with overlapping contracts
                 var availableTutors = new List<User>();
+                var inputDaysOfWeeks = inputContract.DaysOfWeeks.Value;
 
                 foreach (var tutor in tutors)
                 {
-                    // Get all contracts where tutor is MainTutor, SubstituteTutor1, or SubstituteTutor2
-                    var tutorContracts = new List<Contract>();
-                    tutorContracts.AddRange(tutor.ContractMainTutors.Where(c => c.Status == "active"));
-                    //tutorContracts.AddRange(tutor.ContractSubstituteTutor1s.Where(c => c.Status != "cancelled" && c.Status != "completed"));
-                    //tutorContracts.AddRange(tutor.ContractSubstituteTutor2s.Where(c => c.Status != "cancelled" && c.Status != "completed"));
+                    // Get all active contracts of the tutor (MainTutor only)
+                    var tutorActiveContracts = tutor.ContractMainTutors
+                        .Where(c => c.Status == "active")
+                        .ToList();
 
                     bool hasOverlap = false;
-
-                    foreach (var existingContract in tutorContracts)
+                    foreach (var existingContract in tutorActiveContracts)
                     {
-                        // Check if ALL overlap conditions are met
                         if (CheckOverlap(inputContract, existingContract))
                         {
                             hasOverlap = true;
@@ -150,35 +149,33 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                         }
                     }
 
-                    if (!hasOverlap)
+                    if (hasOverlap) continue;
+
+                    // Conditions according to class type
+                    if (inputContract.IsOnline)
                     {
-                        if (inputContract.IsOnline && inputContract.Child.CenterId == null)
+                        // Online: only tutors with centers (filtered above)
+                        availableTutors.Add(tutor);
+                    }
+                    else
+                    {
+                        // Must be in the same center as the child (if the child has a center)
+                        var childCenterId = inputContract.Child?.CenterId;
+                        if (!childCenterId.HasValue)
+                        {
+                            // Child has no center → does not accept offline
+                            continue;
+                        }
+
+                        var tutorCenterIds = tutor.TutorCenters.Select(tc => tc.CenterId).ToList();
+                        if (tutorCenterIds.Contains(childCenterId.Value))
                         {
                             availableTutors.Add(tutor);
-                        }
-                        else if (!inputContract.IsOnline && inputContract.Child.CenterId != null)
-                        {
-                            // For offline contracts, ensure tutor is associated with the child's center
-                            var childCenterId = inputContract.Child.CenterId;
-                            var tutorCenterIds = tutor.TutorCenters.Select(tc => tc.CenterId).ToList();
-                            if (childCenterId.HasValue && tutorCenterIds.Contains(childCenterId.Value))
-                            {
-                                availableTutors.Add(tutor);
-                            }
-
                         }
                     }
                 }
 
                 return availableTutors;
-            }
-            catch (KeyNotFoundException)
-            {
-                throw;
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
             }
             catch (Exception ex)
             {
