@@ -224,7 +224,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 // If input contract's StartTime is at least 90 minutes after existing contract's EndTime, no overlap
                 var gapInMinutes = (inputContract.StartTime.Value.ToTimeSpan() - existingContract.EndTime.Value.ToTimeSpan()).TotalMinutes;
                 if (gapInMinutes >= 90)
-                    return false; // Exception applies - no overlap
+                    return false; 
 
                 // All conditions met and no exception applies - there is overlap
                 return true;
