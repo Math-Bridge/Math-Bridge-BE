@@ -15,12 +15,16 @@ namespace MathBridgeSystem.Application.Services
         private readonly IDailyReportRepository _dailyReportRepository;
         private readonly IUnitRepository _unitRepository;
         private readonly IPackageRepository _packageRepository;
+        private readonly IContractRepository _contractRepository;
+        private readonly ISessionRepository _sessionRepository;
 
-        public DailyReportService(IDailyReportRepository dailyReportRepository, IUnitRepository unitRepository, IPackageRepository packageRepository)
+        public DailyReportService(IDailyReportRepository dailyReportRepository, IUnitRepository unitRepository, IPackageRepository packageRepository, IContractRepository contractRepository, ISessionRepository sessionRepository)
         {
             _dailyReportRepository = dailyReportRepository ?? throw new ArgumentNullException(nameof(dailyReportRepository));
             _unitRepository = unitRepository ?? throw new ArgumentNullException(nameof(unitRepository));
             _packageRepository = packageRepository ?? throw new ArgumentNullException(nameof(packageRepository));
+            _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
+            _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         }
 
         public async Task<DailyReportDto> GetDailyReportByIdAsync(Guid reportId)
@@ -193,6 +197,29 @@ namespace MathBridgeSystem.Application.Services
             };
 
             var createdReport = await _dailyReportRepository.AddAsync(dailyReport);
+            
+            // Check if this is the last session and update contract status if needed
+            var session = await _sessionRepository.GetByIdAsync(request.BookingId);
+            if (session != null)
+            {
+                var contract = await _contractRepository.GetByIdAsync(session.ContractId);
+                if (contract != null)
+                {
+                    // Get all sessions for this contract
+                    var allSessions = await _sessionRepository.GetByContractIdAsync(session.ContractId);
+                    
+                    // Check if there are any sessions after the current session date
+                    var hasRemainingsessions = allSessions.Any(s => s.SessionDate > session.SessionDate);
+                    
+                    // If no remaining sessions, mark contract as completed
+                    if (!hasRemainingsessions)
+                    {
+                        contract.Status = "Completed";
+                        await _contractRepository.UpdateAsync(contract);
+                    }
+                }
+            }
+            
             return createdReport.ReportId;
         }
 

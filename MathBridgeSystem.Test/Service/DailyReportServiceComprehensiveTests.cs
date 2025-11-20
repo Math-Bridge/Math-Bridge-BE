@@ -13,6 +13,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IDailyReportRepository> _dailyReportRepositoryMock;
         private readonly Mock<IUnitRepository> _unitRepositoryMock;
         private readonly Mock<IPackageRepository> _packageRepositoryMock;
+        private readonly Mock<IContractRepository> _contractRepositoryMock;
+        private readonly Mock<ISessionRepository> _sessionRepositoryMock;
         private readonly DailyReportService _dailyReportService;
 
         public DailyReportServiceComprehensiveTests()
@@ -20,10 +22,14 @@ namespace MathBridgeSystem.Tests.Services
             _dailyReportRepositoryMock = new Mock<IDailyReportRepository>();
             _unitRepositoryMock = new Mock<IUnitRepository>();
             _packageRepositoryMock = new Mock<IPackageRepository>();
+            _contractRepositoryMock = new Mock<IContractRepository>();
+            _sessionRepositoryMock = new Mock<ISessionRepository>();
             _dailyReportService = new DailyReportService(
                 _dailyReportRepositoryMock.Object,
                 _unitRepositoryMock.Object,
-                _packageRepositoryMock.Object);
+                _packageRepositoryMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object);
         }
 
         #region Constructor Tests
@@ -32,7 +38,7 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullDailyReportRepository_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Action act = () => new DailyReportService(null!, _unitRepositoryMock.Object, _packageRepositoryMock.Object);
+            Action act = () => new DailyReportService(null!, _unitRepositoryMock.Object, _packageRepositoryMock.Object, _contractRepositoryMock.Object, _sessionRepositoryMock.Object);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -40,7 +46,7 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullUnitRepository_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, null!, _packageRepositoryMock.Object);
+            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, null!, _packageRepositoryMock.Object, _contractRepositoryMock.Object, _sessionRepositoryMock.Object);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -48,7 +54,23 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullPackageRepository_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, _unitRepositoryMock.Object, null!);
+            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, _unitRepositoryMock.Object, null!, _contractRepositoryMock.Object, _sessionRepositoryMock.Object);
+            act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_NullContractRepository_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, _unitRepositoryMock.Object, _packageRepositoryMock.Object, null!, _sessionRepositoryMock.Object);
+            act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_NullSessionRepository_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Action act = () => new DailyReportService(_dailyReportRepositoryMock.Object, _unitRepositoryMock.Object, _packageRepositoryMock.Object, _contractRepositoryMock.Object, null!);
             act.Should().Throw<ArgumentNullException>();
         }
 

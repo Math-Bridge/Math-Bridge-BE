@@ -329,7 +329,8 @@ namespace MathBridgeSystem.Application.Services
 
             var successfulTransactions = allTransactions.Where(t => t.AccountNumber != null).ToList();
 
-            var totalRevenue = successfulTransactions.Sum(t => t.Accumulated);
+            var totalRevenue = successfulTransactions.Max(t => t.Accumulated);
+
             var successRate = allTransactions.Count > 0
                 ? Math.Round((decimal)successfulTransactions.Count / allTransactions.Count * 100, 2)
                 : 0;

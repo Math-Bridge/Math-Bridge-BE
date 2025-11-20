@@ -274,7 +274,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(contractId)).ReturnsAsync(contract);
 
             // Act
-            var result = await _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
+            var result = await _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole);
 
             // Assert
             result.AmountDeducted.Should().Be(1500);
@@ -293,11 +293,10 @@ namespace MathBridgeSystem.Tests.Services
         public async Task DeductWalletAsync_ContractNotFound_ThrowsException()
         {
             var parent = new User { UserId = _userId, Role = new Role { RoleName = "parent" } };
-            var request = new DeductWalletRequest { ContractId = new Guid() };
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync((Contract)null);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract not found");
         }
@@ -312,7 +311,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract does not belong to this parent");
         }
@@ -323,11 +322,10 @@ namespace MathBridgeSystem.Tests.Services
         {
             var parent = new User { UserId = _userId, Role = new Role { RoleName = "parent" }, WalletBalance = 1000 };
             var contract = new Contract { ParentId = _userId, Package = new PaymentPackage { Price = 1500 } }; 
-            var request = new DeductWalletRequest { ContractId = new Guid() };
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request, _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("*Insufficient wallet balance*");
         }
