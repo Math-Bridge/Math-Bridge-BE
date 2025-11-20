@@ -27,6 +27,12 @@ namespace MathBridgeSystem.Application.Services
             var testResults = await _testResultRepository.GetByContractIdAsync(contractId);
             return testResults.Select(MapToDto);
         }
+
+        public async Task<IEnumerable<TestResultDto>> GetTestResultsByChildIdAsync(Guid childId)
+        {
+            var testResults = await _testResultRepository.GetByChildIdAsync(childId);
+            return testResults.Select(MapToDto);
+        }
         public async Task<Guid> CreateTestResultAsync(CreateTestResultRequest request)
         {
             var testResult = new TestResult
