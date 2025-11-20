@@ -314,5 +314,21 @@ namespace MathBridgeSystem.Application.Services
 
             return tutorList;
         }
+        public async Task<List<TutorInCenterDto>> GetTutorsNotAssignedToAnyCenterAsync()
+        {
+            var tutorsWithoutCenter = await _userRepository.GetTutorsNotAssignedToAnyCenterAsync();
+
+            return tutorsWithoutCenter.Select(u => new TutorInCenterDto
+            {
+                TutorId = u.UserId,
+                FullName = u.FullName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                HourlyRate = u.TutorVerification?.HourlyRate ?? 0m,
+                Bio = u.TutorVerification?.Bio,
+                VerificationStatus = u.TutorVerification?.VerificationStatus ?? "Pending",
+                CreatedDate = u.CreatedDate
+            }).ToList();
+        }
     }
 }
