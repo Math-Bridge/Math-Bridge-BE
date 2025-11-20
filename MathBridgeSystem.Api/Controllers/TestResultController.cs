@@ -58,6 +58,25 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get all test results for a child
+        /// </summary>
+        [HttpGet("child/{childId}")]
+        [Authorize(Roles = "parent,tutor,staff,admin")]
+        public async Task<IActionResult> GetTestResultsByChildId(Guid childId)
+        {
+            try
+            {
+                var testResults = await _testResultService.GetTestResultsByChildIdAsync(childId);
+                return Ok(testResults);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Create a new test result
         /// </summary>

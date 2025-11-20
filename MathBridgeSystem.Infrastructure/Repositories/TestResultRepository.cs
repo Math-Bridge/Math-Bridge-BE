@@ -33,6 +33,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<TestResult>> GetByChildIdAsync(Guid childId)
+        {
+            return await _context.TestResults
+                .Include(t => t.Contract)
+                .Where(t => t.Contract.ChildId == childId)
+                .ToListAsync();
+        }
+
         public async Task<TestResult> AddAsync(TestResult testResult)
         {
             _context.TestResults.Add(testResult);

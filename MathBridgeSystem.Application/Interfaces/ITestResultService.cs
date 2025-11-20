@@ -9,6 +9,7 @@ namespace MathBridgeSystem.Application.Interfaces
     {
         Task<TestResultDto> GetTestResultByIdAsync(Guid resultId);
         Task<IEnumerable<TestResultDto>> GetTestResultsByContractIdAsync(Guid contractId);
+        Task<IEnumerable<TestResultDto>> GetTestResultsByChildIdAsync(Guid childId);
         Task<Guid> CreateTestResultAsync(CreateTestResultRequest request);
         Task UpdateTestResultAsync(Guid resultId, UpdateTestResultRequest request);
         Task<bool> DeleteTestResultAsync(Guid resultId);
