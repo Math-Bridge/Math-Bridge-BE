@@ -12,6 +12,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IDailyReportRepository> _dailyReportRepositoryMock;
         private readonly Mock<IUnitRepository> _unitRepositoryMock;
         private readonly Mock<IPackageRepository> _packageRepositoryMock;
+        private readonly Mock<IContractRepository> _contractRepositoryMock;
+        private readonly Mock<ISessionRepository> _sessionRepositoryMock;
         private readonly DailyReportService _service;
 
         public DailyReportServiceTests()
@@ -19,11 +21,15 @@ namespace MathBridgeSystem.Tests.Services
             _dailyReportRepositoryMock = new Mock<IDailyReportRepository>();
             _unitRepositoryMock = new Mock<IUnitRepository>();
             _packageRepositoryMock = new Mock<IPackageRepository>();
+            _contractRepositoryMock = new Mock<IContractRepository>();
+            _sessionRepositoryMock = new Mock<ISessionRepository>();
 
             _service = new DailyReportService(
                 _dailyReportRepositoryMock.Object,
                 _unitRepositoryMock.Object,
-                _packageRepositoryMock.Object
+                _packageRepositoryMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object
             );
         }
 
@@ -134,7 +140,9 @@ namespace MathBridgeSystem.Tests.Services
             var action = () => new DailyReportService(
                 null!,
                 _unitRepositoryMock.Object,
-                _packageRepositoryMock.Object
+                _packageRepositoryMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object
             );
 
             action.Should().Throw<ArgumentNullException>();
@@ -147,7 +155,54 @@ namespace MathBridgeSystem.Tests.Services
             var action = () => new DailyReportService(
                 _dailyReportRepositoryMock.Object,
                 null!,
-                _packageRepositoryMock.Object
+                _packageRepositoryMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object
+            );
+
+            action.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenPackageRepositoryIsNull()
+        {
+            // Act & Assert
+            var action = () => new DailyReportService(
+                _dailyReportRepositoryMock.Object,
+                _unitRepositoryMock.Object,
+                null!,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object
+            );
+
+            action.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenContractRepositoryIsNull()
+        {
+            // Act & Assert
+            var action = () => new DailyReportService(
+                _dailyReportRepositoryMock.Object,
+                _unitRepositoryMock.Object,
+                _packageRepositoryMock.Object,
+                null!,
+                _sessionRepositoryMock.Object
+            );
+
+            action.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenSessionRepositoryIsNull()
+        {
+            // Act & Assert
+            var action = () => new DailyReportService(
+                _dailyReportRepositoryMock.Object,
+                _unitRepositoryMock.Object,
+                _packageRepositoryMock.Object,
+                _contractRepositoryMock.Object,
+                null!
             );
 
             action.Should().Throw<ArgumentNullException>();

@@ -13,6 +13,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IDailyReportRepository> _dailyReportRepo;
         private readonly Mock<IUnitRepository> _unitRepo;
         private readonly Mock<IPackageRepository> _packageRepo;
+        private readonly Mock<IContractRepository> _contractRepo;
+        private readonly Mock<ISessionRepository> _sessionRepo;
         private readonly DailyReportService _service;
 
         public DailyReportServiceForecastAndProgressTests()
@@ -20,7 +22,9 @@ namespace MathBridgeSystem.Tests.Services
             _dailyReportRepo = new Mock<IDailyReportRepository>();
             _unitRepo = new Mock<IUnitRepository>();
             _packageRepo = new Mock<IPackageRepository>();
-            _service = new DailyReportService(_dailyReportRepo.Object, _unitRepo.Object, _packageRepo.Object);
+            _contractRepo = new Mock<IContractRepository>();
+            _sessionRepo = new Mock<ISessionRepository>();
+            _service = new DailyReportService(_dailyReportRepo.Object, _unitRepo.Object, _packageRepo.Object, _contractRepo.Object, _sessionRepo.Object);
         }
 
         [Fact]
