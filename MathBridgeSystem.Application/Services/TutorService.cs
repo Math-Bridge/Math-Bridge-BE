@@ -314,5 +314,93 @@ namespace MathBridgeSystem.Application.Services
 
             return tutorList;
         }
+
+        public async Task<List<TutorDto>> GetTutorsWithoutCenterAsync()
+        {
+            var tutors = await _userRepository.GetTutorsWithoutCenterAsync();
+            var tutorList = new List<TutorDto>();
+
+            foreach (var user in tutors)
+            {
+                // Get tutor schedules
+                var tutorSchedules = await _tutorScheduleRepository.GetByTutorIdAsync(user.UserId);
+
+                // Get final feedbacks for tutor
+                var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(user.UserId);
+
+                // Build DTO
+                var tutorDto = new TutorDto
+                {
+                    UserId = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Gender = user.Gender,
+                    WalletBalance = user.WalletBalance,
+                    Status = user.Status,
+                    CreatedDate = user.CreatedDate,
+                    LastActive = user.LastActive,
+                    FormattedAddress = user.FormattedAddress,
+                    City = user.City,
+                    District = user.District,
+                    Latitude = user.Latitude.HasValue ? (decimal)user.Latitude.Value : (decimal?)null,
+                    Longitude = user.Longitude.HasValue ? (decimal)user.Longitude.Value : (decimal?)null
+                };
+
+                // Map TutorVerification
+                if (user.TutorVerification != null)
+                {
+                    tutorDto.TutorVerification = new TutorVerificationDto
+                    {
+                        VerificationId = user.TutorVerification.VerificationId,
+                        University = user.TutorVerification.University,
+                        Major = user.TutorVerification.Major,
+                        HourlyRate = user.TutorVerification.HourlyRate,
+                        Bio = user.TutorVerification.Bio,
+                        VerificationStatus = user.TutorVerification.VerificationStatus,
+                        VerificationDate = user.TutorVerification.VerificationDate,
+                        CreatedDate = user.TutorVerification.CreatedDate
+                    };
+                }
+
+                // No TutorCenters for tutors without centers
+                tutorDto.TutorCenters = new List<TutorCenterDetailDto>();
+
+                // Map TutorSchedules
+                tutorDto.TutorSchedules = tutorSchedules.Select(ts => new TutorScheduleDetailDto
+                {
+                    AvailabilityId = ts.AvailabilityId,
+                    DaysOfWeek = ts.DaysOfWeek,
+                    AvailableFrom = ts.AvailableFrom.ToString(),
+                    AvailableUntil = ts.AvailableUntil.ToString(),
+                    EffectiveFrom = ts.EffectiveFrom.ToString(),
+                    EffectiveUntil = ts.EffectiveUntil?.ToString(),
+                    CanTeachOnline = ts.CanTeachOnline,
+                    CanTeachOffline = ts.CanTeachOffline,
+                    IsBooked = ts.IsBooked,
+                    Status = ts.Status,
+                    CreatedDate = ts.CreatedDate
+                }).ToList();
+
+                // Map Final Feedbacks
+                tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
+                {
+                    FeedbackId = f.FeedbackId,
+                    UserId = f.UserId,
+                    ContractId = f.ContractId,
+                    FeedbackProviderType = f.FeedbackProviderType,
+                    FeedbackText = f.FeedbackText,
+                    OverallSatisfactionRating = f.OverallSatisfactionRating,
+                    WouldRecommend = f.WouldRecommend,
+                    FeedbackStatus = f.FeedbackStatus,
+                    CreatedDate = f.CreatedDate,
+                    ProviderName = f.User?.FullName ?? "Anonymous"
+                }).ToList();
+
+                tutorList.Add(tutorDto);
+            }
+
+            return tutorList;
+        }
     }
 }
