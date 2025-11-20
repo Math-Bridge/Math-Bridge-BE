@@ -134,20 +134,5 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-
-        public async Task<List<User>> GetTutorsWithoutCenterAsync()
-        {
-            var tutorsWithCenters = await _context.TutorCenters
-                .Select(tc => tc.TutorId)
-                .Distinct()
-                .ToListAsync();
-
-            return await _context.Users
-                .Include(u => u.Role)
-                .Include(u => u.TutorVerification)
-                .Where(u => u.RoleId == 2)
-                .Where(u => !tutorsWithCenters.Contains(u.UserId))
-                .ToListAsync();
-        }
     }
 }

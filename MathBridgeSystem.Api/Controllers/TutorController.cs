@@ -76,20 +76,5 @@ namespace MathBridgeSystem.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        [HttpGet("without-center")]
-        [Authorize]
-        public async Task<ActionResult<List<TutorDto>>> GetTutorsWithoutCenter()
-        {
-            try
-            {
-                var tutors = await _tutorService.GetTutorsWithoutCenterAsync();
-                return Ok(tutors);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
     }
 }
