@@ -13,6 +13,7 @@ using System.Text;
 using MathBridgeSystem.Infrastructure.Services;
 using System.Security.Claims;
 using QuestPDF.Infrastructure;
+using Microsoft.Extensions.Caching.Memory;
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize Firebase with error handling
@@ -135,7 +136,7 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 // === INFRASTRUCTURE SERVICES ===
 builder.Services.AddMemoryCache();
 
-// === AUTHENTICATION ===
+// === AUTHENTICATION + BLACKLIST LOGOUT ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -148,10 +149,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-            ClockSkew = TimeSpan.Zero, // Disable clock skew to enforce exact token expiration
-                                       // Map JWT claims to ClaimTypes
-            NameClaimType = ClaimTypes.NameIdentifier, // Maps "sub" to ClaimTypes.NameIdentifier
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = ClaimTypes.NameIdentifier,
             RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        };
+
+        // ADD THIS TO CHECK IF THE TOKEN HAS BEEN LOGOUT
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    return Task.CompletedTask;
+
+                var token = authHeader["Bearer ".Length..].Trim();
+                var cache = context.HttpContext.RequestServices.GetService<IMemoryCache>();
+
+                if (cache != null && cache.TryGetValue($"blacklist_{token}", out _))
+                {
+                    context.Response.StatusCode = 401;
+                    context.Fail("Token has been revoked. Please log in again.");
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 

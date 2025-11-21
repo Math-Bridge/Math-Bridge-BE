@@ -55,129 +55,141 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid childId)
         {
-            // Get the oldest daily report for the child
-            var oldestReport = await _dailyReportRepository.GetOldestByChildIdAsync(childId);
-            if (oldestReport == null)
-                throw new KeyNotFoundException($"No daily reports found for child with ID {childId}.");
+            var oldestReport = await _dailyReportRepository.GetOldestByChildIdAsync(childId)
+                ?? throw new KeyNotFoundException($"No daily reports found for child {childId}");
 
-            // Get the starting unit information
+            if (oldestReport.Unit == null)
+                throw new InvalidOperationException("Oldest report has no Unit assigned.");
+
             var startingUnit = oldestReport.Unit;
-            if (startingUnit == null)
-                throw new InvalidOperationException($"Starting unit not found for report with ID {oldestReport.ReportId}.");
 
-            // Get the curriculum to find the last unit
+           
+            if (startingUnit.Curriculum == null)
+            {
+                var unitFromDb = await _unitRepository.GetByIdAsync(startingUnit.UnitId);
+                if (unitFromDb?.Curriculum == null)
+                    throw new InvalidOperationException("Curriculum not found for the starting unit.");
+                startingUnit.Curriculum = unitFromDb.Curriculum;
+            }
+
             var curriculum = startingUnit.Curriculum;
-            if (curriculum == null)
-                throw new InvalidOperationException($"Curriculum not found for unit with ID {startingUnit.UnitId}.");
 
-            // Get all active units in the curriculum ordered by unit order
             var allUnits = await _unitRepository.GetByCurriculumIdAsync(curriculum.CurriculumId);
-            var package = await _packageRepository.GetPackageByCurriculumIdAsync(curriculum.CurriculumId);
-            var numberOfUnits = package.DurationDays / 14;
-            var filteredUnits = allUnits.Where(u => u.UnitOrder >= startingUnit.UnitOrder && u.IsActive)
-                .Take(numberOfUnits)
-                .OrderBy(u => u.UnitOrder)
-                .ToList();
-            
-            // Find the last unit
-            var lastUnit = filteredUnits.MaxBy(u => u.UnitOrder);
-            if (lastUnit == null)
-                throw new InvalidOperationException($"No active units found in curriculum with ID {curriculum.CurriculumId}.");
+            if (!allUnits.Any())
+                throw new InvalidOperationException("No units found in this curriculum.");
 
-            // Calculate completion forecast
-            var startDate = oldestReport.CreatedDate;
+            var package = await _packageRepository.GetPackageByCurriculumIdAsync(curriculum.CurriculumId)
+                ?? throw new InvalidOperationException("Package not found for this curriculum.");
+
+            var numberOfUnits = package.DurationDays / 14;
+
+            var candidateUnits = allUnits
+                .Where(u => u.IsActive && u.UnitOrder >= startingUnit.UnitOrder)
+                .OrderBy(u => u.UnitOrder)
+                .Take(numberOfUnits)
+                .ToList();
+
+            if (!candidateUnits.Any())
+                throw new InvalidOperationException("No active units found after starting unit.");
+
+            var lastUnit = candidateUnits.MaxBy(u => u.UnitOrder)!;
+
             var unitsToComplete = lastUnit.UnitOrder - startingUnit.UnitOrder + 1;
-            var daysPerUnit = 14; // Average 2 weeks per unit
-            var totalDays = unitsToComplete * daysPerUnit;
-            var estimatedCompletionDate = startDate.AddDays(totalDays);
+            var totalDays = unitsToComplete * 14;
+            var estimatedCompletionDate = oldestReport.CreatedDate.AddDays(totalDays);
+
+            string childName = "Unknown Child";
+            if (oldestReport.Child != null)
+                childName = oldestReport.Child.FullName ?? "Unknown Child";
 
             return new LearningCompletionForecastDto
             {
                 ChildId = oldestReport.ChildId,
-                ChildName = oldestReport.Child.FullName,
+                ChildName = childName,
                 CurriculumId = curriculum.CurriculumId,
-                CurriculumName = curriculum.CurriculumName,
+                CurriculumName = curriculum.CurriculumName ?? "Unknown Curriculum",
                 StartingUnitId = startingUnit.UnitId,
-                StartingUnitName = startingUnit.UnitName,
+                StartingUnitName = startingUnit.UnitName ?? "Unit",
                 StartingUnitOrder = startingUnit.UnitOrder,
                 LastUnitId = lastUnit.UnitId,
-                LastUnitName = lastUnit.UnitName,
+                LastUnitName = lastUnit.UnitName ?? "Final Unit",
                 LastUnitOrder = lastUnit.UnitOrder,
                 TotalUnitsToComplete = unitsToComplete,
-                StartDate = startDate,
+                StartDate = oldestReport.CreatedDate,
                 EstimatedCompletionDate = estimatedCompletionDate.ToDateTime(TimeOnly.MinValue),
                 DaysToCompletion = totalDays,
                 WeeksToCompletion = Math.Round(totalDays / 7.0, 2),
-                Message = $"Child will complete {lastUnit.UnitName} (Unit {lastUnit.UnitOrder}) by approximately {estimatedCompletionDate:MMMM dd, yyyy}"
+                Message = $"Expected to finish Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) around {estimatedCompletionDate:MMMM dd, yyyy}"
             };
         }
 
         public async Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid childId)
         {
-            // Get all daily reports for the child sorted by date
+            // 1. Get all daily reports for the child
             var dailyReports = await _dailyReportRepository.GetByChildIdAsync(childId);
+
             if (!dailyReports.Any())
                 throw new KeyNotFoundException($"No daily reports found for child with ID {childId}.");
 
-            var reportsOrderedByDate = dailyReports.OrderBy(d => d.CreatedDate).ToList();
-            
-            // Get child and unit information
-            var child = reportsOrderedByDate.First().Child;
+            var orderedReports = dailyReports.OrderBy(r => r.CreatedDate).ToList();
 
-            if (child == null)
-                throw new InvalidOperationException($"Child information not found for daily reports.");
-            
+            // 2. Safely get Child info — fallback to any report that has Child loaded
+            var child = orderedReports
+                .Select(r => r.Child)
+                .FirstOrDefault(c => c != null)
+                ?? throw new InvalidOperationException($"Child information could not be loaded for ChildId: {childId}");
 
-            // Group reports by unit
-            var unitGroups = reportsOrderedByDate
-                .GroupBy(d => d.UnitId)
-                .OrderBy(g => g.First().Unit?.UnitOrder ?? 0)
+            // 3. Group by Unit (skip reports where Unit is null)
+            var unitGroups = orderedReports
+                .Where(r => r.Unit != null)
+                .GroupBy(r => r.UnitId)
+                .OrderBy(g => g.First().Unit!.UnitOrder)
                 .ToList();
 
             var unitsProgress = new List<UnitProgressDetail>();
-            var today = DateOnly.FromDateTime(DateTime.Now);
+            var today = DateOnly.FromDateTime(DateTime.Today);
 
-            foreach (var unitGroup in unitGroups)
+            foreach (var group in unitGroups)
             {
-                var unit = unitGroup.First().Unit;
-                if (unit == null)
-                    continue;
+                var unit = group.First().Unit!;
+                var reportsInUnit = group.ToList();
 
-                var unitReports = unitGroup.ToList();
-                var firstLearned = unitReports.Min(r => r.CreatedDate);
-                var lastLearned = unitReports.Max(r => r.CreatedDate);
-                var daysSinceLearned = (today.DayNumber - lastLearned.DayNumber);
+                var firstLearned = reportsInUnit.Min(r => r.CreatedDate);
+                var lastLearned = reportsInUnit.Max(r => r.CreatedDate);
 
                 unitsProgress.Add(new UnitProgressDetail
                 {
                     UnitId = unit.UnitId,
-                    UnitName = unit.UnitName,
+                    UnitName = string.IsNullOrWhiteSpace(unit.UnitName) ? "Untitled Unit" : unit.UnitName,
                     UnitOrder = unit.UnitOrder,
-                    TimesLearned = unitReports.Count,
+                    TimesLearned = reportsInUnit.Count,
                     FirstLearned = firstLearned,
                     LastLearned = lastLearned,
-                    DaysSinceLearned = daysSinceLearned,
-                    OnTrack = unitReports.All(r => r.OnTrack),
-                    HasHomework = unitReports.Any(r => r.HaveHomework)
+                    DaysSinceLearned = Math.Max(0, today.DayNumber - lastLearned.DayNumber),
+                    OnTrack = reportsInUnit.All(r => r.OnTrack),
+                    HasHomework = reportsInUnit.Any(r => r.HaveHomework)
                 });
             }
-            var uniqueUnitIdCount = reportsOrderedByDate
-                .GroupBy(d => d.UnitId)
-                .Count(g => g.Count() == 1);
-            var firstReportDate = reportsOrderedByDate.First().CreatedDate;
-            var lastReportDate = reportsOrderedByDate.Last().CreatedDate;
+
+            // 4. Calculate progress percentage using forecast
             var forecast = await GetLearningCompletionForecastAsync(childId);
+            var uniqueUnitsLearned = unitGroups.Count;
+            var percentage = forecast.TotalUnitsToComplete > 0
+                ? Math.Round((double)uniqueUnitsLearned / forecast.TotalUnitsToComplete * 100, 2)
+                : 0.0;
+
+            // 5. Return final DTO
             return new ChildUnitProgressDto
             {
                 ChildId = child.ChildId,
                 ChildName = child.FullName,
-                TotalUnitsLearned = unitGroups.Count,
-                UniqueLessonsCompleted = reportsOrderedByDate.Count,
+                TotalUnitsLearned = uniqueUnitsLearned,
+                UniqueLessonsCompleted = orderedReports.Count,
                 UnitsProgress = unitsProgress,
-                FirstLessonDate = firstReportDate,
-                LastLessonDate = lastReportDate,
-                PercentageOfCurriculumCompleted = Math.Round((double)uniqueUnitIdCount / forecast.TotalUnitsToComplete * 100, 2),
-                Message = $"{child.FullName} has learned {unitGroups.Count} units across {reportsOrderedByDate.Count}"
+                FirstLessonDate = orderedReports.First().CreatedDate,
+                LastLessonDate = orderedReports.Last().CreatedDate,
+                PercentageOfCurriculumCompleted = percentage,
+                Message = $"{child.FullName} has studied {uniqueUnitsLearned} different unit(s) over {orderedReports.Count} lesson(s)."
             };
         }
 

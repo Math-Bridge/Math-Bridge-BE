@@ -101,6 +101,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<Unit?> GetUnitByIdAsync(Guid unitId)
+        {
+            return await _context.Units
+                .Include(u => u.Curriculum)
+                .FirstOrDefaultAsync(u => u.UnitId == unitId);
+        }
     }
 }
 

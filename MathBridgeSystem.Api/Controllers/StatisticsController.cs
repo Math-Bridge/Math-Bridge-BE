@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.Statistics;
+﻿using MathBridgeSystem.Application.DTOs.Statistics;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,6 @@ namespace MathBridgeSystem.Api.Controllers
 {
     [Route("api/statistics")]
     [ApiController]
-    [Authorize(Roles = "admin,staff")]
     public class StatisticsController : ControllerBase
     {
         private readonly IStatisticsService _statisticsService;
@@ -27,6 +26,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>User statistics including total, active, and breakdown by role</returns>
         [HttpGet("users/overview")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetUserStatistics()
         {
             try
@@ -47,6 +47,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="endDate">End date for trend analysis</param>
         /// <returns>User registration trends</returns>
         [HttpGet("users/registrations")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetUserRegistrationTrends(
             [FromQuery] [Required] DateTime startDate,
             [FromQuery] [Required] DateTime endDate)
@@ -70,6 +71,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>User count by city</returns>
         [HttpGet("users/location")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetUserLocationDistribution()
         {
             try
@@ -88,6 +90,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>Wallet statistics including totals, averages, and distribution</returns>
         [HttpGet("users/wallet")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetWalletStatistics()
         {
             try
@@ -110,6 +113,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>Session counts by status and completion rate</returns>
         [HttpGet("sessions/overview")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetSessionStatistics()
         {
             try
@@ -128,6 +132,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>Comparison of online and offline sessions with percentages</returns>
         [HttpGet("sessions/online-vs-offline")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetSessionOnlineVsOffline()
         {
             try
@@ -148,6 +153,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="endDate">End date for trend analysis</param>
         /// <returns>Session trends by date</returns>
         [HttpGet("sessions/trends")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetSessionTrends(
             [FromQuery] [Required] DateTime startDate,
             [FromQuery] [Required] DateTime endDate)
@@ -175,6 +181,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>Total tutors, average rating, and breakdown by feedback</returns>
         [HttpGet("tutors/overview")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetTutorStatistics()
         {
             try
@@ -194,6 +201,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="limit">Number of top tutors to return (default: 10)</param>
         /// <returns>List of top-rated tutors with their ratings</returns>
         [HttpGet("tutors/top-rated")]
+        [Authorize(Roles = "admin,staff,parent")]
         public async Task<IActionResult> GetTopRatedTutors([FromQuery] int limit = 10)
         {
             if (limit < 1 || limit > 100)
@@ -216,6 +224,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="limit">Number of top tutors to return (default: 10)</param>
         /// <returns>List of most active tutors with session counts</returns>
         [HttpGet("tutors/most-active")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetMostActiveTutors([FromQuery] int limit = 10)
         {
             if (limit < 1 || limit > 100)
@@ -241,6 +250,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// </summary>
         /// <returns>Total revenue, transaction counts, and success rate</returns>
         [HttpGet("financial/revenue")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetRevenueStatistics()
         {
             try
@@ -261,6 +271,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="endDate">End date for trend analysis</param>
         /// <returns>Revenue trends by date</returns>
         [HttpGet("financial/revenue-trends")]
+        [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetRevenueTrends(
             [FromQuery] [Required] DateTime startDate,
             [FromQuery] [Required] DateTime endDate)

@@ -255,5 +255,59 @@ namespace MathBridgeSystem.Presentation.Controllers
                 return StatusCode(500, new { error = errorMessage });
             }
         }
+        /// <summary>
+        /// Logout - Disable current token immediately (blacklist)
+        /// </summary>
+        /// <response code="200">Logout successful</response>
+        /// <response code="401">No token or invalid token</response>
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            try
+            {
+                var token = ExtractTokenFromHeader();
+                if (string.IsNullOrEmpty(token))
+                    return Unauthorized(new { error = "No token provided" });
+
+                // Get the expiration time from the "exp" claim
+                var expClaim = User.FindFirst("exp")?.Value;
+                if (string.IsNullOrEmpty(expClaim) || !long.TryParse(expClaim, out var unixSeconds))
+                    return BadRequest(new { error = "Invalid token format" });
+
+                var expiration = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
+                var timeUntilExpiry = expiration - DateTime.UtcNow;
+
+                if (timeUntilExpiry <= TimeSpan.Zero)
+                    return Ok(new { message = "Token has expired" });
+
+                // Blacklist token in MemoryCache until it expires
+                var cacheOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = expiration
+                };
+
+                _cache.Set($"blacklist_{token}", true, cacheOptions);
+
+                return Ok(new { message = "Log out successfully" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Logout Error] {ex}");
+                return StatusCode(500, new { error = "System error when logging out" });
+            }
+        }
+
+        /// <summary>
+        /// Get the Bearer token from the Authorization header
+        /// </summary>
+        private string? ExtractTokenFromHeader()
+        {
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            return authHeader["Bearer ".Length..].Trim();
+        }
     }
 }
