@@ -10,8 +10,6 @@ namespace MathBridgeSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Route("api/finalfeedback")] 
-    [Route("api/FinalFeedback")]
     [Authorize]
     public class FinalFeedbackController : ControllerBase
     {
