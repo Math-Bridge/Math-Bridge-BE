@@ -207,7 +207,7 @@
             In = ParameterLocation.Header,
             Description = "Enter your JWT token (without 'Bearer ' prefix)"
         });
-
+        c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
         c.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
             {
