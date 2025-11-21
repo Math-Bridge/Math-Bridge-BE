@@ -11,5 +11,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<string> ForgotPasswordAsync(ForgotPasswordRequest request);
         Task<string> ResetPasswordAsync(ResetPasswordRequest request);
         Task<string> ChangePasswordAsync(ChangePasswordRequest request, Guid userId);
+        Task<string> ResendVerificationAsync(ResendVerificationRequest request);
     }
 }
