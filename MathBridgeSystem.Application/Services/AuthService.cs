@@ -60,6 +60,9 @@ namespace MathBridgeSystem.Application.Services
                 RoleId = parentRoleId
             };
             _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
+            
+            // Store email-to-oobCode mapping for resend functionality
+            _cache.Set($"email_{request.Email}", oobCode, cacheEntryOptions);
 
             // Generate verification link with oobCode (sửa để đúng route API)
             var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
@@ -134,6 +137,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             _cache.Remove(oobCode);
+            _cache.Remove($"email_{email}"); // Remove email mapping
             Console.WriteLine($"VerifyEmailAsync: Cache removed for oobCode: {oobCode}");
 
             return user.UserId;
@@ -338,6 +342,46 @@ namespace MathBridgeSystem.Application.Services
 
             Console.WriteLine($"ChangePasswordAsync: Password changed successfully for user: {user.UserId}");
             return "Password changed successfully.";
+        }
+
+        public async Task<string> ResendVerificationAsync(ResendVerificationRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            // Check if email already exists in the database
+            if (await _userRepository.EmailExistsAsync(request.Email))
+                throw new Exception("Email already registered. Please login.");
+
+            // Try to get the oobCode from email mapping
+            if (!_cache.TryGetValue($"email_{request.Email}", out string oobCode) || string.IsNullOrEmpty(oobCode))
+            {
+                Console.WriteLine($"ResendVerificationAsync: No pending registration found for email: {request.Email}");
+                throw new Exception("No pending registration found for this email. Please register again.");
+            }
+
+            // Get the cached registration data
+            if (!_cache.TryGetValue(oobCode, out var cachedRequest) || cachedRequest == null)
+            {
+                Console.WriteLine($"ResendVerificationAsync: Registration data expired for email: {request.Email}");
+                throw new Exception("Registration data has expired. Please register again.");
+            }
+
+            // Generate verification link with existing oobCode
+            var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
+
+            try
+            {
+                await _emailService.SendVerificationLinkAsync(request.Email, verificationLink);
+                Console.WriteLine($"Verification link resent to {request.Email}: {verificationLink}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to resend verification email: {ex.ToString()}");
+                throw new Exception("Failed to resend verification email", ex);
+            }
+
+            return "Verification link has been resent to your email. Please check and click to complete registration.";
         }
     }
 }

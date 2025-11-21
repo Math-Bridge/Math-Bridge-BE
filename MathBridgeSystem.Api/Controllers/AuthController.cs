@@ -43,6 +43,29 @@ namespace MathBridgeSystem.Presentation.Controllers
             }
         }
 
+
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"ModelState errors in ResendVerification: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var message = await _authService.ResendVerificationAsync(request);
+                return Ok(new { message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ResendVerification: {ex.ToString()}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during resend verification" : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
+
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
