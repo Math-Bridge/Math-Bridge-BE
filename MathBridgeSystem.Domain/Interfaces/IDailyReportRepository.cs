@@ -15,5 +15,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<DailyReport> AddAsync(DailyReport dailyReport);
         Task<DailyReport> UpdateAsync(DailyReport dailyReport);
         Task<bool> DeleteAsync(Guid reportId);
+        Task<Unit?> GetUnitByIdAsync(Guid unitId);
     }
 }
