@@ -52,8 +52,7 @@ namespace MathBridgeSystem.Application.Services
             var existingCenters = await _centerRepository.GetAllAsync();
             var existingCenter = existingCenters
                 .FirstOrDefault(c => c.Name == request.Name &&
-                                   c.City == place.City &&
-                                   c.District == place.District);
+                                   c.GooglePlaceId == place.PlaceId);
 
             if (existingCenter != null)
                 throw new Exception($"Center with name '{request.Name}' at location {place.City}, {place.District} already exists");
