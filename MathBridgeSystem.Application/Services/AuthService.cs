@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Application.Services
             _cache.Set($"email_{request.Email}", oobCode, cacheEntryOptions);
 
             // Generate verification link with oobCode (sửa để đúng route API)
-            var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
+            var verificationLink = $"https://web.vibe88.tech/verify-email?oobCode={oobCode}";
 
             try
             {
@@ -122,9 +122,7 @@ namespace MathBridgeSystem.Application.Services
 
             try
             {
-                await _userRepository.AddAsync(user);
-                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
-                var firebaseUser = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
+                await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
                 {
                     Email = request.Email,
                     Disabled = false
@@ -134,6 +132,11 @@ namespace MathBridgeSystem.Application.Services
             {
                 Console.WriteLine($"VerifyEmailAsync: Failed to create user: {ex.ToString()}");
                 throw new Exception("Failed to create user", ex);
+            }
+            finally
+            {
+                await _userRepository.AddAsync(user);
+                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
             }
 
             _cache.Remove(oobCode);
