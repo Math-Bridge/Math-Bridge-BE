@@ -138,14 +138,18 @@ namespace MathBridgeSystem.Api.Controllers
         /// Get child unit progress from daily reports
         /// Returns information about which units the child has learned, how many times, and dates
         /// </summary>
-        [HttpGet("child/{childId}/unit-progress")]
+        [HttpGet("contract/{contractId}/unit-progress")]
         [Authorize(Roles = "tutor,parent,staff,admin")]
-        public async Task<IActionResult> GetChildUnitProgress(Guid childId)
+        public async Task<IActionResult> GetChildUnitProgress(Guid contractId)
         {
             try
             {
-                var progress = await _dailyReportService.GetChildUnitProgressAsync(childId);
+                var progress = await _dailyReportService.GetChildUnitProgressAsync(contractId);
                 return Ok(progress);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
             catch (KeyNotFoundException ex)
             {

@@ -123,24 +123,35 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        public async Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid childId)
+        public async Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid contractId)
         {
-            // 1. Get all daily reports for the child
-            var dailyReports = await _dailyReportRepository.GetByChildIdAsync(childId);
+            // 1. Get contract with child information
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract?.Child == null)
+                throw new KeyNotFoundException($"Contract {contractId} or child information not found.");
+            
+            var child = contract.Child;
 
-            if (!dailyReports.Any())
-                throw new KeyNotFoundException($"No daily reports found for child with ID {childId}.");
+            // 2. Get all sessions for the contract
+            var allSessions = await _sessionRepository.GetByContractIdAsync(contractId);
+            
+            if (!allSessions.Any())
+                throw new KeyNotFoundException($"No sessions found for contract {contractId}.");
 
-            var orderedReports = dailyReports.OrderBy(r => r.CreatedDate).ToList();
+            // 3. Get daily reports for this child and filter to this contract's sessions
+            var dailyReports = await _dailyReportRepository.GetByChildIdAsync(child.ChildId);
+            
+            var sessionIdsInContract = allSessions.Select(s => s.BookingId).ToHashSet();
+            var contractDailyReports = dailyReports
+                .Where(dr => sessionIdsInContract.Contains(dr.BookingId))
+                .OrderBy(r => r.CreatedDate)
+                .ToList();
+            
+            if (!contractDailyReports.Any())
+                throw new KeyNotFoundException($"No daily reports found for contract {contractId}.");
 
-            // 2. Safely get Child info — fallback to any report that has Child loaded
-            var child = orderedReports
-                .Select(r => r.Child)
-                .FirstOrDefault(c => c != null)
-                ?? throw new InvalidOperationException($"Child information could not be loaded for ChildId: {childId}");
-
-            // 3. Group by Unit (skip reports where Unit is null)
-            var unitGroups = orderedReports
+            // 4. Group by Unit (skip reports where Unit is null)
+            var unitGroups = contractDailyReports
                 .Where(r => r.Unit != null)
                 .GroupBy(r => r.UnitId)
                 .OrderBy(g => g.First().Unit!.UnitOrder)
@@ -171,25 +182,26 @@ namespace MathBridgeSystem.Application.Services
                 });
             }
 
-            // 4. Calculate progress percentage using forecast
-            var forecast = await GetLearningCompletionForecastAsync(childId);
-            var uniqueUnitsLearned = unitGroups.Count;
-            var percentage = forecast.TotalUnitsToComplete > 0
-                ? Math.Round((double)uniqueUnitsLearned / forecast.TotalUnitsToComplete * 100, 2)
+            // 5. Calculate progress percentage based on sessions completed vs total sessions
+            var completedSessionsCount = contractDailyReports.Count;
+            var totalSessionsCount = allSessions.Count;
+            
+            var percentage = totalSessionsCount > 0
+                ? Math.Round((double)completedSessionsCount / totalSessionsCount * 100, 2)
                 : 0.0;
 
-            // 5. Return final DTO
+            // 6. Return final DTO
             return new ChildUnitProgressDto
             {
                 ChildId = child.ChildId,
                 ChildName = child.FullName,
-                TotalUnitsLearned = uniqueUnitsLearned,
-                UniqueLessonsCompleted = orderedReports.Count,
+                TotalUnitsLearned = unitGroups.Count,
+                UniqueLessonsCompleted = completedSessionsCount,
                 UnitsProgress = unitsProgress,
-                FirstLessonDate = orderedReports.First().CreatedDate,
-                LastLessonDate = orderedReports.Last().CreatedDate,
+                FirstLessonDate = contractDailyReports.First().CreatedDate,
+                LastLessonDate = contractDailyReports.Last().CreatedDate,
                 PercentageOfCurriculumCompleted = percentage,
-                Message = $"{child.FullName} has studied {uniqueUnitsLearned} different unit(s) over {orderedReports.Count} lesson(s)."
+                Message = $"{child.FullName} has completed {completedSessionsCount} out of {totalSessionsCount} sessions ({percentage}%) for contract {contractId}."
             };
         }
 
