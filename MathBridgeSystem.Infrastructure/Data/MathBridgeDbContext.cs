@@ -59,9 +59,15 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=sql.vibe88.tech;Database=mathbridge;User Id=sa;Password=Phineas160404;MultipleActiveResultSets=true;TrustServerCertificate=True");
-
+    {
+        // Only configure if not already configured (e.g., when used outside of DI container)
+        if (!optionsBuilder.IsConfigured)
+        {
+            // This fallback is only used for design-time operations like migrations
+            // At runtime, the connection string from appsettings.json is used via DI in Program.cs
+            optionsBuilder.UseSqlServer("Server=sql.vibe88.tech;Database=mathbridge2;User Id=sa;Password=Phineas160404;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        }
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Center>(entity =>
