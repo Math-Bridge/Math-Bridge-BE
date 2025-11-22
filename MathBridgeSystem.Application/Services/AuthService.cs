@@ -127,17 +127,22 @@ namespace MathBridgeSystem.Application.Services
                     Email = request.Email,
                     Disabled = false
                 });
+                Console.WriteLine($"VerifyEmailAsync: Firebase user created successfully for: {request.Email}");
+            }
+            catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
+            {
+                // Ignore EMAIL_EXISTS error - user already exists in Firebase
+                Console.WriteLine($"VerifyEmailAsync: Firebase user already exists for: {request.Email}, continuing with local registration");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"VerifyEmailAsync: Failed to create user: {ex.ToString()}");
-                throw new Exception("Failed to create user", ex);
+                Console.WriteLine($"VerifyEmailAsync: Unexpected error creating Firebase user: {ex.ToString()}");
+                throw new Exception("Failed to create user in Firebase", ex);
             }
-            finally
-            {
-                await _userRepository.AddAsync(user);
-                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
-            }
+
+            // Add user to local database
+            await _userRepository.AddAsync(user);
+            Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
 
             _cache.Remove(oobCode);
             _cache.Remove($"email_{email}"); // Remove email mapping
