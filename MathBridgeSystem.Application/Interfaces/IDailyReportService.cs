@@ -13,7 +13,10 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByChildIdAsync(Guid childId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByBookingIdAsync(Guid bookingId);
         Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid childId);
-        Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid childId);
+        /// <summary>
+        /// Gets the unit progress for a contract's child based on session completion.
+        /// </summary>
+        Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid contractId);
         Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId);
         Task UpdateDailyReportAsync(Guid reportId, UpdateDailyReportRequest request);
         Task<bool> DeleteDailyReportAsync(Guid reportId);
