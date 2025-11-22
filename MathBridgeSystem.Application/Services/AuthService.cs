@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Application.Services
             _cache.Set($"email_{request.Email}", oobCode, cacheEntryOptions);
 
             // Generate verification link with oobCode (sửa để đúng route API)
-            var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
+            var verificationLink = $"https://web.vibe88.tech/verify-email?oobCode={oobCode}";
 
             try
             {
@@ -122,19 +122,27 @@ namespace MathBridgeSystem.Application.Services
 
             try
             {
-                await _userRepository.AddAsync(user);
-                Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
-                var firebaseUser = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
+                await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs
                 {
                     Email = request.Email,
                     Disabled = false
                 });
+                Console.WriteLine($"VerifyEmailAsync: Firebase user created successfully for: {request.Email}");
+            }
+            catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
+            {
+                // Ignore EMAIL_EXISTS error - user already exists in Firebase
+                Console.WriteLine($"VerifyEmailAsync: Firebase user already exists for: {request.Email}, continuing with local registration");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"VerifyEmailAsync: Failed to create user: {ex.ToString()}");
-                throw new Exception("Failed to create user", ex);
+                Console.WriteLine($"VerifyEmailAsync: Unexpected error creating Firebase user: {ex.ToString()}");
+                throw new Exception("Failed to create user in Firebase", ex);
             }
+
+            // Add user to local database
+            await _userRepository.AddAsync(user);
+            Console.WriteLine($"VerifyEmailAsync: User created successfully: {user.UserId}");
 
             _cache.Remove(oobCode);
             _cache.Remove($"email_{email}"); // Remove email mapping
