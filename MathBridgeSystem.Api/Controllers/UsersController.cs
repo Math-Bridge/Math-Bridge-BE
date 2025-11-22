@@ -56,7 +56,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="id">User ID</param>
         /// <returns>User details</returns>
         [HttpGet("{id}")]
-        [Authorize(Roles = "admin,parent,tutor,staff")]
+        [Authorize]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             try
@@ -96,7 +96,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <param name="request">Update data</param>
         /// <returns>Updated user ID</returns>
         [HttpPut("{id}")]
-        [Authorize(Roles = "admin,parent,tutor,staff")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
         {
             if (!ModelState.IsValid)

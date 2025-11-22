@@ -22,9 +22,6 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<UserResponse> GetUserByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
         {
-            if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != id))
-                throw new Exception("Unauthorized access");
-
             var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
                 throw new Exception("User not found");
