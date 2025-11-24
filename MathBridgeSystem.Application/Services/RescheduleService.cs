@@ -20,7 +20,7 @@ namespace MathBridgeSystem.Application.Services
 
         // Valid start times: 16:00, 17:30, 19:00, 20:30
         private static readonly TimeOnly[] ValidStartTimes = new[]
-        {
+         {
             new TimeOnly(16, 0),
             new TimeOnly(17, 30),
             new TimeOnly(19, 0),
@@ -28,11 +28,11 @@ namespace MathBridgeSystem.Application.Services
         };
 
         public RescheduleService(
-            IRescheduleRequestRepository rescheduleRepo,
-            IContractRepository contractRepo,
-            ISessionRepository sessionRepo,
-            IUserRepository userRepo,
-            IWalletTransactionRepository walletTransactionRepo)
+             IRescheduleRequestRepository rescheduleRepo,
+             IContractRepository contractRepo,
+             ISessionRepository sessionRepo,
+             IUserRepository userRepo,
+             IWalletTransactionRepository walletTransactionRepo)
         {
             _rescheduleRepo = rescheduleRepo;
             _contractRepo = contractRepo;
@@ -43,37 +43,47 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
         {
-            // Validate start time
+            // 1. Validate time
             if (!IsValidStartTime(dto.StartTime))
-            {
                 throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
-            }
 
-            // Validate end time (must be 90 minutes from start time)
             var expectedEndTime = dto.StartTime.AddMinutes(90);
             if (dto.EndTime != expectedEndTime)
-            {
-                throw new ArgumentException($"End time must be 90 minutes after start time. Expected: {expectedEndTime}");
-            }
+                throw new ArgumentException($"End time must be {expectedEndTime:HH:mm} (90 minutes after start time).");
 
-            var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId);
-            if (oldSession == null) throw new KeyNotFoundException("Session not found.");
-            if (oldSession.Contract.ParentId != parentId) throw new UnauthorizedAccessException("Not your child.");
-            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime())) throw new InvalidOperationException("Cannot reschedule past sessions.");
+            // 2. Validate session
+            var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId)
+                ?? throw new KeyNotFoundException("Session not found.");
 
+            if (oldSession.Contract.ParentId != parentId)
+                throw new UnauthorizedAccessException("You can only reschedule your child's sessions.");
+
+            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
+                throw new InvalidOperationException("Cannot reschedule past sessions.");
+
+            // 3. ANTI-SPAM: Only one pending request per session
             var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
-            if (hasPending) throw new InvalidOperationException("Pending request exists.");
+            if (hasPending)
+                throw new InvalidOperationException(
+                    "You already have a pending reschedule request for this session. " +
+                    "Please wait until it is approved or rejected before submitting a new one.");
 
-            var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId);
-            if (contract == null) throw new KeyNotFoundException("Contract not found.");
+            // 4. Load contract
+            var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
             if (contract.Status != "active")
-                throw new InvalidOperationException("Contract is not active.");
-            if(contract.EndDate < dto.RequestedDate)
-                throw new InvalidOperationException("Requested date exceeds contract end date.");
-            if (contract.RescheduleCount ==0)
-                throw new InvalidOperationException($"No reschedule attempts left. Max: {contract.Package.MaxReschedule}");
-            
+                throw new InvalidOperationException("Contract is no longer active.");
 
+            if (contract.EndDate < dto.RequestedDate)
+                throw new InvalidOperationException("Requested date exceeds contract end date.");
+
+            // 5. CRITICAL: Check remaining reschedule attempts
+            if (contract.RescheduleCount <= 0)
+                throw new InvalidOperationException(
+                    "You have used all your reschedule attempts for this package. No more rescheduling is allowed.");
+
+            // All checks passed → create request
             var request = new RescheduleRequest
             {
                 RequestId = Guid.NewGuid(),
@@ -94,59 +104,43 @@ namespace MathBridgeSystem.Application.Services
             {
                 RequestId = request.RequestId,
                 Status = "pending",
-                Message = "Yêu cầu đổi lịch đã được gửi."
+                Message = "Reschedule request submitted successfully. Waiting for staff approval."
             };
         }
 
         public async Task<RescheduleResponseDto> ApproveRequestAsync(Guid staffId, Guid requestId, ApproveRescheduleRequestDto dto)
         {
-            var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId);
-            if (request == null || request.Status != "pending") throw new KeyNotFoundException("Invalid request.");
+            var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId)
+                ?? throw new KeyNotFoundException("Reschedule request not found.");
 
-            // Determine the final tutor ID
-            Guid finalTutorId;
-            if (dto.NewTutorId != Guid.Empty)
-            {
-                // Validate that the new tutor exists and is a tutor
-                var newTutor = await _userRepo.GetByIdAsync(dto.NewTutorId);
-                if (newTutor == null)
-                    throw new KeyNotFoundException($"Tutor with ID {dto.NewTutorId} not found.");
-                if (newTutor.RoleId != 2) // 2 = tutor role
-                    throw new InvalidOperationException($"User {dto.NewTutorId} is not a tutor.");
-                finalTutorId = dto.NewTutorId;
-            }
-            else if (request.RequestedTutorId.HasValue)
-            {
-                // Validate that the requested tutor exists and is a tutor
-                var requestedTutor = await _userRepo.GetByIdAsync(request.RequestedTutorId.Value);
-                if (requestedTutor == null)
-                    throw new KeyNotFoundException($"Requested tutor with ID {request.RequestedTutorId} not found.");
-                if (requestedTutor.RoleId != 2)
-                    throw new InvalidOperationException($"Requested user {request.RequestedTutorId} is not a tutor.");
-                finalTutorId = request.RequestedTutorId.Value;
-            }
-            else
-            {
-                // Use the original tutor
-                finalTutorId = request.Booking.TutorId;
-            }
+            if (request.Status != "pending")
+                throw new InvalidOperationException("Only pending requests can be approved.");
 
-            var startDateTime = request.RequestedDate.ToDateTime(request.StartTime);
-            var endDateTime = request.RequestedDate.ToDateTime(request.EndTime);
-            var available = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDateTime, endDateTime);
-            if (!available) throw new InvalidOperationException("Tutor not available.");
+            // Determine final tutor
+            Guid finalTutorId = dto.NewTutorId != Guid.Empty
+                ? dto.NewTutorId
+                : request.RequestedTutorId ?? request.Booking.TutorId;
 
-            var sessionStart = request.RequestedDate.ToDateTime(request.StartTime);
-            var sessionEnd = request.RequestedDate.ToDateTime(request.EndTime);
+            var tutor = await _userRepo.GetByIdAsync(finalTutorId)
+                ?? throw new KeyNotFoundException("Tutor not found.");
+            if (tutor.RoleId != 2)
+                throw new InvalidOperationException("Selected user is not a tutor.");
 
+            var startDt = request.RequestedDate.ToDateTime(request.StartTime);
+            var endDt = request.RequestedDate.ToDateTime(request.EndTime);
+            var isAvailable = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDt, endDt);
+            if (!isAvailable)
+                throw new InvalidOperationException("Selected tutor is not available at the requested time.");
+
+            // Create new session
             var newSession = new Session
             {
                 BookingId = Guid.NewGuid(),
                 ContractId = request.ContractId,
                 TutorId = finalTutorId,
                 SessionDate = request.RequestedDate,
-                StartTime = sessionStart,
-                EndTime = sessionEnd,
+                StartTime = startDt,
+                EndTime = endDt,
                 IsOnline = request.Booking.IsOnline,
                 VideoCallPlatform = request.Booking.VideoCallPlatform,
                 OfflineAddress = request.Booking.OfflineAddress,
@@ -158,15 +152,18 @@ namespace MathBridgeSystem.Application.Services
 
             await _sessionRepo.AddRangeAsync(new[] { newSession });
 
+            // Mark old session as rescheduled
             request.Booking.Status = "rescheduled";
             request.Booking.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(request.Booking);
 
+            // Deduct one reschedule attempt (never go negative)
             var contract = request.Booking.Contract;
-            contract.RescheduleCount -= 1;
+            contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
 
+            // Finalize request
             request.Status = "approved";
             request.StaffId = staffId;
             request.RequestedTutorId = finalTutorId;
@@ -177,32 +174,33 @@ namespace MathBridgeSystem.Application.Services
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Done reschedule",
+                Message = "Reschedule request approved successfully.",
                 ProcessedDate = request.ProcessedDate
             };
         }
 
         public async Task<RescheduleResponseDto> RejectRequestAsync(Guid staffId, Guid requestId, string reason)
         {
-            var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId);
-            if (request == null || request.Status != "pending") throw new KeyNotFoundException("Invalid request.");
+            var request = await _rescheduleRepo.GetByIdWithDetailsAsync(requestId)
+                ?? throw new KeyNotFoundException("Reschedule request not found.");
+
+            if (request.Status != "pending")
+                throw new InvalidOperationException("Only pending requests can be rejected.");
 
             request.Status = "rejected";
             request.StaffId = staffId;
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.Reason = reason;
-
             await _rescheduleRepo.UpdateAsync(request);
 
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
                 Status = "rejected",
-                Message = $"Từ chối: {reason}",
+                Message = $"Request rejected: {reason}",
                 ProcessedDate = request.ProcessedDate
             };
         }
-
         public async Task<AvailableSubTutorsDto> GetAvailableSubTutorsAsync(Guid rescheduleRequestId)
         {
             // Get the reschedule request with contract details
@@ -352,38 +350,26 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId, Guid rescheduleRequestId)
         {
-            var rescheduleRequest = await _rescheduleRepo.GetByIdWithDetailsAsync(rescheduleRequestId);
-            if (rescheduleRequest == null)
-                throw new KeyNotFoundException("Reschedule request not found.");
+            var rescheduleRequest = await _rescheduleRepo.GetByIdWithDetailsAsync(rescheduleRequestId)
+                ?? throw new KeyNotFoundException("Reschedule request not found.");
 
             if (rescheduleRequest.BookingId != sessionId)
                 throw new InvalidOperationException("Reschedule request does not belong to this session.");
 
             if (rescheduleRequest.Status != "pending")
-                throw new InvalidOperationException($"Reschedule request is not pending (current status: {rescheduleRequest.Status}).");
+                throw new InvalidOperationException($"Request is not pending (current: {rescheduleRequest.Status}).");
 
+            var session = await _sessionRepo.GetByIdAsync(sessionId)
+                ?? throw new KeyNotFoundException("Session not found.");
 
-            // Get session with contract and package details
-            var session = await _sessionRepo.GetByIdAsync(sessionId);
-            if (session == null)
-                throw new KeyNotFoundException("Session not found.");
+            if (session.Status is "cancelled" or "completed")
+                throw new InvalidOperationException("Session cannot be cancelled in its current state.");
 
-            // Validate session status
-            if (session.Status == "cancelled")
-                throw new InvalidOperationException("Session is already cancelled.");
+            var contract = await _contractRepo.GetByIdWithPackageAsync(session.ContractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
 
-            if (session.Status == "completed")
-                throw new InvalidOperationException("Cannot cancel a completed session.");
-
-            // Get contract with package details
-            var contract = await _contractRepo.GetByIdWithPackageAsync(session.ContractId);
-            if (contract == null)
-                throw new KeyNotFoundException("Contract not found.");
-
-            // Calculate refund amount: package price / session count
             var refundAmount = contract.Package.Price / contract.Package.SessionCount;
 
-            // Create refund wallet transaction
             var transaction = new WalletTransaction
             {
                 TransactionId = Guid.NewGuid(),
@@ -400,25 +386,24 @@ namespace MathBridgeSystem.Application.Services
             await _walletTransactionRepo.AddAsync(transaction);
             await _userRepo.UpdateWalletBalanceAsync(contract.ParentId, refundAmount);
 
-            // Update session status to cancelled
             session.Status = "cancelled";
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(session);
 
-            
-            contract.RescheduleCount -= 1;
+            // Deduct attempt safely
+            contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
-                rescheduleRequest.Status = "approved";
-                rescheduleRequest.ProcessedDate = DateTime.UtcNow.ToLocalTime();
-                await _rescheduleRepo.UpdateAsync(rescheduleRequest);
 
+            rescheduleRequest.Status = "approved";
+            rescheduleRequest.ProcessedDate = DateTime.UtcNow.ToLocalTime();
+            await _rescheduleRepo.UpdateAsync(rescheduleRequest);
 
             return new RescheduleResponseDto
             {
                 RequestId = sessionId,
                 Status = "cancelled",
-                Message = $"Session cancelled successfully. Refund amount: {refundAmount:N0} VND has been added to your wallet.",
+                Message = $"Session cancelled successfully. Refund {refundAmount:N0} VND has been added to your wallet.",
                 ProcessedDate = DateTime.UtcNow.ToLocalTime()
             };
         }
