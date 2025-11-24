@@ -16,5 +16,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<Session>> GetSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime);
         Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId);
         Task<List<Session>> GetByTutorIdAsync(Guid tutorId); // MỚI
+        Task<List<Session>> GetAllSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime); 
     }
 }
