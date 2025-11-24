@@ -81,5 +81,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.RescheduleRequests
                 .FirstOrDefaultAsync(r => r.BookingId == bookingId && r.Status == "pending");
         }
+        public async Task<bool> HasPendingRequestInContractAsync(Guid contractId)
+        {
+            return await _context.RescheduleRequests
+                .AnyAsync(r => r.ContractId == contractId && r.Status == "pending");
+        }
     }
 }
