@@ -163,10 +163,10 @@ namespace MathBridgeSystem.Application.Services
                 new DateTime(2000, 1, 1),
                 DateTime.UtcNow.ToLocalTime().AddYears(10));
 
-            var completedCount = allSessions.Count(s => s.Status == "Completed");
-            var cancelledCount = allSessions.Count(s => s.Status == "Cancelled");
-            var upcomingCount = allSessions.Count(s => s.Status == "Scheduled" && s.StartTime > DateTime.UtcNow.ToLocalTime());
-            var rescheduledCount = allSessions.Count(s => s.Status == "Rescheduled");
+            var completedCount = allSessions.Count(s => s.Status.Equals("completed",StringComparison.OrdinalIgnoreCase));
+            var cancelledCount = allSessions.Count(s => s.Status.Equals("cancelled",StringComparison.OrdinalIgnoreCase));
+            var upcomingCount = allSessions.Count(s => s.Status.Equals("Scheduled",StringComparison.OrdinalIgnoreCase) && s.StartTime > DateTime.UtcNow.ToLocalTime());
+            var rescheduledCount = allSessions.Count(s => s.Status.Equals("Rescheduled",StringComparison.OrdinalIgnoreCase));
 
             var completionRate = allSessions.Count > 0
                 ? Math.Round((decimal)completedCount / allSessions.Count * 100, 2)
