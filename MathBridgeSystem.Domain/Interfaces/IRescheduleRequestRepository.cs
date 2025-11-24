@@ -13,5 +13,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<IEnumerable<RescheduleRequest>> GetByParentIdAsync(Guid parentId);
         Task UpdateAsync(RescheduleRequest entity);
         Task<bool> HasPendingRequestForBookingAsync(Guid bookingId);
+        Task<RescheduleRequest?> GetPendingRequestForBookingAsync(Guid bookingId);
     }
 }
