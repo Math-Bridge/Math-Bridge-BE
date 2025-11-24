@@ -86,7 +86,13 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
         }
-
+        public async Task<List<Session>> GetAllSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime)
+        {
+            return await WithFullIncludes()
+                .Where(s => s.StartTime >= startTime && s.StartTime <= endTime)
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+        }
         public async Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId)
         {
             return await WithFullIncludes()

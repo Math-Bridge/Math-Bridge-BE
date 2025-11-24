@@ -159,7 +159,7 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<SessionStatisticsDto> GetSessionStatisticsAsync()
         {
-            var allSessions = await _sessionRepository.GetSessionsInTimeRangeAsync(
+            var allSessions = await _sessionRepository.GetAllSessionsInTimeRangeAsync(
                 new DateTime(2000, 1, 1),
                 DateTime.UtcNow.ToLocalTime().AddYears(10));
 
@@ -185,7 +185,7 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<SessionOnlineVsOfflineDto> GetSessionOnlineVsOfflineAsync()
         {
-            var allSessions = await _sessionRepository.GetSessionsInTimeRangeAsync(
+            var allSessions = await _sessionRepository.GetAllSessionsInTimeRangeAsync(
                 new DateTime(2000, 1, 1),
                 DateTime.UtcNow.ToLocalTime().AddYears(10));
 
@@ -207,7 +207,7 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<SessionTrendStatisticsDto> GetSessionTrendsAsync(DateTime startDate, DateTime endDate)
         {
-            var allSessions = await _sessionRepository.GetSessionsInTimeRangeAsync(startDate, endDate);
+            var allSessions = await _sessionRepository.GetAllSessionsInTimeRangeAsync(startDate, endDate);
 
             var trends = allSessions
                 .GroupBy(s => s.CreatedAt.Date)
