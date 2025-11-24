@@ -6,6 +6,7 @@ namespace MathBridgeSystem.Application.DTOs
     {
         public Guid ContractId { get; set; }
         public Guid ChildId { get; set; }
+        public Guid ParentId { get; set; }
         public string ChildName { get; set; } = null!;
         public Guid PackageId { get; set; }
         public string PackageName { get; set; } = null!;
