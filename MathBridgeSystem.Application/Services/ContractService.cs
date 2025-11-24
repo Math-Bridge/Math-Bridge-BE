@@ -219,6 +219,7 @@ namespace MathBridgeSystem.Application.Services
                 DaysOfWeeks = c.DaysOfWeeks,
                 DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
                 IsOnline = c.IsOnline,
+                ParentId = c.ParentId,
 
                 // ONLY ONLINE
                 VideoCallPlatform = c.IsOnline ? c.VideoCallPlatform : null,
@@ -263,6 +264,7 @@ namespace MathBridgeSystem.Application.Services
                 DaysOfWeeks = contract.DaysOfWeeks,
                 DaysOfWeeksDisplay = FormatDaysOfWeek(contract.DaysOfWeeks),
                 IsOnline = contract.IsOnline,
+                ParentId = contract.ParentId,
 
                 // ONLY ONLINE
                 VideoCallPlatform = contract.IsOnline ? contract.VideoCallPlatform : null,
@@ -414,6 +416,7 @@ namespace MathBridgeSystem.Application.Services
                 DaysOfWeeks = c.DaysOfWeeks,
                 DaysOfWeeksDisplay = FormatDaysOfWeek(c.DaysOfWeeks),
                 IsOnline = c.IsOnline,
+                ParentId = c.ParentId,
 
                 // ONLY ONLINE
                 VideoCallPlatform = c.IsOnline ? c.VideoCallPlatform : null,
@@ -466,6 +469,7 @@ namespace MathBridgeSystem.Application.Services
                 OfflineLongitude = !c.IsOnline ? c.OfflineLongitude : null,
                 MaxDistanceKm = !c.IsOnline ? c.MaxDistanceKm : null,
                 RescheduleCount = c.RescheduleCount ?? 0,
+                ParentId = c.ParentId,
                 Status = c.Status
             }).ToList();
         }
