@@ -62,11 +62,14 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Cannot reschedule past sessions.");
 
             // 3. ANTI-SPAM: Only one pending request per session
-            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
-            if (hasPending)
+            var pendingRequest = await _rescheduleRepo.GetPendingRequestForBookingAsync(dto.BookingId);
+            if (pendingRequest != null)
+            {
                 throw new InvalidOperationException(
-                    "You already have a pending reschedule request for this session. " +
-                    "Please wait until it is approved or rejected before submitting a new one.");
+                    $"You cannot create a new reschedule request because this session already has a pending request " +
+                    $"(Request ID: {pendingRequest.RequestId}, Created: {pendingRequest.CreatedDate:dd/MM/yyyy HH:mm}). " +
+                    $"Please wait for staff to approve or reject it first.");
+            }
 
             // 4. Load contract
             var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId)
@@ -97,6 +100,12 @@ namespace MathBridgeSystem.Application.Services
                 Status = "pending",
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
+
+            var finalCheck = await _rescheduleRepo.GetPendingRequestForBookingAsync(dto.BookingId);
+            if (finalCheck != null && finalCheck.RequestId != request.RequestId)
+            {
+                throw new InvalidOperationException("A reschedule request was created by another action. Please try again.");
+            }
 
             await _rescheduleRepo.AddAsync(request);
 
