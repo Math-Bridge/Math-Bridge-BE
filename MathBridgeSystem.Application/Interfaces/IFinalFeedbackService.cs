@@ -14,7 +14,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<FinalFeedbackDto?> GetByContractAndProviderTypeAsync(Guid contractId, string providerType);
         Task<List<FinalFeedbackDto>> GetByProviderTypeAsync(string providerType);
         Task<List<FinalFeedbackDto>> GetByStatusAsync(string status);
-        Task<FinalFeedbackDto> CreateAsync(CreateFinalFeedbackRequest request);
+        Task<FinalFeedbackDto> CreateAsync(CreateFinalFeedbackRequest request, Guid parentId);
         Task<FinalFeedbackDto?> UpdateAsync(Guid feedbackId, UpdateFinalFeedbackRequest request);
         Task<bool> DeleteAsync(Guid feedbackId);
     }
