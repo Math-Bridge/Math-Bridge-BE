@@ -204,15 +204,21 @@ namespace MathBridgeSystem.Api.Controllers
 
         /// <summary>
         /// Get available tutors for a contract (no overlapping contracts)
-        /// Tutors are sorted by average rating (descending)
         /// </summary>
+        /// <param name="contractId">The contract ID</param>
+        /// <param name="sortByRating">Enable sorting by highest rating (default: false)</param>
+        /// <param name="sortByDistance">Enable sorting by nearest distance for offline contracts (default: false)</param>
+        /// <returns>List of available tutors with rating and distance information</returns>
         [HttpGet("{contractId}/available-tutors")]
         [Authorize(Roles = "staff,admin")]
-        public async Task<IActionResult> GetAvailableTutors(Guid contractId)
+        public async Task<IActionResult> GetAvailableTutors(
+            Guid contractId,
+            [FromQuery] bool sortByRating = false,
+            [FromQuery] bool sortByDistance = false)
         {
             try
             {
-                var availableTutors = await _contractService.GetAvailableTutorsAsync(contractId);
+                var availableTutors = await _contractService.GetAvailableTutorsAsync(contractId, sortByRating, sortByDistance);
 
                 if (availableTutors == null || availableTutors.Count == 0)
                     return Ok(new List<object>());
