@@ -150,6 +150,68 @@ public class LocationController : ControllerBase
         }
     }
     /// <summary>
+    /// Get longitude and latitude from Google Maps Place ID
+    /// </summary>
+    /// <param name="placeId">Google Maps Place ID</param>
+    /// <returns>Coordinates and place details</returns>
+    [HttpGet("coordinates")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCoordinatesFromPlaceId([FromQuery][Required] string placeId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(placeId))
+            {
+                return BadRequest(new { error = "Place ID is required" });
+            }
+
+            // Validate Place ID format - typical Place IDs start with ChIJ or similar prefix
+            // and are usually between 27-100 characters
+            if (placeId.Length > 200)
+            {
+                _logger.LogWarning("Place ID appears to be invalid (too long): {PlaceId}", placeId);
+                return BadRequest(new 
+                { 
+                    error = "Invalid Place ID format. Place IDs should start with 'ChIJ' and be around 27-100 characters long.",
+                    hint = "Please use the place_id field from the autocomplete response, not the entire response object."
+                });
+            }
+
+            _logger.LogInformation("Get coordinates requested for place ID: {PlaceId}", placeId);
+
+            var result = await _locationService.GetCoordinatesFromPlaceIdAsync(placeId);
+
+            if (!result.Success)
+            {
+                return BadRequest(new 
+                { 
+                    error = result.ErrorMessage,
+                    placeId = placeId,
+                    hint = "Ensure you're using a valid Google Maps Place ID from the autocomplete API."
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                placeId = result.PlaceId,
+                latitude = result.Latitude,
+                longitude = result.Longitude,
+                formattedAddress = result.FormattedAddress,
+                placeName = result.PlaceName,
+                city = result.City,
+                district = result.District,
+                countryCode = result.CountryCode
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting coordinates for place ID: {PlaceId}", placeId);
+            return StatusCode(500, new { error = "Internal server error while getting coordinates" });
+        }
+    }
+
+    /// <summary>
     /// Get centers near a specific address
     /// </summary>
     /// <param name="address">Address to search near</param>

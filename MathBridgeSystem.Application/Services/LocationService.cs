@@ -285,4 +285,82 @@ public class LocationService : ILocationService
             return new List<CenterDto>();
         }
     }
+
+    public async Task<PlaceCoordinatesResponse> GetCoordinatesFromPlaceIdAsync(string placeId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(placeId))
+            {
+                return new PlaceCoordinatesResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Place ID is required"
+                };
+            }
+
+            // Validate Place ID format
+            if (placeId.Length > 200)
+            {
+                _logger.LogWarning("Place ID appears to be invalid (too long): Length={Length}", placeId.Length);
+                return new PlaceCoordinatesResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid Place ID format. Place ID is too long."
+                };
+            }
+
+            _logger.LogInformation("Getting coordinates for place ID: {PlaceId}", placeId);
+
+            // Get place details from Google Maps
+            var placeDetails = await _googleMapsService.GetPlaceDetailsAsync(placeId);
+
+            if (!placeDetails.Success || placeDetails.Place == null)
+            {
+                _logger.LogWarning("Failed to get place details for place ID: {PlaceId}, Error: {Error}", 
+                    placeId, placeDetails.ErrorMessage);
+                return new PlaceCoordinatesResponse
+                {
+                    Success = false,
+                    ErrorMessage = placeDetails.ErrorMessage ?? "Failed to get place details from Google Maps"
+                };
+            }
+
+            var place = placeDetails.Place;
+            
+            _logger.LogInformation("Successfully retrieved coordinates for place ID: {PlaceId} - Lat: {Latitude}, Lng: {Longitude}",
+                placeId, place.Latitude, place.Longitude);
+
+            return new PlaceCoordinatesResponse
+            {
+                Success = true,
+                PlaceId = place.PlaceId,
+                Latitude = place.Latitude,
+                Longitude = place.Longitude,
+                FormattedAddress = place.FormattedAddress,
+                PlaceName = place.PlaceName,
+                City = place.City,
+                District = place.District,
+                CountryCode = place.CountryCode
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout getting coordinates for place ID: {PlaceId}", placeId);
+            return new PlaceCoordinatesResponse
+            {
+                Success = false,
+                ErrorMessage = "Request timeout. The Place ID may be invalid or the Google Maps API is not responding."
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting coordinates for place ID: {PlaceId}", placeId);
+            return new PlaceCoordinatesResponse
+            {
+                Success = false,
+                ErrorMessage = "Failed to get coordinates from place ID. Please check the Place ID is correct."
+            };
+        }
+    }
 }

@@ -9,4 +9,5 @@ public interface ILocationService
     Task<FindNearbyUsersResponse> FindNearbyUsersAsync(Guid currentUserId, int radiusKm = 5);
     Task<GeocodeResponse> GeocodeAddressAsync(string address, string? country = "VN");
     Task<List<CenterDto>> FindCentersNearAddressAsync(string address, double radiusKm = 10.0);
+    Task<PlaceCoordinatesResponse> GetCoordinatesFromPlaceIdAsync(string placeId);
 }
