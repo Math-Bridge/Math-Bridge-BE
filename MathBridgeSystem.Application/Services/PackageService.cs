@@ -67,7 +67,8 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = p.MaxReschedule,
                 DurationDays = p.DurationDays,
                 Description = p.Description,
-                IsActive = p.IsActive
+                IsActive = p.IsActive,
+                CurriculumId = p.CurriculumId
             }).ToList();
         }
 
