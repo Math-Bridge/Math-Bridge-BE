@@ -431,7 +431,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new KeyNotFoundException(KeyNotFoundException));
+            Moq.Language.Flow.IReturnsResult<IContractService> returnsResult = _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new KeyNotFoundException());
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -446,8 +446,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new InvalidOperationException(InvalidOperationException));
-
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new InvalidOperationException());
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
 
@@ -461,7 +460,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new Exception(Exception));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new Exception());
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
