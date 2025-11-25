@@ -34,37 +34,34 @@ namespace MathBridgeSystem.Application.Services
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
             if (string.IsNullOrWhiteSpace(request.Name))
                 throw new ArgumentException("Center name is required", nameof(request.Name));
-
             if (string.IsNullOrWhiteSpace(request.PlaceId))
                 throw new ArgumentException("PlaceId is required", nameof(request.PlaceId));
 
-            // Fetch place details from Google Maps
             var placeDetailsResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
             if (!placeDetailsResponse.Success || placeDetailsResponse.Place == null)
                 throw new Exception("Failed to fetch place details from Google Maps");
 
             var place = placeDetailsResponse.Place;
 
-            // Check if center already exists by name and location
+            // Kiểm tra trùng: cùng tên + cùng GooglePlaceId
             var existingCenters = await _centerRepository.GetAllAsync();
-            var existingCenter = existingCenters
-                .FirstOrDefault(c => c.Name == request.Name &&
-                                   c.GooglePlaceId == place.PlaceId);
+            var existingCenter = existingCenters.FirstOrDefault(c =>
+                string.Equals(c.Name, request.Name, StringComparison.OrdinalIgnoreCase) &&
+                c.GooglePlaceId == request.PlaceId);
 
             if (existingCenter != null)
-                throw new Exception($"Center with name '{request.Name}' at location {place.City}, {place.District} already exists");
+                throw new Exception($"Center with name '{request.Name}' at this exact location already exists");
 
             var center = new Center
             {
                 CenterId = Guid.NewGuid(),
-                Name = request.Name,
+                Name = request.Name.Trim(),
                 GooglePlaceId = request.PlaceId,
                 FormattedAddress = place.FormattedAddress,
-                Latitude = place.Latitude,
-                Longitude = place.Longitude,
+                Latitude = place.Latitude,     
+                Longitude = place.Longitude,    
                 City = place.City,
                 District = place.District,
                 PlaceName = place.PlaceName,
