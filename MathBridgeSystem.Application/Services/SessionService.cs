@@ -81,13 +81,13 @@ namespace MathBridgeSystem.Application.Services
             var contract = session.Contract;
             if (contract == null)
                 throw new InvalidOperationException("Session contract not found.");
-            
+
             // Validate that the new tutor is one of the 3 tutors from the contract
-            var validTutorIds = new List<Guid?> 
-            { 
-                contract.MainTutorId, 
-                contract.SubstituteTutor1Id, 
-                contract.SubstituteTutor2Id 
+            var validTutorIds = new List<Guid?>
+            {
+                contract.MainTutorId,
+                contract.SubstituteTutor1Id,
+                contract.SubstituteTutor2Id
             }.Where(id => id.HasValue).Select(id => id.Value).ToList();
 
             if (!validTutorIds.Contains(newTutorId))
@@ -108,9 +108,9 @@ namespace MathBridgeSystem.Application.Services
 
             // Check if the new tutor is available at the session time
             var isAvailable = await _sessionRepository.IsTutorAvailableAsync(
-                newTutorId, 
-                session.SessionDate, 
-                session.StartTime, 
+                newTutorId,
+                session.SessionDate,
+                session.StartTime,
                 session.EndTime);
 
             if (!isAvailable)
@@ -123,25 +123,72 @@ namespace MathBridgeSystem.Application.Services
             // Update the tutor
             session.TutorId = newTutorId;
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
-            
+
             await _sessionRepository.UpdateAsync(session);
             return true;
         }
 
+        /// <summary>
+        /// Updates the status of a session.
+        /// - Only the assigned tutor can perform the update
+        /// - Only sessions scheduled for TODAY can be updated by tutors
+        /// - Only these 5 statuses are allowed: scheduled, processing, completed, rescheduled, cancelled
+        /// </summary>
         public async Task<bool> UpdateSessionStatusAsync(Guid bookingId, string newStatus, Guid tutorId)
         {
-            var session = await _sessionRepository.GetByIdAsync(bookingId);
-            if (session == null)
-                throw new KeyNotFoundException("Session not found.");
+            // 1. Load session
+            var session = await _sessionRepository.GetByIdAsync(bookingId)
+                          ?? throw new KeyNotFoundException("Session not found.");
+
+            // 2. Permission check – must be the assigned tutor
             if (session.TutorId != tutorId)
-                throw new UnauthorizedAccessException("You are not the tutor of this session.");
+                throw new UnauthorizedAccessException("You are not the tutor assigned to this session.");
 
-            var currentStatus = session.Status.ToLower();
-            var normalizedNewStatus = newStatus.ToLower();
+            // 3. Critical rule – only TODAY's sessions can be updated by tutors
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            if (session.SessionDate != today)
+            {
+                throw new InvalidOperationException(
+                    $"You can only update sessions scheduled for today ({today:dd/MM/yyyy}). " +
+                    $"This session is on {session.SessionDate:dd/MM/yyyy}.");
+            }
 
+            // 4. Allowed statuses – strictly limited to these 5 values only
+            var allowedStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "scheduled",
+        "procesing",
+        "completed",
+        "rescheduled",
+        "cancelled"
+    };
+
+            var normalizedNewStatus = newStatus.Trim().ToLowerInvariant();
+
+            if (!allowedStatuses.Contains(normalizedNewStatus))
+            {
+                throw new ArgumentException(
+                    $"Invalid status '{newStatus}'. " +
+                    $"Allowed values are: {string.Join(", ", allowedStatuses.OrderBy(s => s))}");
+            }
+
+            // 5. Prevent changing a final status (completed / cancelled / rescheduled)
+            var currentStatus = session.Status?.Trim().ToLowerInvariant();
+            var finalStatuses = new[] { "completed", "cancelled", "rescheduled" };
+
+            if (finalStatuses.Contains(currentStatus) && normalizedNewStatus != currentStatus)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot change status from '{currentStatus}'. " +
+                    "Sessions that are completed, cancelled or rescheduled cannot be modified.");
+            }
+
+            // 6. Apply update
             session.Status = normalizedNewStatus;
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+
             await _sessionRepository.UpdateAsync(session);
+
             return true;
         }
 
