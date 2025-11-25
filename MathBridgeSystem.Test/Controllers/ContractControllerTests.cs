@@ -395,7 +395,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId)).Returns(Task.FromResult(new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>()));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).Returns(Task.FromResult(new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>()));
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -413,9 +413,9 @@ namespace MathBridgeSystem.Tests.Controllers
             var contractId = Guid.NewGuid();
             var tutors = new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>
             {
-                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor A", Email = "a@x.com", PhoneNumber = "0123", AverageRating = 4.5m, FeedbackCount = 2 }
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor A", Email = "a@x.com", PhoneNumber = "0123", AverageRating = 4.5m, FeedbackCount = 2, DistanceKm = 5.2m }
             };
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId)).Returns(Task.FromResult(tutors));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).Returns(Task.FromResult(tutors));
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -431,7 +431,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId)).ThrowsAsync(new KeyNotFoundException("not found"));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new KeyNotFoundException(KeyNotFoundException));
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -446,7 +446,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId)).ThrowsAsync(new InvalidOperationException("bad"));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new InvalidOperationException(InvalidOperationException));
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -461,7 +461,7 @@ namespace MathBridgeSystem.Tests.Controllers
             // Arrange
             SetUserRole("staff");
             var contractId = Guid.NewGuid();
-            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId)).ThrowsAsync(new Exception("boom"));
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, It.IsAny<bool>(), It.IsAny<bool>())).ThrowsAsync(new Exception(Exception));
 
             // Act
             var result = await _controller.GetAvailableTutors(contractId);
@@ -469,6 +469,70 @@ namespace MathBridgeSystem.Tests.Controllers
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, objectResult.StatusCode);
+        }
+
+
+        [Fact]
+        public async Task GetAvailableTutors_WithSortByRating_ReturnsOk()
+        {
+            // Arrange
+            SetUserRole("staff");
+            var contractId = Guid.NewGuid();
+            var tutors = new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>
+            {
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor A", Email = "a@x.com", PhoneNumber = "0123", AverageRating = 4.5m, FeedbackCount = 2, DistanceKm = 5.2m },
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor B", Email = "b@x.com", PhoneNumber = "0124", AverageRating = 4.8m, FeedbackCount = 5, DistanceKm = 3.1m }
+            };
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, true, false)).Returns(Task.FromResult(tutors));
+
+            // Act
+            var result = await _controller.GetAvailableTutors(contractId, sortByRating: true);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+        }
+
+        [Fact]
+        public async Task GetAvailableTutors_WithSortByDistance_ReturnsOk()
+        {
+            // Arrange
+            SetUserRole("staff");
+            var contractId = Guid.NewGuid();
+            var tutors = new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>
+            {
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor A", Email = "a@x.com", PhoneNumber = "0123", AverageRating = 4.5m, FeedbackCount = 2, DistanceKm = 5.2m },
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor B", Email = "b@x.com", PhoneNumber = "0124", AverageRating = 4.8m, FeedbackCount = 5, DistanceKm = 3.1m }
+            };
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, false, true)).Returns(Task.FromResult(tutors));
+
+            // Act
+            var result = await _controller.GetAvailableTutors(contractId, sortByDistance: true);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+        }
+
+        [Fact]
+        public async Task GetAvailableTutors_WithBothSortOptions_ReturnsOk()
+        {
+            // Arrange
+            SetUserRole("staff");
+            var contractId = Guid.NewGuid();
+            var tutors = new List<MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse>
+            {
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor A", Email = "a@x.com", PhoneNumber = "0123", AverageRating = 4.5m, FeedbackCount = 2, DistanceKm = 5.2m },
+                new MathBridgeSystem.Application.DTOs.Contract.AvailableTutorResponse { UserId = Guid.NewGuid(), FullName = "Tutor B", Email = "b@x.com", PhoneNumber = "0124", AverageRating = 4.8m, FeedbackCount = 5, DistanceKm = 3.1m }
+            };
+            _mockContractService.Setup(s => s.GetAvailableTutorsAsync(contractId, true, true)).Returns(Task.FromResult(tutors));
+
+            // Act
+            var result = await _controller.GetAvailableTutors(contractId, sortByRating: true, sortByDistance: true);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
         }
 
         [Fact]

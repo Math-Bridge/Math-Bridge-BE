@@ -499,45 +499,111 @@ namespace MathBridgeSystem.Application.Services
             return true;
         }
 
-        public async Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(Guid contractId)
+        public async Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(Guid contractId, bool sortByRating = false, bool sortByDistance = false)
+{
+    try
+    {
+        // Get the contract to access offline location coordinates
+        var contract = await _contractRepository.GetByIdAsync(contractId);
+        if (contract == null)
+            throw new KeyNotFoundException($"Contract with ID {contractId} not found.");
+
+        // Get available tutors from repository
+        var availableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(contractId);
+
+        // Map to response DTOs and calculate distance if needed
+        var result = availableTutors
+            .Select(tutor => new AvailableTutorResponse
+            {
+                UserId = tutor.UserId,
+                FullName = tutor.FullName,
+                Email = tutor.Email,
+                PhoneNumber = tutor.PhoneNumber,
+                AverageRating = tutor.FinalFeedbacks != null && tutor.FinalFeedbacks.Count > 0
+                    ? (decimal)tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
+                    : 0m,
+                FeedbackCount = tutor.FinalFeedbacks != null ? tutor.FinalFeedbacks.Count : 0,
+                DistanceKm = CalculateDistance(contract, tutor)
+            })
+            .ToList();
+
+        // Apply sorting based on flags
+        if (sortByRating && sortByDistance)
         {
-            try
-            {
-                // Get available tutors from repository
-                var availableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(contractId);
-
-                // Map to response DTOs and sort by rating (descending), then by review count (descending)
-                var result = availableTutors
-                    .Select(tutor => new AvailableTutorResponse
-                    {
-                        UserId = tutor.UserId,
-                        FullName = tutor.FullName,
-                        Email = tutor.Email,
-                        PhoneNumber = tutor.PhoneNumber,
-                        AverageRating = tutor.FinalFeedbacks != null && tutor.FinalFeedbacks.Count > 0
-                            ? (decimal)tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
-                            : 0m,
-                        FeedbackCount = tutor.FinalFeedbacks != null ? tutor.FinalFeedbacks.Count : 0
-                    })
-                    .OrderByDescending(t => t.AverageRating)
-                    .ThenByDescending(t => t.FeedbackCount)
-                    .ToList();
-
-                return result;
-            }
-            catch (KeyNotFoundException)
-            {
-                throw;
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error retrieving available tutors: {ex.Message}", ex);
-            }
+            // Sort by both: rating first (descending), then distance (ascending)
+            result = result
+                .OrderByDescending(t => t.AverageRating)
+                .ThenBy(t => t.DistanceKm ?? decimal.MaxValue)
+                .ToList();
         }
+        else if (sortByRating)
+        {
+            // Sort by rating only (descending), then by feedback count (descending)
+            result = result
+                .OrderByDescending(t => t.AverageRating)
+                .ThenByDescending(t => t.FeedbackCount)
+                .ToList();
+        }
+        else if (sortByDistance)
+        {
+            // Sort by distance only (ascending), null values go to the end
+            result = result
+                .OrderBy(t => t.DistanceKm ?? decimal.MaxValue)
+                .ToList();
+        }
+
+        return result;
+    }
+    catch (KeyNotFoundException)
+    {
+        throw;
+    }
+    catch (InvalidOperationException)
+    {
+        throw;
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException($"Error retrieving available tutors: {ex.Message}", ex);
+    }
+}
+
+/// <summary>
+/// Calculate distance between contract location and tutor location using Haversine formula
+/// Returns null if coordinates are not available for offline contracts or if contract is online
+/// </summary>
+private decimal? CalculateDistance(Contract contract, User tutor)
+{
+    // Only calculate distance for offline contracts
+    if (contract.IsOnline)
+        return null;
+
+    // Check if both contract and tutor have location coordinates
+    if (!contract.OfflineLatitude.HasValue || !contract.OfflineLongitude.HasValue ||
+        !tutor.Latitude.HasValue || !tutor.Longitude.HasValue)
+        return null;
+
+    // Haversine formula to calculate distance between two GPS coordinates
+    const double earthRadiusKm = 6371.0;
+
+    var lat1 = (double)contract.OfflineLatitude.Value * Math.PI / 180.0;
+    var lon1 = (double)contract.OfflineLongitude.Value * Math.PI / 180.0;
+    var lat2 = tutor.Latitude.Value * Math.PI / 180.0;
+    var lon2 = tutor.Longitude.Value * Math.PI / 180.0;
+
+    var dLat = lat2 - lat1;
+    var dLon = lon2 - lon1;
+
+    var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+            Math.Cos(lat1) * Math.Cos(lat2) *
+            Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+    var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+    var distance = earthRadiusKm * c;
+
+    return (decimal)Math.Round(distance, 2);
+}
     }
 }
 
