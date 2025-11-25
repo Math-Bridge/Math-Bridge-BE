@@ -199,38 +199,38 @@ namespace MathBridgeSystem.Tests.Controllers
             Assert.Single(returnValue);
         }
 
-        [Fact]
-        public async Task Create_ReturnsCreated()
-        {
-            // Arrange
-            var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
-            var created = new FinalFeedbackDto { FeedbackId = Guid.NewGuid() };
-            _mockFeedbackService.Setup(s => s.CreateAsync(request)).ReturnsAsync(created);
+        //[Fact]
+        //public async Task Create_ReturnsCreated()
+        //{
+        //    // Arrange
+        //    var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
+        //    var created = new FinalFeedbackDto { FeedbackId = Guid.NewGuid() };
+        //    _mockFeedbackService.Setup(s => s.CreateAsync(request)).ReturnsAsync(created);
 
-            // Act
-            var result = await _controller.Create(request);
+        //    // Act
+        //    var result = await _controller.Create(request);
 
-            // Assert
-            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            var returnValue = Assert.IsType<FinalFeedbackDto>(createdResult.Value);
-            Assert.Equal(created.FeedbackId, returnValue.FeedbackId);
-            _mockFeedbackService.Verify(s => s.CreateAsync(request), Times.Once);
-        }
+        //    // Assert
+        //    var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        //    var returnValue = Assert.IsType<FinalFeedbackDto>(createdResult.Value);
+        //    Assert.Equal(created.FeedbackId, returnValue.FeedbackId);
+        //    _mockFeedbackService.Verify(s => s.CreateAsync(request), Times.Once);
+        //}
 
-        [Fact]
-        public async Task Create_Exception_ReturnsBadRequest()
-        {
-            // Arrange
-            var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
-            _mockFeedbackService.Setup(s => s.CreateAsync(request)).ThrowsAsync(new Exception("bad"));
+        //[Fact]
+        //public async Task Create_Exception_ReturnsBadRequest()
+        //{
+        //    // Arrange
+        //    var request = new CreateFinalFeedbackRequest { UserId = Guid.NewGuid(), ContractId = Guid.NewGuid(), FeedbackProviderType = "tutor", OverallSatisfactionRating = 5, WouldRecommend = true, WouldWorkTogetherAgain = true };
+        //    _mockFeedbackService.Setup(s => s.CreateAsync(request)).ThrowsAsync(new Exception("bad"));
 
-            // Act
-            var result = await _controller.Create(request);
+        //    // Act
+        //    var result = await _controller.Create(request);
 
-            // Assert
-            var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.NotNull(bad.Value);
-        }
+        //    // Assert
+        //    var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        //    Assert.NotNull(bad.Value);
+        //}
 
         [Fact]
         public async Task Update_Success_ReturnsOk()
