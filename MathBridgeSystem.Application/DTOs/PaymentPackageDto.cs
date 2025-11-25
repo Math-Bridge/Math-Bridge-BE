@@ -18,5 +18,6 @@ namespace MathBridgeSystem.Application.DTOs
         public int DurationDays { get; set; }
         public string? Description { get; set; }
         public bool IsActive { get; set; }
+        public Guid CurriculumId { get; set; }
     }
 }
