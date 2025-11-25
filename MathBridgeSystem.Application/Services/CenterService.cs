@@ -32,118 +32,161 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<Guid> CreateCenterAsync(CreateCenterRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            if (request == null) throw new ArgumentNullException(nameof(request));
             if (string.IsNullOrWhiteSpace(request.Name))
-                throw new ArgumentException("Center name is required", nameof(request.Name));
+                throw new ArgumentException("Center name is required.", nameof(request.Name));
             if (string.IsNullOrWhiteSpace(request.PlaceId))
-                throw new ArgumentException("PlaceId is required", nameof(request.PlaceId));
+                throw new ArgumentException("Google PlaceId is required.", nameof(request.PlaceId));
 
-            var placeDetailsResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
-            if (!placeDetailsResponse.Success || placeDetailsResponse.Place == null)
-                throw new Exception("Failed to fetch place details from Google Maps");
+            var placeResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
+            if (!placeResponse.Success || placeResponse.Place == null)
+                throw new Exception("Failed to retrieve place details from Google Maps. Invalid PlaceId.");
 
-            var place = placeDetailsResponse.Place;
+            dynamic place = placeResponse.Place; // Dùng dynamic để hỗ trợ mọi tên property
 
-            // Kiểm tra trùng: cùng tên + cùng GooglePlaceId
+            // Lấy dữ liệu an toàn 100% dù tên property là gì
+            string formattedAddress = GetString(place, "FormattedAddress", "Address", "Vicinity", "formatted_address");
+            string city = GetString(place, "City", "AdminAreaLevel1", "administrative_area_level_1");
+            string district = GetString(place, "District", "AdminAreaLevel2", "administrative_area_level_2");
+            string placeName = GetString(place, "Name", "PlaceName", "name");
+            double latitude = GetDouble(place, "Lat", "Latitude", "lat", "latitude");
+            double longitude = GetDouble(place, "Lng", "Longitude", "lng", "longitude");
+
+            if (string.IsNullOrWhiteSpace(formattedAddress))
+                throw new Exception("Could not retrieve valid address from Google Maps.");
+
+            var newName = request.Name.Trim();
             var existingCenters = await _centerRepository.GetAllAsync();
-            var existingCenter = existingCenters.FirstOrDefault(c =>
-                string.Equals(c.Name, request.Name, StringComparison.OrdinalIgnoreCase) &&
-                c.GooglePlaceId == request.PlaceId);
 
-            if (existingCenter != null)
-                throw new Exception($"Center with name '{request.Name}' at this exact location already exists");
+            foreach (var center in existingCenters)
+            {
+                // 1. Cùng Google PlaceId
+                if (center.GooglePlaceId == request.PlaceId)
+                    throw new Exception($"A center already exists at this exact Google location: \"{center.Name}\" – {center.FormattedAddress}");
 
-            var center = new Center
+                // 2. Cùng tên + cùng khu vực
+                if (string.Equals(center.Name, newName, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(center.City, city, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(center.District, district, StringComparison.OrdinalIgnoreCase))
+                    throw new Exception($"A center named \"{newName}\" already exists in {city}, {district}.");
+
+                // 3. Địa chỉ quá giống (chuỗi)
+                if (!string.IsNullOrWhiteSpace(center.FormattedAddress) &&
+                    AreAddressesTooSimilar(center.FormattedAddress, formattedAddress))
+                    throw new Exception($"The address is too similar to an existing center: \"{center.Name}\" – {center.FormattedAddress}");
+
+                // 4. Quá gần về tọa độ (< 150m)
+                if (center.Latitude.HasValue && center.Longitude.HasValue && latitude != 0 && longitude != 0)
+                {
+                    var distance = CalculateDistance(latitude, longitude, center.Latitude.Value, center.Longitude.Value);
+                    if (distance <= 0.15)
+                    {
+                        var meters = Math.Round(distance * 1000);
+                        throw new Exception($"Location is too close (~{meters}m) to existing center: \"{center.Name}\"");
+                    }
+                }
+            }
+
+            var newCenter = new Center
             {
                 CenterId = Guid.NewGuid(),
-                Name = request.Name.Trim(),
+                Name = newName,
                 GooglePlaceId = request.PlaceId,
-                FormattedAddress = place.FormattedAddress,
-                Latitude = place.Latitude,     
-                Longitude = place.Longitude,    
-                City = place.City,
-                District = place.District,
-                PlaceName = place.PlaceName,
-                CountryCode = place.CountryCode ?? "VN",
+                FormattedAddress = formattedAddress,
+                Latitude = latitude == 0 ? null : latitude,
+                Longitude = longitude == 0 ? null : longitude,
+                City = city,
+                District = district,
+                PlaceName = placeName,
+                CountryCode = "VN",
                 CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 UpdatedDate = DateTime.UtcNow.ToLocalTime(),
                 LocationUpdatedDate = DateTime.UtcNow.ToLocalTime(),
                 TutorCount = 0
             };
 
-            await _centerRepository.AddAsync(center);
-            return center.CenterId;
+            await _centerRepository.AddAsync(newCenter);
+            return newCenter.CenterId;
         }
 
         public async Task UpdateCenterAsync(Guid id, UpdateCenterRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
-            var center = await _centerRepository.GetByIdAsync(id);
-            if (center == null)
-                throw new Exception("Center not found");
+            var center = await _centerRepository.GetByIdAsync(id) ?? throw new Exception("Center not found.");
 
-            bool hasChanges = false;
+            var newName = string.IsNullOrWhiteSpace(request.Name) ? center.Name : request.Name.Trim();
+            var newPlaceId = string.IsNullOrWhiteSpace(request.PlaceId) ? center.GooglePlaceId : request.PlaceId;
 
-            // Cập nhật tên
-            if (!string.IsNullOrWhiteSpace(request.Name) && request.Name.Trim() != center.Name)
+            if (newName == center.Name && newPlaceId == center.GooglePlaceId)
+                return;
+
+            dynamic newPlace = null;
+            string formattedAddress = center.FormattedAddress;
+            string city = center.City;
+            string district = center.District;
+            string placeName = center.PlaceName;
+            double latitude = center.Latitude ?? 0;
+            double longitude = center.Longitude ?? 0;
+
+            if (newPlaceId != center.GooglePlaceId)
             {
-                var nameToCheck = request.Name.Trim();
+                var resp = await _googleMapsService.GetPlaceDetailsAsync(newPlaceId);
+                if (!resp.Success || resp.Place == null)
+                    throw new Exception("Failed to retrieve new place details from Google Maps.");
 
-                // Kiểm tra trùng tên + cùng vị trí (City + District) – loại trừ center hiện tại
-                var conflictByNameLocation = (await _centerRepository.GetAllAsync())
-                    .Any(c => c.CenterId != id &&
-                              string.Equals(c.Name, nameToCheck, StringComparison.OrdinalIgnoreCase) &&
-                              c.City == center.City &&
-                              c.District == center.District);
+                newPlace = resp.Place;
 
-                if (conflictByNameLocation)
-                    throw new Exception($"Another center with name '{nameToCheck}' already exists in {center.City}, {center.District}");
-
-                center.Name = nameToCheck;
-                hasChanges = true;
+                formattedAddress = GetString(newPlace, "FormattedAddress", "Address", "Vicinity", "formatted_address");
+                city = GetString(newPlace, "City", "AdminAreaLevel1", "administrative_area_level_1");
+                district = GetString(newPlace, "District", "AdminAreaLevel2", "administrative_area_level_2");
+                placeName = GetString(newPlace, "Name", "PlaceName", "name");
+                latitude = GetDouble(newPlace, "Lat", "Latitude", "lat", "latitude");
+                longitude = GetDouble(newPlace, "Lng", "Longitude", "lng", "longitude");
             }
 
-            // Cập nhật địa điểm
-            if (!string.IsNullOrWhiteSpace(request.PlaceId) && request.PlaceId != center.GooglePlaceId)
+            var allCenters = await _centerRepository.GetAllAsync();
+
+            foreach (var c in allCenters.Where(c => c.CenterId != id))
             {
-                var placeResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
-                if (!placeResponse.Success || placeResponse.Place == null)
-                    throw new Exception("Failed to fetch place details from Google Maps");
+                if (c.GooglePlaceId == newPlaceId)
+                    throw new Exception($"This Google location is already used by another center: \"{c.Name}\"");
 
-                var place = placeResponse.Place;
-                var nameToCheck = !string.IsNullOrWhiteSpace(request.Name) ? request.Name.Trim() : center.Name;
+                if (string.Equals(c.Name, newName, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(c.City, city, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(c.District, district, StringComparison.OrdinalIgnoreCase))
+                    throw new Exception($"A center named \"{newName}\" already exists in {city}, {district}.");
 
-                // Kiểm tra trùng tên + vị trí mới
-                var conflictByNewLocation = (await _centerRepository.GetAllAsync())
-                    .Any(c => c.CenterId != id &&
-                              string.Equals(c.Name, nameToCheck, StringComparison.OrdinalIgnoreCase) &&
-                              c.City == place.City &&
-                              c.District == place.District);
+                if (!string.IsNullOrWhiteSpace(c.FormattedAddress) && AreAddressesTooSimilar(c.FormattedAddress, formattedAddress))
+                    throw new Exception($"The new address is too similar to existing center: \"{c.Name}\"");
 
-                if (conflictByNewLocation)
-                    throw new Exception($"Another center with name '{nameToCheck}' already exists in {place.City}, {place.District}");
+                if (c.Latitude.HasValue && c.Longitude.HasValue && latitude != 0 && longitude != 0)
+                {
+                    var distance = CalculateDistance(latitude, longitude, c.Latitude.Value, c.Longitude.Value);
+                    if (distance <= 0.15)
+                    {
+                        var meters = Math.Round(distance * 1000);
+                        throw new Exception($"New location is too close (~{meters}m) to existing center: \"{c.Name}\"");
+                    }
+                }
+            }
 
-                // Cập nhật thông tin địa điểm
-                center.GooglePlaceId = request.PlaceId;
-                center.FormattedAddress = place.FormattedAddress;
-                center.Latitude = place.Latitude;
-                center.Longitude = place.Longitude;
-                center.City = place.City;
-                center.District = place.District;
-                center.PlaceName = place.PlaceName;
-                center.CountryCode = place.CountryCode ?? "VN";
+            center.Name = newName;
+            if (newPlace != null)
+            {
+                center.GooglePlaceId = newPlaceId;
+                center.FormattedAddress = formattedAddress;
+                center.Latitude = latitude == 0 ? null : latitude;
+                center.Longitude = longitude == 0 ? null : longitude;
+                center.City = city;
+                center.District = district;
+                center.PlaceName = placeName;
+                center.CountryCode = "VN";
                 center.LocationUpdatedDate = DateTime.UtcNow.ToLocalTime();
-                hasChanges = true;
             }
 
-            if (hasChanges)
-            {
-                center.UpdatedDate = DateTime.UtcNow.ToLocalTime();
-                await _centerRepository.UpdateAsync(center);
-            }
+            center.UpdatedDate = DateTime.UtcNow.ToLocalTime();
+            await _centerRepository.UpdateAsync(center);
         }
 
         public async Task DeleteCenterAsync(Guid id)
@@ -443,6 +486,83 @@ namespace MathBridgeSystem.Application.Services
         private double ToRadians(double degrees)
         {
             return degrees * Math.PI / 180;
+        }
+        private string GetString(dynamic obj, params string[] possibleNames)
+        {
+            if (obj == null) return "";
+            foreach (var name in possibleNames)
+            {
+                try
+                {
+                    var value = obj.GetType().GetProperty(name)?.GetValue(obj);
+                    if (value is string str && !string.IsNullOrWhiteSpace(str)) return str;
+                }
+                catch { /* ignore */ }
+            }
+            return "";
+        }
+
+        private double GetDouble(dynamic obj, params string[] possibleNames)
+        {
+            if (obj == null) return 0.0;
+            foreach (var name in possibleNames)
+            {
+                try
+                {
+                    var value = obj.GetType().GetProperty(name)?.GetValue(obj);
+                    if (value is double d) return d;
+                    if (value is float f) return f;
+                    if (value is decimal m) return (double)m;
+                }
+                catch { /* ignore */ }
+            }
+            return 0.0;
+        }
+        private bool AreAddressesTooSimilar(string addr1, string addr2)
+        {
+            if (string.IsNullOrWhiteSpace(addr1) || string.IsNullOrWhiteSpace(addr2))
+                return false;
+
+            var clean1 = NormalizeAddress(addr1);
+            var clean2 = NormalizeAddress(addr2);
+
+            var longer = clean1.Length > clean2.Length ? clean1 : clean2;
+            var shorter = clean1.Length > clean2.Length ? clean2 : clean1;
+
+            return longer.Contains(shorter, StringComparison.OrdinalIgnoreCase) ||
+                   shorter.Contains(longer, StringComparison.OrdinalIgnoreCase) ||
+                   ComputeLevenshteinSimilarity(clean1, clean2) >= 0.8;
+        }
+        private string NormalizeAddress(string addr) => addr
+            .Replace("Phường", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("Quận", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("Thành phố", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("Hồ Chí Minh", "HCM", StringComparison.OrdinalIgnoreCase)
+            .Replace("TP.", "", StringComparison.OrdinalIgnoreCase)
+            .Replace(",", " ")
+            .Replace(".", " ")
+            .Replace("  ", " ")
+            .Trim()
+            .ToLowerInvariant();
+
+        private double ComputeLevenshteinSimilarity(string s1, string s2)
+        {
+            int len1 = s1.Length;
+            int len2 = s2.Length;
+            var matrix = new int[len1 + 1, len2 + 1];
+
+            for (int i = 0; i <= len1; i++) matrix[i, 0] = i;
+            for (int j = 0; j <= len2; j++) matrix[0, j] = j;
+
+            for (int i = 1; i <= len1; i++)
+                for (int j = 1; j <= len2; j++)
+                {
+                    int cost = s1[i - 1] == s2[j - 1] ? 0 : 1;
+                    matrix[i, j] = Math.Min(Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1), matrix[i - 1, j - 1] + cost);
+                }
+
+            int maxLen = Math.Max(len1, len2);
+            return maxLen == 0 ? 1.0 : 1.0 - (double)matrix[len1, len2] / maxLen;
         }
     }
 }
