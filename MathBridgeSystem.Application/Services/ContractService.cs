@@ -322,10 +322,6 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("MainTutorId is required to generate sessions.");
 
             var sessions = new List<Session>();
-            var currentDate = request.StartDate;
-            var endDate = request.EndDate;
-
-            // LẤY TỪ contract.DaysOfWeeks (byte?)
             var daysOfWeeks = contract.DaysOfWeeks
                 ?? throw new ArgumentException("DaysOfWeeks is required to generate sessions.");
 
@@ -337,9 +333,13 @@ namespace MathBridgeSystem.Application.Services
             var sessionStartTime = new TimeOnly(startTime.Hour, startTime.Minute);
             var sessionEndTime = new TimeOnly(endTime.Hour, endTime.Minute);
 
+            // IMPORTANT: STARTING FROM TOMORROW, NOT TODAY
+            var currentDate = DateOnly.FromDateTime(DateTime.Today).AddDays(1);
+
+            var endDate = request.EndDate;
+
             while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
             {
-                // SỬA: DÙNG daysOfWeeks trực tiếp (đã đảm bảo != null)
                 if (IsDayOfWeekSelected(currentDate.DayOfWeek, daysOfWeeks))
                 {
                     var sessionStart = currentDate.ToDateTime(sessionStartTime);
@@ -362,8 +362,14 @@ namespace MathBridgeSystem.Application.Services
                         CreatedAt = DateTime.UtcNow.ToLocalTime()
                     });
                 }
+
                 currentDate = currentDate.AddDays(1);
             }
+
+            if (sessions.Count < totalSessionsNeeded)
+                throw new InvalidOperationException(
+                    $"Not enough future days to schedule {totalSessionsNeeded} sessions. " +
+                    $"Only {sessions.Count} valid future session(s) found up to {endDate:dd/MM/yyyy}.");
 
             return sessions;
         }
