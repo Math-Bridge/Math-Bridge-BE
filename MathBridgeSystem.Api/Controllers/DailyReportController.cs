@@ -249,5 +249,26 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while deleting the daily report.", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Get all daily reports for a specific contract (very useful for parent/staff to track progress per package)
+        /// </summary>
+        [HttpGet("contract/{contractId}")]
+        [Authorize(Roles = "tutor,parent,staff,admin")]
+        public async Task<IActionResult> GetDailyReportsByContractId(Guid contractId)
+        {
+            try
+            {
+                var reports = await _dailyReportService.GetDailyReportsByContractIdAsync(contractId);
+                return Ok(reports);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving daily reports.", details = ex.Message });
+            }
+        }
     }
 }
