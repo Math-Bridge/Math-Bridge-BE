@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.FinalFeedback;
+﻿using MathBridgeSystem.Application.DTOs.FinalFeedback;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -64,33 +64,36 @@ namespace MathBridgeSystem.Application.Services
             return feedbacks.Select(MapToDto).ToList();
         }
 
-        public async Task<FinalFeedbackDto> CreateAsync(CreateFinalFeedbackRequest request)
+        public async Task<FinalFeedbackDto> CreateAsync(CreateFinalFeedbackRequest request, Guid parentId)
         {
-            var user = await _userRepository.GetByIdAsync(request.UserId);
-            if(user == null)
-            {
-                throw new InvalidOperationException("User not found.");
-            }
-            var contract = await _contractRepository.GetByIdAsync(request.ContractId);
-            if(contract == null)
-            {
-                throw new InvalidOperationException("Contract not found.");
-            }
-            if(contract.MainTutorId != request.UserId && contract.ParentId != request.UserId)
-            {
-                throw new InvalidOperationException("User is not associated with the specified contract.");
-            }
-            var feedbacks = await _feedbackRepository.GetByContractIdAsync(request.ContractId);
-            var confeedbacks = feedbacks.Where(f => f.ContractId == request.ContractId && f.FeedbackProviderType == request.FeedbackProviderType).ToList();
-            if (confeedbacks.Any())
-            {
-                throw new InvalidOperationException("Feedback for this contract already exists.");
-            }
+            // 1. Kiểm tra hợp đồng tồn tại
+            var contract = await _contractRepository.GetByIdAsync(request.ContractId)
+                ?? throw new InvalidOperationException("The contract does not exist.");
 
+            // 2. Chỉ phụ huynh của hợp đồng mới được gửi đánh giá
+            if (contract.ParentId != parentId)
+                throw new UnauthorizedAccessException("You can only evaluate your child's contract.");
+
+            // 3. Chỉ được gửi khi hợp đồng đã hoàn thành
+            if (contract.Status?.ToLower() != "completed")
+                throw new InvalidOperationException("Reviews can only be submitted after the contract has been completed.");
+
+            // 4. Kiểm tra đã gửi feedback chưa (chỉ được gửi 1 lần)
+            var existing = await _feedbackRepository.GetByContractAndProviderTypeAsync(request.ContractId, "parent");
+            if (existing != null)
+                throw new InvalidOperationException("You have already submitted a review for this contract.");
+
+            // 5. Tutor bị đánh giá (chính là MainTutorId)
+            if (!contract.MainTutorId.HasValue)
+                throw new InvalidOperationException("The contract does not have a primary teacher to evaluate.");
+
+            var tutorId = contract.MainTutorId.Value;
+
+            // 6. Tạo feedback đúng logic
             var feedback = new FinalFeedback
             {
                 FeedbackId = Guid.NewGuid(),
-                UserId = request.UserId,
+                UserId = tutorId,                           
                 ContractId = request.ContractId,
                 FeedbackProviderType = "parent",
                 FeedbackText = request.FeedbackText,
@@ -217,8 +220,11 @@ namespace MathBridgeSystem.Application.Services
                 AdditionalComments = feedback.AdditionalComments,
                 FeedbackStatus = feedback.FeedbackStatus,
                 CreatedDate = feedback.CreatedDate,
-                UserFullName = feedback.User != null ? feedback.User.FullName : null,
-                ContractTitle = feedback.Contract?.ContractId.ToString()
+
+                // Tên Tutor bị đánh giá (hiển thị cho phụ huynh, admin, tutor)
+                UserFullName = feedback.User?.FullName ?? "Tutor unknown",
+
+                ContractTitle = $"Contract {feedback.ContractId}"
             };
         }
     }

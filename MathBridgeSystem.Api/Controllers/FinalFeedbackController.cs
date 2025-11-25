@@ -1,9 +1,10 @@
-using MathBridgeSystem.Application.DTOs.FinalFeedback;
+﻿using MathBridgeSystem.Application.DTOs.FinalFeedback;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MathBridgeSystem.Api.Controllers
@@ -100,20 +101,37 @@ namespace MathBridgeSystem.Api.Controllers
             return Ok(feedbacks);
         }
 
-        /// <summary>
-        /// Create a new feedback
-        /// </summary>
         [HttpPost]
+        [Authorize(Roles = "parent")]
         public async Task<ActionResult<FinalFeedbackDto>> Create([FromBody] CreateFinalFeedbackRequest request)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var parentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                             ?? User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(parentIdClaim) || !Guid.TryParse(parentIdClaim, out var parentId))
+            {
+                return Unauthorized("Unable to authenticate user.");
+            }
+
             try
             {
-                var feedback = await _feedbackService.CreateAsync(request);
+                var feedback = await _feedbackService.CreateAsync(request, parentId);
                 return CreatedAtAction(nameof(GetById), new { id = feedback.FeedbackId }, feedback);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "Failed to create final feedback", error = ex.Message });
+                return StatusCode(500, new { message = "System error while submitting review", error = ex.Message });
             }
         }
 
