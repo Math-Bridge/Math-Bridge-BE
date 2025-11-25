@@ -107,6 +107,17 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.Curriculum)
                 .FirstOrDefaultAsync(u => u.UnitId == unitId);
         }
+        public async Task<IEnumerable<DailyReport>> GetByBookingIdsAsync(IEnumerable<Guid> bookingIds)
+        {
+            return await _context.DailyReports
+                .Include(d => d.Child)
+                .Include(d => d.Tutor)
+                .Include(d => d.Booking)
+                .Include(d => d.Unit)
+                .Where(d => bookingIds.Contains(d.BookingId))
+                .OrderByDescending(d => d.CreatedDate)
+                .ToListAsync();
+        }
     }
 }
 

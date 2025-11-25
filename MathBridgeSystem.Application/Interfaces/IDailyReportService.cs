@@ -20,5 +20,9 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId);
         Task UpdateDailyReportAsync(Guid reportId, UpdateDailyReportRequest request);
         Task<bool> DeleteDailyReportAsync(Guid reportId);
+        /// <summary>
+        /// Gets all daily reports belonging to sessions of a specific contract
+        /// </summary>
+        Task<IEnumerable<DailyReportDto>> GetDailyReportsByContractIdAsync(Guid contractId);
     }
 }
