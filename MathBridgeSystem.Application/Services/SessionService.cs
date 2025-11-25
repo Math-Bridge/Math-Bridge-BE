@@ -157,7 +157,7 @@ namespace MathBridgeSystem.Application.Services
             var allowedStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "scheduled",
-        "procesing",
+        "processing",
         "completed",
         "rescheduled",
         "cancelled"
