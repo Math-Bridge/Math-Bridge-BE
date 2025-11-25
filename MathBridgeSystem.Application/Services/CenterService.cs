@@ -87,61 +87,56 @@ namespace MathBridgeSystem.Application.Services
 
             bool hasChanges = false;
 
-            // Update name if provided
-            if (!string.IsNullOrWhiteSpace(request.Name))
+            // Cập nhật tên
+            if (!string.IsNullOrWhiteSpace(request.Name) && request.Name.Trim() != center.Name)
             {
-                if (request.Name != center.Name)
-                {
-                    // Check if name and location combination already exists (excluding current center)
-                    var existingCenters = await _centerRepository.GetAllAsync();
-                    var existingCenter = existingCenters
-                        .FirstOrDefault(c => c.CenterId != id &&
-                                           c.Name == request.Name &&
-                                           c.City == center.City &&
-                                           c.District == center.District);
+                var nameToCheck = request.Name.Trim();
 
-                    if (existingCenter != null)
-                        throw new Exception($"Another center with name '{request.Name}' at location {center.City}, {center.District} already exists");
+                // Kiểm tra trùng tên + cùng vị trí (City + District) – loại trừ center hiện tại
+                var conflictByNameLocation = (await _centerRepository.GetAllAsync())
+                    .Any(c => c.CenterId != id &&
+                              string.Equals(c.Name, nameToCheck, StringComparison.OrdinalIgnoreCase) &&
+                              c.City == center.City &&
+                              c.District == center.District);
 
-                    center.Name = request.Name;
-                    hasChanges = true;
-                }
+                if (conflictByNameLocation)
+                    throw new Exception($"Another center with name '{nameToCheck}' already exists in {center.City}, {center.District}");
+
+                center.Name = nameToCheck;
+                hasChanges = true;
             }
 
-            // Update location if PlaceId is provided
-            if (!string.IsNullOrWhiteSpace(request.PlaceId))
+            // Cập nhật địa điểm
+            if (!string.IsNullOrWhiteSpace(request.PlaceId) && request.PlaceId != center.GooglePlaceId)
             {
-                if (request.PlaceId != center.GooglePlaceId)
-                {
-                    var placeDetailsResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
-                    if (!placeDetailsResponse.Success || placeDetailsResponse.Place == null)
-                        throw new Exception("Failed to fetch place details from Google Maps");
+                var placeResponse = await _googleMapsService.GetPlaceDetailsAsync(request.PlaceId);
+                if (!placeResponse.Success || placeResponse.Place == null)
+                    throw new Exception("Failed to fetch place details from Google Maps");
 
-                    var place = placeDetailsResponse.Place;
+                var place = placeResponse.Place;
+                var nameToCheck = !string.IsNullOrWhiteSpace(request.Name) ? request.Name.Trim() : center.Name;
 
-                    // Check if name and new location combination already exists (excluding current center)
-                    var nameToCheck = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : center.Name;
-                    var existingCenters = await _centerRepository.GetAllAsync();
-                    var existingCenter = existingCenters
-                        .FirstOrDefault(c => c.CenterId != id &&
-                                           c.Name == nameToCheck &&
-                                           c.City == place.City &&
-                                           c.District == place.District);
+                // Kiểm tra trùng tên + vị trí mới
+                var conflictByNewLocation = (await _centerRepository.GetAllAsync())
+                    .Any(c => c.CenterId != id &&
+                              string.Equals(c.Name, nameToCheck, StringComparison.OrdinalIgnoreCase) &&
+                              c.City == place.City &&
+                              c.District == place.District);
 
-                    if (existingCenter != null)
-                        throw new Exception($"Another center with name '{nameToCheck}' at location {place.City}, {place.District} already exists");
+                if (conflictByNewLocation)
+                    throw new Exception($"Another center with name '{nameToCheck}' already exists in {place.City}, {place.District}");
 
-                    center.GooglePlaceId = request.PlaceId;
-                    center.FormattedAddress = place.FormattedAddress;
-                    center.Latitude = place.Latitude;
-                    center.Longitude = place.Longitude;
-                    center.City = place.City;
-                    center.District = place.District;
-                    center.PlaceName = place.PlaceName;
-                    center.CountryCode = place.CountryCode ?? "VN";
-                    center.LocationUpdatedDate = DateTime.UtcNow.ToLocalTime();
-                    hasChanges = true;
-                }
+                // Cập nhật thông tin địa điểm
+                center.GooglePlaceId = request.PlaceId;
+                center.FormattedAddress = place.FormattedAddress;
+                center.Latitude = place.Latitude;
+                center.Longitude = place.Longitude;
+                center.City = place.City;
+                center.District = place.District;
+                center.PlaceName = place.PlaceName;
+                center.CountryCode = place.CountryCode ?? "VN";
+                center.LocationUpdatedDate = DateTime.UtcNow.ToLocalTime();
+                hasChanges = true;
             }
 
             if (hasChanges)
