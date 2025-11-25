@@ -85,7 +85,8 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = package.MaxReschedule,
                 DurationDays = package.DurationDays,
                 Description = package.Description,
-                IsActive = package.IsActive
+                IsActive = package.IsActive,
+                CurriculumId = package.CurriculumId
             };
         }
 
