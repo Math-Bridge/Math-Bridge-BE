@@ -289,5 +289,24 @@ namespace MathBridgeSystem.Application.Services
                 UnitId = dailyReport.UnitId,
             };
         }
+
+        public async Task<IEnumerable<DailyReportDto>> GetDailyReportsByContractIdAsync(Guid contractId)
+        {
+            // First get all session BookingIds for this contract
+            var sessionBookingIds = await _sessionRepository
+                .GetByContractIdAsync(contractId)
+                .ContinueWith(t => t.Result.Select(s => s.BookingId).ToList());
+
+            if (!sessionBookingIds.Any())
+                throw new KeyNotFoundException($"No sessions found for contract {contractId}.");
+
+            // Then get daily reports for those booking IDs
+            var reports = await _dailyReportRepository.GetByBookingIdsAsync(sessionBookingIds);
+
+            if (!reports.Any())
+                throw new KeyNotFoundException($"No daily reports found for contract {contractId}.");
+
+            return reports.Select(MapToDto).OrderByDescending(r => r.CreatedDate);
+        }
     }
 }
