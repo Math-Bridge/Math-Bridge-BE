@@ -9,4 +9,6 @@ public class ZoomMeetingResponse
     public string? Status { get; set; }
     public DateTime? StartTime { get; set; }
     public int Duration { get; set; }
+    public string? Password { get; set; }
+    public string? EncryptedPassword{ get; set; }
 }
