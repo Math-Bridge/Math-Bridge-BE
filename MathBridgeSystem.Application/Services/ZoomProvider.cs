@@ -36,6 +36,8 @@ public class ZoomProvider : IVideoConferenceProvider
             {
                 type = 2, // Scheduled meeting
                 timezone = "UTC",
+                password = "mathbridge",
+                default_password = false,
                 settings = new
                 {
                     host_video = true,
@@ -44,7 +46,7 @@ public class ZoomProvider : IVideoConferenceProvider
                     mute_upon_entry = false,
                     watermark = false,
                     audio = "both",
-                    auto_recording = "none"
+                    auto_recording = "local"
                 }
             };
 
@@ -69,7 +71,8 @@ public class ZoomProvider : IVideoConferenceProvider
 
             var meetingData = JsonSerializer.Deserialize<ZoomMeetingResponse>(responseContent, new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
             });
 
             if (meetingData == null)
@@ -85,7 +88,7 @@ public class ZoomProvider : IVideoConferenceProvider
             {
                 Success = true,
                 MeetingId = meetingData.Id.ToString(),
-                MeetingUri = "https://zoom.us/j/" + meetingData.Id,
+                MeetingUri = "https://zoom.us/j/" + meetingData.Id +"?pwd=" + meetingData.EncryptedPassword,
                 MeetingCode = meetingData.Id.ToString()
             };
         }
