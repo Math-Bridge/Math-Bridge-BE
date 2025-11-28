@@ -72,7 +72,7 @@ public partial class MathBridgeDbContext : DbContext
     {
         modelBuilder.Entity<Center>(entity =>
         {
-            entity.HasKey(e => e.CenterId).HasName("PK__centers__290A2887526C5A12");
+            entity.HasKey(e => e.CenterId).HasName("PK__centers__290A28870A0496AB");
 
             entity.ToTable("centers");
 
@@ -124,7 +124,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Child>(entity =>
         {
-            entity.HasKey(e => e.ChildId).HasName("PK__children__015ADC05C21463A1");
+            entity.HasKey(e => e.ChildId).HasName("PK__children__015ADC05AB690EC5");
 
             entity.ToTable("children");
 
@@ -181,7 +181,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Contract>(entity =>
         {
-            entity.HasKey(e => e.ContractId).HasName("PK__contract__F8D66423932B1126");
+            entity.HasKey(e => e.ContractId).HasName("PK__contract__F8D6642382342DEA");
 
             entity.ToTable("contracts");
 
@@ -275,13 +275,13 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Curriculum>(entity =>
         {
-            entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C76352BF625");
+            entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C76AA08A06B");
 
             entity.ToTable("curriculum");
 
             entity.HasIndex(e => e.CurriculumCode, "IX_curriculum_code");
 
-            entity.HasIndex(e => e.CurriculumCode, "UQ__curricul__575F76872A623D21").IsUnique();
+            entity.HasIndex(e => e.CurriculumCode, "UQ__curricul__575F7687C8A6BC5A").IsUnique();
 
             entity.Property(e => e.CurriculumId)
                 .HasDefaultValueSql("(newid())")
@@ -352,7 +352,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<FinalFeedback>(entity =>
         {
-            entity.HasKey(e => e.FeedbackId).HasName("PK__final_fe__7A6B2B8C88297D2D");
+            entity.HasKey(e => e.FeedbackId).HasName("PK__final_fe__7A6B2B8C279C3E32");
 
             entity.ToTable("final_feedback");
 
@@ -409,7 +409,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__20CF2E122466ECC3");
+            entity.HasKey(e => e.NotificationId).HasName("PK__notifica__20CF2E126179812C");
 
             entity.ToTable("notifications");
 
@@ -443,7 +443,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<PaymentPackage>(entity =>
         {
-            entity.HasKey(e => e.PackageId).HasName("PK__payment___63846AE8C179A8BE");
+            entity.HasKey(e => e.PackageId).HasName("PK__payment___63846AE816168510");
 
             entity.ToTable("payment_packages");
 
@@ -486,7 +486,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
         {
-            entity.HasKey(e => e.RequestId).HasName("PK__reschedu__18D3B90F1BFC4B87");
+            entity.HasKey(e => e.RequestId).HasName("PK__reschedu__18D3B90F20E82ADC");
 
             entity.ToTable("reschedule_requests");
 
@@ -551,11 +551,11 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__roles__760965CC23BBB9E9");
+            entity.HasKey(e => e.RoleId).HasName("PK__roles__760965CCFBC9A27C");
 
             entity.ToTable("roles");
 
-            entity.HasIndex(e => e.RoleName, "UQ__roles__783254B1E80F97AE").IsUnique();
+            entity.HasIndex(e => e.RoleName, "UQ__roles__783254B1B96B0059").IsUnique();
 
             entity.HasIndex(e => e.RoleName, "ix_roles_name");
 
@@ -572,7 +572,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<School>(entity =>
         {
-            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF4957EF47B");
+            entity.HasKey(e => e.SchoolId).HasName("PK__schools__27CA6CF4FF5A0BDB");
 
             entity.ToTable("schools");
 
@@ -676,7 +676,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Session>(entity =>
         {
-            entity.HasKey(e => e.BookingId).HasName("PK__schedule__5DE3A5B16338CF16");
+            entity.HasKey(e => e.BookingId).HasName("PK__sessions__5DE3A5B17918ED5D");
 
             entity.ToTable("sessions");
 
@@ -740,7 +740,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<TestResult>(entity =>
         {
-            entity.HasKey(e => e.ResultId).HasName("PK__test_res__AFB3C316774AFA46");
+            entity.HasKey(e => e.ResultId).HasName("PK__test_res__AFB3C31664F43CC2");
 
             entity.ToTable("test_results");
 
@@ -778,7 +778,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<TutorCenter>(entity =>
         {
-            entity.HasKey(e => e.TutorCenterId).HasName("PK__tutor_ce__E4F33A88509B8636");
+            entity.HasKey(e => e.TutorCenterId).HasName("PK__tutor_ce__E4F33A88F867D285");
 
             entity.ToTable("tutor_centers");
 
@@ -811,7 +811,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<TutorSchedule>(entity =>
         {
-            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_av__86E3A80163D5EEF8");
+            entity.HasKey(e => e.AvailabilityId).HasName("PK__tutor_sc__86E3A801D76A6744");
 
             entity.ToTable("tutor_schedule");
 
@@ -846,12 +846,12 @@ public partial class MathBridgeDbContext : DbContext
             entity.HasOne(d => d.Tutor).WithMany(p => p.TutorSchedules)
                 .HasForeignKey(d => d.TutorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__tutor_ava__tutor__0618D7E0");
+                .HasConstraintName("FK__tutor_sch__tutor__00AA174D");
         });
 
         modelBuilder.Entity<TutorVerification>(entity =>
         {
-            entity.HasKey(e => e.VerificationId).HasName("PK__tutor_ve__24F1796982ADF4CD");
+            entity.HasKey(e => e.VerificationId).HasName("PK__tutor_ve__24F1796934C8054A");
 
             entity.ToTable("tutor_verifications");
 
@@ -896,7 +896,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<Unit>(entity =>
         {
-            entity.HasKey(e => e.UnitId).HasName("PK__units__D3AF5BD7ADCFE7F5");
+            entity.HasKey(e => e.UnitId).HasName("PK__units__D3AF5BD71F0B95DD");
 
             entity.ToTable("units");
 
@@ -944,7 +944,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370F4678BC13");
+            entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370FC4A1B4D3");
 
             entity.ToTable("users");
 
@@ -952,7 +952,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasIndex(e => new { e.Latitude, e.Longitude }, "IX_users_location_coordinates");
 
-            entity.HasIndex(e => e.Email, "UQ__users__AB6E616496FFE2D6").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__users__AB6E6164873FEBC2").IsUnique();
 
             entity.HasIndex(e => e.Email, "ix_users_email");
 
@@ -963,6 +963,10 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.UserId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("user_id");
+            entity.Property(e => e.AvatarUrl)
+                .IsUnicode(false)
+                .HasColumnName("avatar_url");
+            entity.Property(e => e.AvatarVersion).HasColumnName("avatar_version");
             entity.Property(e => e.City)
                 .HasMaxLength(100)
                 .HasColumnName("city");
@@ -1033,7 +1037,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<VideoConferenceSession>(entity =>
         {
-            entity.HasKey(e => e.ConferenceId).HasName("PK__video_co__DC92030833EE47F6");
+            entity.HasKey(e => e.ConferenceId).HasName("PK__video_co__DC92030881C4341D");
 
             entity.ToTable("video_conference_sessions");
 
@@ -1090,7 +1094,7 @@ public partial class MathBridgeDbContext : DbContext
 
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AFCEAB3D23");
+            entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AF384090BD");
 
             entity.ToTable("wallet_transactions");
 

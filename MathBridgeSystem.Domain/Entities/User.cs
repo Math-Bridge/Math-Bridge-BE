@@ -57,6 +57,10 @@ public partial class User
 
     public DateTime? LocationUpdatedDate { get; set; }
 
+    public string? AvatarUrl { get; set; }
+
+    public byte? AvatarVersion { get; set; }
+
     public virtual ICollection<Child> Children { get; set; } = new List<Child>();
 
     public virtual ICollection<Contract> ContractMainTutors { get; set; } = new List<Contract>();
