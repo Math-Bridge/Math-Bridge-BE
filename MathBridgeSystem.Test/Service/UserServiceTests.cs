@@ -1,8 +1,11 @@
-﻿using FluentAssertions;
+﻿using CloudinaryDotNet;
+using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Services;
 using Moq;
 using Org.BouncyCastle.Ocsp;
 using Xunit;
@@ -14,6 +17,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IWalletTransactionRepository> _walletTransactionRepositoryMock;
         private readonly UserService _userService;
+        private readonly Mock<ICloudinaryService> _cloudinary;
 
         private readonly Guid _adminId = Guid.NewGuid();
         private readonly Guid _userId = Guid.NewGuid();
@@ -25,10 +29,12 @@ namespace MathBridgeSystem.Tests.Services
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _walletTransactionRepositoryMock = new Mock<IWalletTransactionRepository>();
+            _cloudinary= new Mock<ICloudinaryService>();
 
             _userService = new UserService(
                 _userRepositoryMock.Object,
-                _walletTransactionRepositoryMock.Object
+                _walletTransactionRepositoryMock.Object,
+                _cloudinary.Object
             );
         }
 
