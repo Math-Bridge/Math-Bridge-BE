@@ -36,7 +36,7 @@ public class CloudinaryService : ICloudinaryService
             Overwrite = true,
             Transformation = new Transformation()
                 .Width(500).Height(500).Crop("fill").Gravity("face")
-                .Format("auto").Quality("auto")
+                .FetchFormat("auto").Quality("auto:low")
         };
 
         var uploadResult = await _cloudinary.UploadAsync(uploadParams);

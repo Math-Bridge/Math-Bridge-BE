@@ -206,7 +206,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// <returns>URL of the uploaded avatar</returns>
         [HttpPost("avatar")]
         [Authorize]
-        public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { error = "No file uploaded" });
