@@ -11,6 +11,8 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<Guid> UpdateUserStatusAsync(Guid id, UpdateStatusRequest request, string currentUserRole);
 
         Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid cid, Guid currentUserId, string currentUserRole);
+
+        Task<string> UpdateProfilePictureAsync(UpdateProfilePictureCommand command, Guid currentUserId, string currentUserRole);
         
         Task<IEnumerable<UserResponse>> GetAllUsersAsync(string currentUserRole);
     }
