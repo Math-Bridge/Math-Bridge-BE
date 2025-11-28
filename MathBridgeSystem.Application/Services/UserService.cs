@@ -39,7 +39,9 @@ namespace MathBridgeSystem.Application.Services
                 RoleId = user.RoleId,
                 Status = user.Status,
                 FormattedAddress = user.FormattedAddress,
-                placeId = user.GooglePlaceId
+                placeId = user.GooglePlaceId,
+                avatarUrl = user.AvatarUrl,
+                avatarVersion = user.AvatarVersion
             };
         }
 
@@ -257,7 +259,9 @@ namespace MathBridgeSystem.Application.Services
                 RoleId = user.RoleId,
                 Status = user.Status,
                 FormattedAddress = user.FormattedAddress,
-                placeId = user.GooglePlaceId
+                placeId = user.GooglePlaceId,
+                avatarUrl = user.AvatarUrl,
+                avatarVersion = user.AvatarVersion
             });
         }
     }
