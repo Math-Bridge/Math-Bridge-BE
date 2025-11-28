@@ -198,6 +198,49 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = errorMessage });
             }
         }
+
+        /// <summary>
+        /// Upload or update user profile picture
+        /// </summary>
+        /// <param name="file">Image file (JPG, PNG, WebP, max 2MB)</param>
+        /// <returns>URL of the uploaded avatar</returns>
+        [HttpPost("avatar")]
+        [Authorize]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "No file uploaded" });
+
+            try
+            {
+                var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+                var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (string.IsNullOrEmpty(currentUserRole))
+                {
+                    return Unauthorized(new { error = "Role not found in token" });
+                }
+
+                var command = new UpdateProfilePictureCommand
+                {
+                    File = file,
+                    UserId = currentUserId
+                };
+
+                var avatarUrl = await _userService.UpdateProfilePictureAsync(command, currentUserId, currentUserRole);
+                return Ok(new { avatarUrl, message = "Profile picture updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UploadAvatar: {ex}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "An error occurred while uploading the profile picture." : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
     }
 }
 

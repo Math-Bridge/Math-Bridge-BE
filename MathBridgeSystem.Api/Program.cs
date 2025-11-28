@@ -102,6 +102,7 @@
     builder.Services.AddScoped<IVideoConferenceService, VideoConferenceService>();
     builder.Services.AddScoped<ITutorVerificationService, TutorVerificationService>();
     builder.Services.AddScoped<ITutorService, TutorService>();
+    builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
     // === NOTIFICATION SERVICES ===
     builder.Services.AddScoped<INotificationService, NotificationService>();

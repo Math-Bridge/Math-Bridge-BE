@@ -13,11 +13,13 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IWalletTransactionRepository _walletTransactionRepository;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository)
+        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository, ICloudinaryService cloudinaryService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
+            _cloudinaryService = cloudinaryService ?? throw new ArgumentNullException(nameof(cloudinaryService));
         }
 
         public async Task<UserResponse> GetUserByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
@@ -37,7 +39,9 @@ namespace MathBridgeSystem.Application.Services
                 RoleId = user.RoleId,
                 Status = user.Status,
                 FormattedAddress = user.FormattedAddress,
-                placeId = user.GooglePlaceId
+                placeId = user.GooglePlaceId,
+                avatarUrl = user.AvatarUrl,
+                avatarVersion = user.AvatarVersion
             };
         }
 
@@ -201,6 +205,41 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<string> UpdateProfilePictureAsync(UpdateProfilePictureCommand command, Guid currentUserId, string currentUserRole)
+        {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
+            // Validate that the user is updating their own picture or is an admin
+            if (string.IsNullOrEmpty(currentUserRole) || (currentUserRole != "admin" && currentUserId != command.UserId))
+                throw new Exception("Unauthorized access");
+
+            var user = await _userRepository.GetByIdAsync(command.UserId);
+            if (user == null)
+                throw new Exception("User not found");
+
+            // Validate file
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var fileExtension = System.IO.Path.GetExtension(command.File.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+                throw new ArgumentException("Invalid file type. Only JPG, PNG and WebP are allowed.");
+
+            if (command.File.Length > 2 * 1024 * 1024) // 2MB
+                throw new ArgumentException("File size exceeds 2MB limit.");
+
+            // Upload to Cloudinary
+            string avatarUrl = await _cloudinaryService.UploadAvatarAsync(command.File, user.UserId);
+
+            // Update user entity
+            user.AvatarUrl = avatarUrl;
+            // Increment version to bust cache if needed, or just track updates
+            user.AvatarVersion = (byte)((user.AvatarVersion ?? 0) + 1);
+
+            await _userRepository.UpdateAsync(user);
+
+            return avatarUrl;
+        }
+
         public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(string currentUserRole)
         {
             // Only admins can get all users
@@ -220,7 +259,9 @@ namespace MathBridgeSystem.Application.Services
                 RoleId = user.RoleId,
                 Status = user.Status,
                 FormattedAddress = user.FormattedAddress,
-                placeId = user.GooglePlaceId
+                placeId = user.GooglePlaceId,
+                avatarUrl = user.AvatarUrl,
+                avatarVersion = user.AvatarVersion
             });
         }
     }

@@ -12,5 +12,7 @@
         public string Status { get; set; }
         public string FormattedAddress { get; set; }
         public string placeId { get; set; }
+        public string? avatarUrl { get; set; }
+        public byte? avatarVersion { get; set; }
     }
 }
