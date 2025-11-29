@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using MathBridgeSystem.Application.Services;
 
 namespace MathBridgeSystem.Tests.Services
 {
