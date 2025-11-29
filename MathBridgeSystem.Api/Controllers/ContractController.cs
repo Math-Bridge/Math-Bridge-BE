@@ -239,29 +239,5 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve available tutors.", details = ex.Message });
             }
         }
-        [HttpPut("{contractId}/re-assign-tutor")]
-        [Authorize(Roles = "staff,admin")]
-        public async Task<IActionResult> ReAssignTutor(Guid contractId, [FromBody] ReAssignTutorRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var staffId = GetUserIdFromClaims();
-
-            try
-            {
-                await _contractService.ReAssignTutorAsync(contractId, request, staffId);
-                return Ok(new
-                {
-                    success = true,
-                    message = request.ApplyToAllUpcomingSessions
-                        ? "Tutor has been successfully replaced for all upcoming sessions."
-                        : "Tutor has been updated in the contract."
-                });
-            }
-            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
-            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
-            catch (Exception ex) { return StatusCode(500, new { error = "Server error", details = ex.Message }); }
-        }
     }
 }
