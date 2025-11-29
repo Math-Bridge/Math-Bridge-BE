@@ -133,6 +133,7 @@
     builder.Services.AddScoped<ITestResultService, TestResultService>();
     builder.Services.AddScoped<IDailyReportService, DailyReportService>();
     builder.Services.AddScoped<IUnitService, UnitService>();
+    builder.Services.AddHttpClient<IHomeworkHelperService, GeminiHomeworkHelperService>();
 
     // === INFRASTRUCTURE SERVICES ===
     builder.Services.AddMemoryCache();

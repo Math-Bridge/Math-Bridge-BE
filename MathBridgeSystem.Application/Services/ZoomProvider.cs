@@ -7,7 +7,7 @@ using MathBridgeSystem.Application.DTOs.VideoConference;
 using Microsoft.Extensions.Configuration;
 using MathBridgeSystem.Application.Interfaces;
 
-namespace MathBridgeSystem.Infrastructure.Services;
+namespace MathBridgeSystem.Application.Services;
 
 public class ZoomProvider : IVideoConferenceProvider
 {
