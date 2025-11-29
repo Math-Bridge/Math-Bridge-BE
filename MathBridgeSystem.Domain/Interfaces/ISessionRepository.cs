@@ -18,7 +18,5 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<Session>> GetByTutorIdAsync(Guid tutorId);
         Task<List<Session>> GetAllSessionsInTimeRangeAsync(DateTime startTime, DateTime endTime);
         Task<List<Session>> GetUpcomingSessionsByContractIdAsync(Guid contractId, DateOnly fromDate);
-        //New
-        Task UpdateRangeAsync(IEnumerable<Session> sessions);
     }
 }
