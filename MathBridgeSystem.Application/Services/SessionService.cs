@@ -2,6 +2,7 @@
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using MathBridgeSystem.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,12 @@ namespace MathBridgeSystem.Application.Services
     public class SessionService : ISessionService
     {
         private readonly ISessionRepository _sessionRepository;
+        private readonly IUserRepository _userRepository;
 
-        public SessionService(ISessionRepository sessionRepository)
+        public SessionService(ISessionRepository sessionRepository, IUserRepository userRepository)
         {
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public async Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId)
@@ -218,6 +221,141 @@ namespace MathBridgeSystem.Application.Services
             // staff: được xem tất cả
 
             return MapSessionToDto(session);
+        }
+        /// <summary>
+        /// Thay tutor cho 1 buổi học cụ thể
+        /// - Kiểm tra buổi học tồn tại
+        /// - Kiểm tra tutor mới có rảnh không
+        /// - Không cho đổi nếu buổi học đã completed hoặc cancelled
+        /// </summary>
+        public async Task<bool> ChangeSessionTutorAsync(ChangeSessionTutorRequest request, Guid staffId)
+        {
+            var session = await _sessionRepository.GetByIdAsync(request.BookingId)
+                ?? throw new KeyNotFoundException("Session not found.");
+
+            if (session.Status is "completed" or "cancelled")
+                throw new InvalidOperationException("Cannot change tutor for completed or cancelled session.");
+
+            // Kiểm tra tutor mới có rảnh không
+            var isAvailable = await _sessionRepository.IsTutorAvailableAsync(
+                request.NewTutorId,
+                session.SessionDate,
+                session.StartTime,
+                session.EndTime);
+
+            if (!isAvailable)
+                throw new InvalidOperationException(
+                    $"Tutor is not available on {session.SessionDate:dd/MM/yyyy} " +
+                    $"from {session.StartTime:HH:mm} to {session.EndTime:HH:mm}.");
+
+            // Thực hiện thay đổi
+            session.TutorId = request.NewTutorId;
+            session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+
+            await _sessionRepository.UpdateAsync(session);
+
+            return true;
+        }
+        /// <summary>
+        /// Lấy danh sách tutor có thể thay thế cho 1 buổi học cụ thể
+        /// Ưu tiên: SubTutor trong Contract (nếu rảnh) → nếu không có → lấy tutor ngoài rảnh
+        /// </summary>
+        public async Task<object> GetReplacementTutorsAsync(Guid bookingId)
+        {
+            var session = await _sessionRepository.GetByIdAsync(bookingId)
+                ?? throw new KeyNotFoundException("Session not found.");
+
+            if (session.Status is "completed" or "cancelled")
+                throw new InvalidOperationException("Cannot replace tutor for completed or cancelled session.");
+
+            var currentTutorId = session.TutorId;
+            var contract = session.Contract;
+
+            var result = new List<object>();
+            var usedTutorIds = new HashSet<Guid> { currentTutorId };
+
+            // 1. Ưu tiên SubTutor trong Contract
+            var subTutorIds = new List<Guid?>
+    {
+        contract?.SubstituteTutor1Id,
+        contract?.SubstituteTutor2Id
+    }.Where(id => id.HasValue).Select(id => id.Value);
+
+            foreach (var subId in subTutorIds.Where(id => id != currentTutorId))
+            {
+                var tutor = await _userRepository.GetByIdAsync(subId);
+                if (tutor?.Status == "active")
+                {
+                    bool isAvailable = await _sessionRepository.IsTutorAvailableAsync(
+                        subId, session.SessionDate, session.StartTime, session.EndTime);
+
+                    if (isAvailable)
+                    {
+                        result.Add(new
+                        {
+                            tutorId = tutor.UserId,
+                            fullName = tutor.FullName ?? "No name",
+                            phoneNumber = tutor.PhoneNumber,
+                            email = tutor.Email,
+                            avatarUrl = tutor.AvatarUrl,
+                            rating = tutor.FinalFeedbacks?.Any() == true
+                                ? Math.Round(tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating), 1)
+                                : 0.0,
+                            feedbackCount = tutor.FinalFeedbacks?.Count ?? 0,
+                            isSubstitute = true,
+                            priority = "high"
+                        });
+                        usedTutorIds.Add(subId);
+                    }
+                }
+            }
+
+            // 2. Nếu vẫn chưa có ai → lấy tutor ngoài
+            if (!result.Any())
+            {
+                var allTutors = await _userRepository.GetTutorsAsync();
+                foreach (var tutor in allTutors.Where(t => t.Status == "active" && !usedTutorIds.Contains(t.UserId)))
+                {
+                    bool isAvailable = await _sessionRepository.IsTutorAvailableAsync(
+                        tutor.UserId, session.SessionDate, session.StartTime, session.EndTime);
+
+                    if (isAvailable)
+                    {
+                        result.Add(new
+                        {
+                            tutorId = tutor.UserId,
+                            fullName = tutor.FullName ?? "No name",
+                            phoneNumber = tutor.PhoneNumber,
+                            email = tutor.Email,
+                            avatarUrl = tutor.AvatarUrl,
+                            rating = tutor.FinalFeedbacks?.Any() == true
+                                ? Math.Round(tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating), 1)
+                                : 0.0,
+                            feedbackCount = tutor.FinalFeedbacks?.Count ?? 0,
+                            isSubstitute = false,
+                            priority = "normal"
+                        });
+                    }
+                }
+            }
+
+            // Sắp xếp: SubTutor lên đầu, rồi mới đến tutor ngoài theo rating
+            var sorted = result
+                .OrderByDescending(x => (string)x.GetType().GetProperty("priority")!.GetValue(x) == "high")
+                .ThenByDescending(x => (double)x.GetType().GetProperty("rating")!.GetValue(x))
+                .ToList();
+
+            return new
+            {
+                bookingId = session.BookingId,
+                sessionDate = session.SessionDate.ToString("dd/MM/yyyy"),
+                timeRange = $"{session.StartTime:HH:mm} - {session.EndTime:HH:mm}",
+                childName = session.Contract?.Child?.FullName,
+                currentTutor = session.Tutor?.FullName,
+                replacementTutors = sorted,
+                totalAvailable = sorted.Count,
+                hasSubstitute = sorted.Any(x => (bool)x.GetType().GetProperty("isSubstitute")!.GetValue(x))
+            };
         }
     }
 }

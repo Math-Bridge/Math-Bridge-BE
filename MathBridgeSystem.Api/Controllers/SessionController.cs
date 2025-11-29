@@ -203,5 +203,65 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred.", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Change tutor for a specific session
+        /// Only staff can use this
+        /// </summary>
+        [HttpPut("change-tutor")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> ChangeSessionTutor([FromBody] ChangeSessionTutorRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var staffId = GetUserId();
+
+            try
+            {
+                await _sessionService.ChangeSessionTutorAsync(request, staffId);
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Tutor changed successfully for session {request.BookingId}."
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Server error", details = ex.Message });
+            }
+        }
+        /// <summary>
+        /// Lấy danh sách tutor có thể thay thế cho buổi học này (ưu tiên SubTutor → tutor ngoài)
+        /// </summary>
+        [HttpGet("{bookingId}/replacement-tutors")]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> GetReplacementTutors(Guid bookingId)
+        {
+            try
+            {
+                var data = await _sessionService.GetReplacementTutorsAsync(bookingId);
+                return Ok(data);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Server error", details = ex.Message });
+            }
+        }
     }
 }
