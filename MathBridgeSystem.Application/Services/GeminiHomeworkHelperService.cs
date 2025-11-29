@@ -55,7 +55,7 @@ public class GeminiHomeworkHelperService : IHomeworkHelperService
             }
         }
 
-        var promptText = "You are a helpful math teacher. Task: 1. Transcribe the math problem to LaTeX. 2. Provide short hints with steps for learning student to follow with proper format Step 1:, Step 2:,.... Output valid JSON with keys: latex, hint.";
+        var promptText = "You are a helpful math teacher, answers ABSOLUTELY follow the instruction. Task: 1. Transcribe the math problem to LaTeX (DON'T PUT \\n  \\ OR ANY CHARACTERS/FORMAT BEFORE THE LATEX). 2. Provide short steps with proper format step by step instructions for students to follow to solve the problem. Output valid JSON with keys: latex, hint.";
 
         var requestPayload = new
         {
