@@ -111,5 +111,23 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
         }
+        public async Task<List<Session>> GetUpcomingSessionsByContractIdAsync(Guid contractId, DateOnly fromDate)
+        {
+            return await WithFullIncludes()
+                .Where(s => s.ContractId == contractId
+                         && s.SessionDate >= fromDate
+                         && s.Status == "scheduled")
+                .ToListAsync();
+        }
+        public async Task UpdateRangeAsync(IEnumerable<Session> sessions)
+        {
+            foreach (var session in sessions)
+            {
+                session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+            }
+
+            _context.Sessions.UpdateRange(sessions);
+            await _context.SaveChangesAsync();
+        }
     }
 }

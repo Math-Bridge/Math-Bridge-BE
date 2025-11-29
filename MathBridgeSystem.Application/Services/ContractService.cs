@@ -17,17 +17,20 @@ namespace MathBridgeSystem.Application.Services
         private readonly IPackageRepository _packageRepository;
         private readonly ISessionRepository _sessionRepository;
         private readonly IEmailService _emailService;
+        private readonly IUserRepository _userRepository;
 
         public ContractService(
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
             ISessionRepository sessionRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            IUserRepository userRepository)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
             _sessionRepository = sessionRepository;
-            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); 
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -604,6 +607,96 @@ private decimal? CalculateDistance(Contract contract, User tutor)
 
     return (decimal)Math.Round(distance, 2);
 }
+        public async Task<bool> ReAssignTutorAsync(Guid contractId, ReAssignTutorRequest request, Guid staffId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (contract.Status is "completed" or "cancelled")
+                throw new InvalidOperationException("Cannot change tutor on completed or cancelled contract.");
+
+            // Kiểm tra tutor bị ban có thực sự thuộc hợp đồng không
+            var assignedIds = new[] { contract.MainTutorId, contract.SubstituteTutor1Id, contract.SubstituteTutor2Id }
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .ToList();
+
+            if (!assignedIds.Contains(request.BannedTutorId))
+                throw new InvalidOperationException("The banned tutor is not part of this contract.");
+
+            // Kiểm tra tutor thay thế
+            var newTutor = await _userRepository.GetByIdAsync(request.ReplacementTutorId)
+                ?? throw new InvalidOperationException("Replacement tutor not found.");
+
+            if (newTutor.Status == "banned")
+                throw new InvalidOperationException("Cannot assign a banned tutor.");
+
+            // KIỂM TRA RẢNH 100% CHO TOÀN BỘ LỊCH
+            var isAvailable = await IsTutorFullyAvailableAsync(request.ReplacementTutorId, contract);
+            if (!isAvailable)
+                throw new InvalidOperationException("The new tutor is not available for the entire contract schedule.");
+
+            // Thay thế tutor trong hợp đồng
+            if (contract.MainTutorId == request.BannedTutorId) contract.MainTutorId = request.ReplacementTutorId;
+            else if (contract.SubstituteTutor1Id == request.BannedTutorId) contract.SubstituteTutor1Id = request.ReplacementTutorId;
+            else if (contract.SubstituteTutor2Id == request.BannedTutorId) contract.SubstituteTutor2Id = request.ReplacementTutorId;
+
+            contract.UpdatedDate = DateTime.UtcNow;
+            await _contractRepository.UpdateAsync(contract);
+
+            // Cập nhật tất cả buổi học còn lại (nếu chọn)
+            if (request.ApplyToAllUpcomingSessions)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                var sessions = await _sessionRepository.GetUpcomingSessionsByContractIdAsync(contractId, today);
+
+                bool changed = false;
+                foreach (var s in sessions)
+                {
+                    if (s.TutorId == request.BannedTutorId)
+                    {
+                        s.TutorId = request.ReplacementTutorId;
+                        s.UpdatedAt = DateTime.UtcNow;
+                        changed = true;
+                    }
+                }
+                if (changed) await _sessionRepository.UpdateRangeAsync(sessions);
+            }
+
+            return true;
+        }
+
+        // Helper: Kiểm tra tutor có rảnh hoàn toàn không
+        private async Task<bool> IsTutorFullyAvailableAsync(Guid tutorId, Contract contract)
+        {
+            var tutorSessions = await _sessionRepository.GetByTutorIdAsync(tutorId);
+            var futureSessions = tutorSessions
+                .Where(s => s.Status == "scheduled" && s.SessionDate >= DateOnly.FromDateTime(DateTime.Today))
+                .ToList();
+
+            var start = DateOnly.FromDateTime(DateTime.Today);
+            var current = start;
+
+            while (current <= contract.EndDate)
+            {
+                if (IsDaySelected(current.DayOfWeek, contract.DaysOfWeeks!.Value))
+                {
+                    var contractStart = current.ToDateTime(contract.StartTime!.Value);
+                    var contractEnd = current.ToDateTime(contract.EndTime!.Value);
+
+                    bool conflict = futureSessions.Any(s =>
+                        s.SessionDate == current &&
+                        s.StartTime < contractEnd &&
+                        s.EndTime > contractStart);
+
+                    if (conflict) return false;
+                }
+                current = current.AddDays(1);
+            }
+            return true;
+        }
+
+        private bool IsDaySelected(DayOfWeek day, byte mask) => (mask & (1 << (int)day)) != 0;
     }
 }
 
