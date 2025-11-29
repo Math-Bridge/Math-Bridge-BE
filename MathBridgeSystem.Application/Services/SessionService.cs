@@ -14,11 +14,17 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly ISessionRepository _sessionRepository;
         private readonly IUserRepository _userRepository;
+        private ISessionRepository @object;
 
         public SessionService(ISessionRepository sessionRepository, IUserRepository userRepository)
         {
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        }
+
+        public SessionService(ISessionRepository @object)
+        {
+            this.@object = @object;
         }
 
         public async Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId)
