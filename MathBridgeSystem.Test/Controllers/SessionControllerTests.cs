@@ -214,7 +214,7 @@ namespace MathBridgeSystem.Tests.Controllers
                 new SessionDto { BookingId = Guid.NewGuid(), SessionDate = DateOnly.FromDateTime(DateTime.Today) },
                 new SessionDto { BookingId = Guid.NewGuid(), SessionDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1)) }
             };
-            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId, _userId))
+            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId))
                 .ReturnsAsync(expectedSessions);
 
             // Act
@@ -224,7 +224,7 @@ namespace MathBridgeSystem.Tests.Controllers
             var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             var sessions = okResult.Value.Should().BeAssignableTo<List<SessionDto>>().Subject;
             sessions.Should().HaveCount(2);
-            _sessionServiceMock.Verify(s => s.GetSessionsByChildIdAsync(childId, _userId), Times.Once);
+            _sessionServiceMock.Verify(s => s.GetSessionsByChildIdAsync(childId), Times.Once);
         }
 
         [Fact]
@@ -232,7 +232,7 @@ namespace MathBridgeSystem.Tests.Controllers
         {
             // Arrange
             var childId = Guid.NewGuid();
-            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId, _userId))
+            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId))
                 .ReturnsAsync(new List<SessionDto>());
 
             // Act
@@ -249,7 +249,7 @@ namespace MathBridgeSystem.Tests.Controllers
         {
             // Arrange
             var childId = Guid.NewGuid();
-            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId, _userId))
+            _sessionServiceMock.Setup(s => s.GetSessionsByChildIdAsync(childId))
                 .ThrowsAsync(new Exception("Child not found"));
 
             // Act
