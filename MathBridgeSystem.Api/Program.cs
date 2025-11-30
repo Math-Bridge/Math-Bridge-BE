@@ -12,6 +12,7 @@
     using System.Text;
     using MathBridgeSystem.Infrastructure.Services;
     using System.Security.Claims;
+    using MathBridgeSystem.Application.Services.Interfaces;
     using QuestPDF.Infrastructure;
     using Microsoft.Extensions.Caching.Memory;
     var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +88,7 @@
     builder.Services.AddScoped<IFinalFeedbackRepository, FinalFeedbackRepository>();
     builder.Services.AddScoped<IDailyReportRepository, DailyReportRepository>();
     builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+    builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
 
 
@@ -133,6 +135,7 @@
     builder.Services.AddScoped<ITestResultService, TestResultService>();
     builder.Services.AddScoped<IDailyReportService, DailyReportService>();
     builder.Services.AddScoped<IUnitService, UnitService>();
+    builder.Services.AddScoped<IReportService, ReportService>();
     builder.Services.AddHttpClient<IHomeworkHelperService, GeminiHomeworkHelperService>();
 
     // === INFRASTRUCTURE SERVICES ===
