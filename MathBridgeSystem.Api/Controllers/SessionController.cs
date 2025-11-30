@@ -69,7 +69,7 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet("child/{childId}")]
-        [Authorize(Roles = "parent,tutor")]
+        [Authorize(Roles = "parent,tutor,staff")]
         public async Task<IActionResult> GetSessionsByChildId(Guid childId)
         {
             var parentId = GetUserId();

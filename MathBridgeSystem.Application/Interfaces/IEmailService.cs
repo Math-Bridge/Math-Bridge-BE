@@ -20,5 +20,9 @@ namespace MathBridgeSystem.Application.Interfaces
     Guid contractId,
     byte[] pdfBytes,
     string pdfFileName = "MathBridge_Contract.pdf");
+
+        // Report Emails
+        Task SendReportSubmittedAsync(string email, string parentName, Guid reportId);
+        Task SendReportStatusUpdateAsync(string email, string parentName, Guid reportId, string status, string reason);
     }
 }

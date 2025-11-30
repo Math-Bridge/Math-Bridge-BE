@@ -516,6 +516,7 @@ public partial class MathBridgeDbContext : DbContext
 
             entity.HasOne(d => d.Contract).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("report___fk_contract");
 
             entity.HasOne(d => d.Parent).WithMany(p => p.ReportParents)
