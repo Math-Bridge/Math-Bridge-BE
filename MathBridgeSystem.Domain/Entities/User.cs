@@ -77,6 +77,10 @@ public partial class User
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
+    public virtual ICollection<Report> ReportParents { get; set; } = new List<Report>();
+
+    public virtual ICollection<Report> ReportTutors { get; set; } = new List<Report>();
+
     public virtual ICollection<RescheduleRequest> RescheduleRequestParents { get; set; } = new List<RescheduleRequest>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequestRequestedTutors { get; set; } = new List<RescheduleRequest>();

@@ -32,6 +32,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
 
+    public virtual DbSet<Report> Reports { get; set; }
+
     public virtual DbSet<RescheduleRequest> RescheduleRequests { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -328,6 +330,9 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.OnTrack).HasColumnName("on_track");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
             entity.Property(e => e.UnitId).HasColumnName("unit_id");
+            entity.Property(e => e.Url)
+                .IsUnicode(false)
+                .HasColumnName("url");
 
             entity.HasOne(d => d.Booking).WithMany(p => p.DailyReports)
                 .HasForeignKey(d => d.BookingId)
@@ -482,6 +487,46 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.CurriculumId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_payment_packages_curriculum");
+        });
+
+        modelBuilder.Entity<Report>(entity =>
+        {
+            entity.HasKey(e => e.ReportId).HasName("report_id");
+
+            entity.ToTable("report");
+
+            entity.Property(e => e.ReportId)
+                .ValueGeneratedNever()
+                .HasColumnName("report_id");
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+            entity.Property(e => e.CreatedDate).HasColumnName("created_date");
+            entity.Property(e => e.ParentId).HasColumnName("parent_id");
+            entity.Property(e => e.Status)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("status");
+            entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.Type)
+                .IsUnicode(false)
+                .HasColumnName("type");
+            entity.Property(e => e.Url)
+                .IsUnicode(false)
+                .HasColumnName("url");
+
+            entity.HasOne(d => d.Contract).WithMany(p => p.Reports)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("report___fk_contract");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.ReportParents)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("report___fk_parent");
+
+            entity.HasOne(d => d.Tutor).WithMany(p => p.ReportTutors)
+                .HasForeignKey(d => d.TutorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("report___fk_tutor");
         });
 
         modelBuilder.Entity<RescheduleRequest>(entity =>
