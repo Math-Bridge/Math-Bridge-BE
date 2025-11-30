@@ -69,13 +69,13 @@ namespace MathBridgeSystem.Api.Controllers
         }
 
         [HttpGet("child/{childId}")]
-        [Authorize(Roles = "parent")]
+        [Authorize(Roles = "parent,tutor")]
         public async Task<IActionResult> GetSessionsByChildId(Guid childId)
         {
             var parentId = GetUserId();
             try
             {
-                var sessions = await _sessionService.GetSessionsByChildIdAsync(childId, parentId);
+                var sessions = await _sessionService.GetSessionsByChildIdAsync(childId);
                 return Ok(sessions);
             }
             catch (Exception ex)
