@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MathBridgeSystem.Application.Interfaces;
 
 namespace MathBridgeSystem.Application.Services
 {
@@ -15,12 +16,21 @@ namespace MathBridgeSystem.Application.Services
         private readonly IReportRepository _reportRepository;
         private readonly IUserRepository _userRepository;
         private readonly IContractRepository _contractRepository;
+        private readonly IEmailService _emailService;
+        private readonly INotificationService _notificationService;
 
-        public ReportService(IReportRepository reportRepository, IUserRepository userRepository, IContractRepository contractRepository)
+        public ReportService(
+            IReportRepository reportRepository, 
+            IUserRepository userRepository, 
+            IContractRepository contractRepository,
+            IEmailService emailService,
+            INotificationService notificationService)
         {
             _reportRepository = reportRepository ?? throw new ArgumentNullException(nameof(reportRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         }
 
         public async Task<ReportResponseDto> CreateReportAsync(CreateReportDto dto, Guid ParentId)
@@ -51,13 +61,30 @@ namespace MathBridgeSystem.Application.Services
                 TutorId = dto.TutorId,
                 Content = dto.Content,
                 Url = dto.Url,
-                Status = "Pending",
+                Status = "pending",
                 CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime()),
                 Type = dto.Type,
                 ContractId = dto.ContractId
             };
 
             await _reportRepository.AddAsync(report);
+
+            // Send Notification and Email
+            var parent = await _userRepository.GetByIdAsync(ParentId);
+            if (parent != null)
+            {
+                await _notificationService.CreateNotificationAsync(new MathBridgeSystem.Application.DTOs.Notification.CreateNotificationRequest
+                {
+                    UserId = ParentId,
+                    ContractId = dto.ContractId,
+                    Title = "Report Submitted",
+                    Message = $"Your report (ID: {report.ReportId}) has been submitted successfully.",
+                    NotificationType = "Report"
+                });
+
+                await _emailService.SendReportSubmittedAsync(parent.Email, parent.FullName, report.ReportId);
+            }
+
             return await MapToDtoAsync(report);
         }
 
@@ -74,7 +101,7 @@ namespace MathBridgeSystem.Application.Services
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var validStatuses = new[] { "Approved", "Denied", "Pending" };
+            var validStatuses = new[] { "approved", "denied", "pending" };
             if (!validStatuses.Contains(dto.Status, StringComparer.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid status value.");
@@ -86,6 +113,27 @@ namespace MathBridgeSystem.Application.Services
 
             report.Status = dto.Status;
             await _reportRepository.UpdateAsync(report);
+
+            // Send Notification and Email
+            var parent = await _userRepository.GetByIdAsync(report.ParentId);
+            if (parent != null)
+            {
+                await _notificationService.CreateNotificationAsync(new MathBridgeSystem.Application.DTOs.Notification.CreateNotificationRequest
+                {
+                    UserId = report.ParentId,
+                    ContractId = report.ContractId,
+                    Title = $"Report {dto.Status}",
+                    Message = $"Your report status has been updated to {dto.Status}. Reason: {dto.Reason ?? "N/A"}",
+                    NotificationType = "Report"
+                });
+
+                await _emailService.SendReportStatusUpdateAsync(
+                    parent.Email, 
+                    parent.FullName, 
+                    report.ReportId, 
+                    dto.Status, 
+                    dto.Reason ?? "No reason provided");
+            }
 
             return await MapToDtoAsync(report);
         }

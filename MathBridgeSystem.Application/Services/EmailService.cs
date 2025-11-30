@@ -541,6 +541,104 @@ namespace MathBridgeSystem.Application.Services
             }
         }
 
+        public async Task SendReportSubmittedAsync(string email, string parentName, Guid reportId)
+        {
+            try
+            {
+                var subject = "Report Submitted Successfully - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #007bff; padding: 20px; text-align: center; color: white; }}
+        .content {{ padding: 20px; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Report Submitted</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>We have received your report (ID: {reportId}). Our support team will review it shortly.</p>
+            <p>Thank you for helping us improve MathBridge.</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; 2025 MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Report submitted email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send report submitted email to {email}");
+                throw;
+            }
+        }
+
+        public async Task SendReportStatusUpdateAsync(string email, string parentName, Guid reportId, string status, string reason)
+        {
+            try
+            {
+                var subject = $"Report Status Update - {status} - MathBridge";
+                var color = status.ToLower() == "approved" ? "#28a745" : (status.ToLower() == "denied" ? "#dc3545" : "#007bff");
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: {{color}}; padding: 20px; text-align: center; color: white; }}
+        .content {{ padding: 20px; }}
+        .reason-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid {{color}}; margin: 15px 0; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Report Status: {status}</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>The status of your report (ID: {reportId}) has been updated to <strong>{status}</strong>.</p>
+            <div class='reason-box'>
+                <p><strong>Reason/Comments:</strong></p>
+                <p>{reason}</p>
+            </div>
+            <p>If you have further questions, please contact support.</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; 2025 MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Report status update email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send report status update email to {email}");
+                throw;
+            }
+        }
+
         private async Task SendEmailWithAttachmentAsync(string to, string subject, string htmlBody, byte[] attachmentBytes, string attachmentName)
         {
             try
