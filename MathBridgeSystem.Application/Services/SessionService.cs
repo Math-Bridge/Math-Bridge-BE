@@ -12,10 +12,12 @@ namespace MathBridgeSystem.Application.Services
     public class SessionService : ISessionService
     {
         private readonly ISessionRepository _sessionRepository;
+        private readonly IChildRepository _childRepository;
 
-        public SessionService(ISessionRepository sessionRepository)
+        public SessionService(ISessionRepository sessionRepository, IChildRepository childRepository)
         {
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
+            _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
         }
 
         public async Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId)
@@ -33,9 +35,10 @@ namespace MathBridgeSystem.Application.Services
             return MapSessionToDto(session);
         }
 
-        public async Task<List<SessionDto>> GetSessionsByChildIdAsync(Guid childId, Guid parentId)
+        public async Task<List<SessionDto>> GetSessionsByChildIdAsync(Guid childId)
         {
-            var sessions = await _sessionRepository.GetByChildIdAsync(childId, parentId);
+            var child = await _childRepository.GetByIdAsync(childId);
+            var sessions = await _sessionRepository.GetByChildIdAsync(childId, child.ParentId);
             return MapSessionsToDto(sessions);
         }
 
