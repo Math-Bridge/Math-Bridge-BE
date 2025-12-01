@@ -141,6 +141,10 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.ChildId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("child_id");
+            entity.Property(e => e.AvatarUrl)
+                .IsUnicode(false)
+                .HasColumnName("avatar_url");
+            entity.Property(e => e.AvatarVersion).HasColumnName("avatar_version");
             entity.Property(e => e.CenterId).HasColumnName("center_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")

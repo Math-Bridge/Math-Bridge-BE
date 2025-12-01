@@ -18,6 +18,17 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        public async Task<IEnumerable<DailyReport>> GetAllAsync()
+        {
+            return await _context.DailyReports
+                .Include(d => d.Child)
+                .Include(d => d.Tutor)
+                .Include(d => d.Booking)
+                .Include(d => d.Unit)
+                .OrderByDescending(d => d.CreatedDate)
+                .ToListAsync();
+        }
+
         public async Task<DailyReport> GetByIdAsync(Guid reportId)
         {
             return await _context.DailyReports

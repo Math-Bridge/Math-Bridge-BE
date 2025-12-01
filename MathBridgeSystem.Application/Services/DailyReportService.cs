@@ -27,6 +27,12 @@ namespace MathBridgeSystem.Application.Services
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         }
 
+        public async Task<IEnumerable<DailyReportDto>> GetAllDailyReportsAsync()
+        {
+            var dailyReports = await _dailyReportRepository.GetAllAsync();
+            return dailyReports.Select(MapToDto);
+        }
+
         public async Task<DailyReportDto> GetDailyReportByIdAsync(Guid reportId)
         {
             var dailyReport = await _dailyReportRepository.GetByIdAsync(reportId);
