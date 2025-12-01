@@ -14,7 +14,6 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly ISessionRepository _sessionRepository;
         private readonly IUserRepository _userRepository;
-        private ISessionRepository @object;
         private readonly IChildRepository _childRepository;
         private readonly IContractRepository _contractRepository;
 
@@ -24,11 +23,6 @@ namespace MathBridgeSystem.Application.Services
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
             _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(childRepository));
-        }
-
-        public SessionService(ISessionRepository @object)
-        {
-            this.@object = @object;
         }
 
         public async Task<List<SessionDto>> GetSessionsByParentAsync(Guid parentId)
