@@ -14,7 +14,7 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
         public bool HaveHomework { get; set; }
         public DateOnly CreatedDate { get; set; }
         public Guid UnitId { get; set; }
-        public Guid? TestId { get; set; }
+        public string? Url { get; set; }
     }
 
     public class CreateDailyReportRequest
@@ -36,6 +36,7 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
 
         [Required]
         public Guid UnitId { get; set; }
+        public string? Url { get; set; }
         
     }
 
@@ -49,6 +50,7 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
         public bool? HaveHomework { get; set; }
 
         public Guid? UnitId { get; set; }
+        public string? Url { get; set; }
         
     }
 }
