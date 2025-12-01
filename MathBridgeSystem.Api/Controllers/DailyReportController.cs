@@ -51,6 +51,25 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get all daily reports in the system
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "staff,admin")]
+        public async Task<IActionResult> GetAllDailyReports()
+        {
+            try
+            {
+                var dailyReports = await _dailyReportService.GetAllDailyReportsAsync();
+                return Ok(dailyReports);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving daily reports.", details = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Get all daily reports for the logged-in tutor
         /// </summary>

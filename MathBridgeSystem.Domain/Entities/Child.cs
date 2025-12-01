@@ -27,6 +27,10 @@ public partial class Child
 
     public DateTime? LastTopicUpdate { get; set; }
 
+    public string? AvatarUrl { get; set; }
+
+    public byte? AvatarVersion { get; set; }
+
     public virtual Center? Center { get; set; }
 
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();

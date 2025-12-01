@@ -8,6 +8,7 @@ namespace MathBridgeSystem.Application.Interfaces
 {
     public interface IDailyReportService
     {
+        Task<IEnumerable<DailyReportDto>> GetAllDailyReportsAsync();
         Task<DailyReportDto> GetDailyReportByIdAsync(Guid reportId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByTutorIdAsync(Guid tutorId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByChildIdAsync(Guid childId);
