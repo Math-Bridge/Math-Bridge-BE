@@ -218,6 +218,7 @@ namespace MathBridgeSystem.Application.Services
                 HaveHomework = request.HaveHomework,
                 CreatedDate = DateOnly.FromDateTime(DateTime.Now),
                 UnitId = request.UnitId,
+                Url = request.Url
             };
 
             var createdReport = await _dailyReportRepository.AddAsync(dailyReport);
@@ -287,6 +288,7 @@ namespace MathBridgeSystem.Application.Services
                 HaveHomework = dailyReport.HaveHomework,
                 CreatedDate = dailyReport.CreatedDate,
                 UnitId = dailyReport.UnitId,
+                Url = dailyReport.Url
             };
         }
 
