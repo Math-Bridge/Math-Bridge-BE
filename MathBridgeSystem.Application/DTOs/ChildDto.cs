@@ -17,5 +17,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string Grade { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string Status { get; set; }
+        public string? AvatarUrl { get; set; }
+        public byte? AvatarVersion { get; set; }
     }
 }

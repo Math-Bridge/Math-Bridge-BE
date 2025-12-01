@@ -125,5 +125,52 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+
+        /// <summary>
+        /// Upload or update child profile picture
+        /// </summary>
+        /// <param name="id">Child ID</param>
+        /// <param name="file">Image file (JPG, PNG, WebP, max 2MB)</param>
+        /// <returns>URL of the uploaded avatar</returns>
+        [HttpPost("{id}/avatar")]
+        [Authorize(Roles = "parent,admin")]
+        public async Task<IActionResult> UploadChildAvatar(Guid id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "No file uploaded" });
+
+            try
+            {
+                var currentUserId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+                var currentUserRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                if (string.IsNullOrEmpty(currentUserRole))
+                {
+                    Console.WriteLine("UploadChildAvatar: Role not found in token");
+                    return Unauthorized(new { error = "Role not found in token" });
+                }
+
+                var command = new UpdateProfilePictureCommand
+                {
+                    File = file,
+                    UserId = id // Using UserId field to store childId for reuse
+                };
+
+                var avatarUrl = await _childService.UpdateChildProfilePictureAsync(id, command, currentUserId, currentUserRole);
+                return Ok(new { avatarUrl, message = "Child profile picture updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Validation error in UploadChildAvatar: {ex.Message}");
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UploadChildAvatar: {ex}");
+                var errorMessage = string.IsNullOrEmpty(ex.Message) ? "An error occurred while uploading the child profile picture." : ex.Message;
+                return StatusCode(500, new { error = errorMessage });
+            }
+        }
     }
 }
