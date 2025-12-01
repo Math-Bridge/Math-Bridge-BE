@@ -119,5 +119,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                          && s.Status == "scheduled")
                 .ToListAsync();
         }
+        public async Task UpdateRangeAsync(IEnumerable<Session> sessions)
+        {
+            foreach (var session in sessions)
+            {
+                session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+            }
+            _context.Sessions.UpdateRange(sessions);
+            await _context.SaveChangesAsync();
+        }
     }
 }

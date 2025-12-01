@@ -18,5 +18,7 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<SessionDto?> GetSessionByBookingIdAsync(Guid bookingId, Guid userId, string role);
         Task<bool> ChangeSessionTutorAsync(ChangeSessionTutorRequest request, Guid staffId);
         Task<object> GetReplacementTutorsAsync(Guid bookingId);
+        Task<object> GetMainTutorReplacementPlanAsync(Guid contractId);
+        Task<bool> ExecuteMainTutorReplacementAsync(Guid contractId, Guid newMainTutorId, Guid newSubstituteTutorId, Guid staffId);
     }
 }
