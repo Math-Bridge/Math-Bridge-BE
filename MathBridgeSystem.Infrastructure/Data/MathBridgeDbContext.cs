@@ -44,6 +44,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Session> Sessions { get; set; }
 
+    public virtual DbSet<SystemSetting> SystemSettings { get; set; }
+
     public virtual DbSet<TestResult> TestResults { get; set; }
 
     public virtual DbSet<TutorCenter> TutorCenters { get; set; }
@@ -786,6 +788,19 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.TutorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_booking_sessions_tutors");
+        });
+
+        modelBuilder.Entity<SystemSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__SystemSe__3214EC0727281F5C");
+
+            entity.ToTable("system_settings");
+
+            entity.HasIndex(e => e.Key, "UQ__SystemSe__C41E0289AAADB1A8").IsUnique();
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Key).HasMaxLength(100);
         });
 
         modelBuilder.Entity<TestResult>(entity =>

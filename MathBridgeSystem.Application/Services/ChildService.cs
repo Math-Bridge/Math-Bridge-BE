@@ -14,16 +14,19 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly IChildRepository _childRepository;
         private readonly IUserRepository _userRepository;
-                private readonly ICenterRepository _centerRepository;
+        private readonly ICenterRepository _centerRepository;
+        private readonly ICloudinaryService _cloudinaryService;
 
         public ChildService(
             IChildRepository childRepository,
             IUserRepository userRepository,
-            ICenterRepository centerRepository)
+            ICenterRepository centerRepository,
+            ICloudinaryService cloudinaryService)
         {
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _centerRepository = centerRepository ?? throw new ArgumentNullException(nameof(centerRepository));
+            _cloudinaryService = cloudinaryService ?? throw new ArgumentNullException(nameof(cloudinaryService));
         }
 
         public async Task<Guid> AddChildAsync(Guid parentId, AddChildRequest request)
@@ -129,7 +132,9 @@ namespace MathBridgeSystem.Application.Services
                 CenterName = centerName,
                 Grade = child.Grade,
                 DateOfBirth = child.DateOfBirth,
-                Status = child.Status
+                Status = child.Status,
+                AvatarUrl = child.AvatarUrl,
+                AvatarVersion = child.AvatarVersion
             };
         }
 
@@ -137,34 +142,38 @@ namespace MathBridgeSystem.Application.Services
         {
             var children = await _childRepository.GetByParentIdAsync(parentId);
             return children.Select(c => new ChildDto
-            {
-                ChildId = c.ChildId,
-                FullName = c.FullName,
-                SchoolId = c.SchoolId,
-                SchoolName = c.School?.SchoolName ?? string.Empty,
-                CenterId = c.CenterId,
-                CenterName = c.Center?.Name,
-                Grade = c.Grade,
-                DateOfBirth = c.DateOfBirth,
-                Status = c.Status
-            }).ToList();
+                {
+                    ChildId = c.ChildId,
+                    FullName = c.FullName,
+                    SchoolId = c.SchoolId,
+                    SchoolName = c.School?.SchoolName ?? string.Empty,
+                    CenterId = c.CenterId,
+                    CenterName = c.Center?.Name,
+                    Grade = c.Grade,
+                    DateOfBirth = c.DateOfBirth,
+                    Status = c.Status,
+                    AvatarUrl = c.AvatarUrl,
+                    AvatarVersion = c.AvatarVersion
+                }).ToList();
         }
 
         public async Task<List<ChildDto>> GetAllChildrenAsync()
         {
             var children = await _childRepository.GetAllAsync();
             return children.Select(c => new ChildDto
-            {
-                ChildId = c.ChildId,
-                FullName = c.FullName,
-                SchoolId = c.SchoolId,
-                SchoolName = c.School?.SchoolName ?? string.Empty,
-                CenterId = c.CenterId,
-                CenterName = c.Center?.Name,
-                Grade = c.Grade,
-                DateOfBirth = c.DateOfBirth,
-                Status = c.Status
-            }).ToList();
+                {
+                    ChildId = c.ChildId,
+                    FullName = c.FullName,
+                    SchoolId = c.SchoolId,
+                    SchoolName = c.School?.SchoolName ?? string.Empty,
+                    CenterId = c.CenterId,
+                    CenterName = c.Center?.Name,
+                    Grade = c.Grade,
+                    DateOfBirth = c.DateOfBirth,
+                    Status = c.Status,
+                    AvatarUrl = c.AvatarUrl,
+                    AvatarVersion = c.AvatarVersion
+                }).ToList();
         }
 
         public async Task LinkCenterAsync(Guid childId, LinkCenterRequest request)
@@ -186,6 +195,45 @@ namespace MathBridgeSystem.Application.Services
 
             child.CenterId = request.CenterId;
             await _childRepository.UpdateAsync(child);
+        }
+
+
+        public async Task<string> UpdateChildProfilePictureAsync(Guid childId, UpdateProfilePictureCommand command, Guid currentUserId, string currentUserRole)
+        {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
+            var child = await _childRepository.GetByIdAsync(childId);
+            if (child == null || child.Status == "deleted")
+                throw new Exception("Child not found or deleted");
+
+            // Validate that the user is the parent of the child or is an admin
+            if (string.IsNullOrEmpty(currentUserRole))
+                throw new Exception("Unauthorized access");
+
+            if (currentUserRole != "admin" && child.ParentId != currentUserId)
+                throw new Exception("Unauthorized access: You can only update your own child's profile picture");
+
+            // Validate file
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var fileExtension = System.IO.Path.GetExtension(command.File.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+                throw new ArgumentException("Invalid file type. Only JPG, PNG and WebP are allowed.");
+
+            if (command.File.Length > 2 * 1024 * 1024) // 2MB
+                throw new ArgumentException("File size exceeds 2MB limit.");
+
+            // Upload to Cloudinary
+            string avatarUrl = await _cloudinaryService.UploadAvatarAsync(command.File, child.ChildId);
+
+            // Update child entity
+            child.AvatarUrl = avatarUrl;
+            // Increment version to bust cache if needed, or just track updates
+            child.AvatarVersion = (byte)((child.AvatarVersion ?? 0) + 1);
+
+            await _childRepository.UpdateAsync(child);
+
+            return avatarUrl;
         }
 
         public async Task<List<ContractDto>> GetChildContractsAsync(Guid childId)

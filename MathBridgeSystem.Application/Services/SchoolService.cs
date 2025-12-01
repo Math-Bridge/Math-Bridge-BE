@@ -287,7 +287,9 @@ namespace MathBridgeSystem.Application.Services
                     CenterName = c.Center?.Name,
                     Grade = c.Grade,
                     DateOfBirth = c.DateOfBirth,
-                    Status = c.Status
+                    Status = c.Status,
+                    AvatarUrl = c.AvatarUrl,
+                    AvatarVersion = c.AvatarVersion
                 }).ToList()
             };
 
@@ -312,7 +314,9 @@ namespace MathBridgeSystem.Application.Services
                 CenterName = c.Center?.Name,
                 Grade = c.Grade,
                 DateOfBirth = c.DateOfBirth,
-                Status = c.Status
+                Status = c.Status,
+                AvatarUrl = c.AvatarUrl,
+                AvatarVersion = c.AvatarVersion
             }).ToList();
         }
 
