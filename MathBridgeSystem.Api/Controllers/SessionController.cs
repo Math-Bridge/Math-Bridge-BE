@@ -263,5 +263,118 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "Server error", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Get replacement plan when the Main Tutor is banned or inactive
+        /// Prioritizes promoting a Substitute Tutor and suggests a new substitute from outside
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        [HttpGet("{contractId}/main-tutor-replacement-plan")]
+        [Authorize(Roles = "staff,admin")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetMainTutorReplacementPlan(Guid contractId)
+        {
+            try
+            {
+                var plan = await _sessionService.GetMainTutorReplacementPlanAsync(contractId);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = plan
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Internal server error",
+                    details = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Replace the banned/inactive Main Tutor for the entire contract
+        /// Updates Contract (MainTutorId + fills substitute slot) and all future sessions
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        /// <param name="request">New Main Tutor and new Substitute Tutor</param>
+        [HttpPut("{contractId}/main-tutor")]
+        [Authorize(Roles = "staff,admin")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> ReplaceMainTutor(
+            Guid contractId,
+            [FromBody] ReplaceMainTutorRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Invalid request data", errors = ModelState });
+
+            try
+            {
+                var staffId = GetCurrentUserId();
+
+                await _sessionService.ExecuteMainTutorReplacementAsync(
+                    contractId,
+                    request.NewMainTutorId,
+                    request.NewSubstituteTutorId,
+                    staffId);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Main Tutor has been successfully replaced.",
+                    data = new
+                    {
+                        contractId,
+                        newMainTutorId = request.NewMainTutorId,
+                        newSubstituteTutorId = request.NewSubstituteTutorId,
+                        replacedAt = DateTime.UtcNow
+                    }
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Internal server error",
+                    details = ex.Message
+                });
+            }
+        }
+
+        // Helper: Get current staff ID from JWT
+        private Guid GetCurrentUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+                        ?? User.FindFirst("userId")
+                        ?? User.FindFirst("sub");
+
+            if (claim == null || !Guid.TryParse(claim.Value, out var userId))
+                throw new UnauthorizedAccessException("User ID not found in token.");
+
+            return userId;
+        }
     }
 }
