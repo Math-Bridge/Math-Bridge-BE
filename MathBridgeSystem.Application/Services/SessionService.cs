@@ -16,12 +16,14 @@ namespace MathBridgeSystem.Application.Services
         private readonly IUserRepository _userRepository;
         private ISessionRepository @object;
         private readonly IChildRepository _childRepository;
+        private readonly IContractRepository _contractRepository;
 
-        public SessionService(ISessionRepository sessionRepository, IUserRepository userRepository, IChildRepository childRepository)
+        public SessionService(ISessionRepository sessionRepository, IUserRepository userRepository, IChildRepository childRepository, IContractRepository contractRepository)
         {
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
+            _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(childRepository));
         }
 
         public SessionService(ISessionRepository @object)
@@ -365,6 +367,175 @@ namespace MathBridgeSystem.Application.Services
                 totalAvailable = sorted.Count,
                 hasSubstitute = sorted.Any(x => (bool)x.GetType().GetProperty("isSubstitute")!.GetValue(x))
             };
+        }
+        /// <summary>
+        /// Lấy kế hoạch thay Main Tutor bị ban – CẬP NHẬT CẢ CONTRACT + TẤT CẢ BUỔI CÒN LẠI
+        /// Không cần field UpdatedAt trong Contract
+        /// </summary>
+        public async Task<object> GetMainTutorReplacementPlanAsync(Guid contractId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (contract.Status is "completed" or "cancelled")
+                throw new InvalidOperationException("Contract is no longer active.");
+
+            var mainTutor = await _userRepository.GetByIdAsync(contract.MainTutorId!.Value);
+            if (mainTutor == null || (mainTutor.Status != "banned" && mainTutor.Status != "inactive"))
+                throw new InvalidOperationException("Only banned/inactive main tutor can be replaced.");
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var upcoming = await _sessionRepository.GetUpcomingSessionsByContractIdAsync(contractId, today);
+            var sessionsToReplace = upcoming.Where(s => s.TutorId == contract.MainTutorId.Value).ToList();
+
+            if (!sessionsToReplace.Any())
+                throw new InvalidOperationException("No upcoming sessions for the main tutor.");
+
+            var usedIds = new HashSet<Guid> { contract.MainTutorId.Value };
+            if (contract.SubstituteTutor1Id.HasValue) usedIds.Add(contract.SubstituteTutor1Id.Value);
+            if (contract.SubstituteTutor2Id.HasValue) usedIds.Add(contract.SubstituteTutor2Id.Value);
+
+            var externalTutors = (await _userRepository.GetTutorsAsync())
+                .Where(t => t.Status == "active" && !usedIds.Contains(t.UserId))
+                .ToList();
+
+            async Task<bool> IsFullyAvailable(Guid tutorId)
+            {
+                foreach (var s in sessionsToReplace)
+                {
+                    if (!await _sessionRepository.IsTutorAvailableAsync(tutorId, s.SessionDate, s.StartTime, s.EndTime))
+                        return false;
+                }
+                return true;
+            }
+
+            // Tìm tutor rảnh nhất (ưu tiên SubTutor)
+            User? bestMain = null;
+            User? bestSub = null;
+
+            // 1. Ưu tiên SubTutor 1
+            if (contract.SubstituteTutor1Id.HasValue)
+            {
+                var sub1 = await _userRepository.GetByIdAsync(contract.SubstituteTutor1Id.Value);
+                if (sub1?.Status == "active" && await IsFullyAvailable(sub1.UserId))
+                {
+                    bestMain = sub1;
+                }
+            }
+
+            // 2. Nếu không có Sub1 → thử SubTutor 2
+            if (bestMain == null && contract.SubstituteTutor2Id.HasValue)
+            {
+                var sub2 = await _userRepository.GetByIdAsync(contract.SubstituteTutor2Id.Value);
+                if (sub2?.Status == "active" && await IsFullyAvailable(sub2.UserId))
+                {
+                    bestMain = sub2;
+                }
+            }
+
+            // 3. Nếu không có Sub → lấy tutor ngoài
+            if (bestMain == null)
+            {
+                bestMain = externalTutors.FirstOrDefault(t => IsFullyAvailable(t.UserId).Result);
+            }
+
+            // Tìm tutor bổ sung (Sub mới)
+            if (bestMain != null)
+            {
+                var remainingTutors = externalTutors.Where(t => t.UserId != bestMain.UserId).ToList();
+                bestSub = remainingTutors.FirstOrDefault(t => IsFullyAvailable(t.UserId).Result);
+            }
+
+            var recommendedPlan = bestMain == null ? null : new
+            {
+                planType = bestMain.UserId == contract.SubstituteTutor1Id || bestMain.UserId == contract.SubstituteTutor2Id
+                    ? "promote_substitute"
+                    : "external_replacement",
+                newMainTutorId = bestMain.UserId,
+                newMainTutorName = bestMain.FullName,
+                newSubstituteTutorId = bestSub?.UserId,
+                newSubstituteTutorName = bestSub?.FullName,
+                ratingMain = GetRating(bestMain),
+                ratingSub = bestSub != null ? GetRating(bestSub) : 0.0
+            };
+
+            return new
+            {
+                contractId,
+                childName = contract.Child?.FullName,
+                remainingSessions = sessionsToReplace.Count,
+                bannedMainTutor = mainTutor.FullName,
+                recommendedPlan,
+                canProceed = recommendedPlan != null && bestSub != null,
+                message = recommendedPlan == null ? "No replacement found." : "Ready to execute replacement."
+            };
+        }
+
+        /// <summary>
+        /// THỰC HIỆN thay Main Tutor – CẬP NHẬT CONTRACT + TẤT CẢ BUỔI CÒN LẠI
+        /// Không cần UpdatedAt trong Contract
+        /// </summary>
+        public async Task<bool> ExecuteMainTutorReplacementAsync(Guid contractId, Guid newMainTutorId, Guid newSubstituteTutorId, Guid staffId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            var newMain = await _userRepository.GetByIdAsync(newMainTutorId)
+                ?? throw new KeyNotFoundException("New main tutor not found.");
+            var newSub = await _userRepository.GetByIdAsync(newSubstituteTutorId)
+                ?? throw new KeyNotFoundException("New substitute tutor not found.");
+
+            if (newMain.Status != "active" || newSub.Status != "active")
+                throw new InvalidOperationException("Both tutors must be active.");
+
+            if (newMainTutorId == newSubstituteTutorId)
+                throw new InvalidOperationException("Main tutor and substitute tutor must be different.");
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var sessions = await _sessionRepository.GetUpcomingSessionsByContractIdAsync(contractId, today);
+            var toUpdate = sessions.Where(s => s.TutorId == contract.MainTutorId.Value).ToList();
+
+            if (!toUpdate.Any())
+                throw new InvalidOperationException("No sessions to replace.");
+
+            // Kiểm tra tutor mới có rảnh không
+            foreach (var s in toUpdate)
+            {
+                var available = await _sessionRepository.IsTutorAvailableAsync(newMainTutorId, s.SessionDate, s.StartTime, s.EndTime);
+                if (!available)
+                    throw new InvalidOperationException($"Tutor {newMain.FullName} is not available on {s.SessionDate:dd/MM/yyyy}");
+            }
+
+            // Cập nhật tất cả buổi học
+            foreach (var s in toUpdate)
+            {
+                s.TutorId = newMainTutorId;
+                s.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+            }
+            await _sessionRepository.UpdateRangeAsync(toUpdate);
+
+            // CẬP NHẬT CONTRACT – KHÔNG CẦN UpdatedAt
+            contract.MainTutorId = newMainTutorId;
+
+            // Đẩy tutor mới vào vị trí Sub trống
+            if (contract.SubstituteTutor1Id == null || contract.SubstituteTutor1Id == contract.MainTutorId)
+                contract.SubstituteTutor1Id = newSubstituteTutorId;
+            else if (contract.SubstituteTutor2Id == null || contract.SubstituteTutor2Id == contract.MainTutorId)
+                contract.SubstituteTutor2Id = newSubstituteTutorId;
+            else
+                contract.SubstituteTutor1Id = newSubstituteTutorId; // thay thế Sub1 nếu cả 2 đều đầy
+
+            await _contractRepository.UpdateAsync(contract);
+
+            return true;
+        }
+
+        // Helper – ĐÃ CÓ TRONG CLASS CỦA BẠN, GIỮ NGUYÊN HOẶC DÁN LẠI
+        private double GetRating(User tutor)
+        {
+            return tutor.FinalFeedbacks?.Any() == true
+                ? Math.Round(tutor.FinalFeedbacks.Average(f => f.OverallSatisfactionRating), 1)
+                : 0.0;
         }
     }
 }
