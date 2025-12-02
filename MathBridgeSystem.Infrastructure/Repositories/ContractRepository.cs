@@ -108,6 +108,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 if (inputContract == null)
                     throw new KeyNotFoundException($"Contract with ID {contractId} not found.");
 
+                // Get MaxContractsPerTutor setting
+                var maxContractsSetting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaxContractsPerTutor");
+                int maxContracts = 5; // Default value
+                if (maxContractsSetting != null && int.TryParse(maxContractsSetting.Value, out int parsedMax))
+                {
+                    maxContracts = parsedMax;
+                }
+
                 // Validate required properties
                 if (!inputContract.DaysOfWeeks.HasValue)
                     throw new InvalidOperationException("Contract must have DaysOfWeeks defined.");
@@ -138,6 +146,12 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     var tutorActiveContracts = tutor.ContractMainTutors
                         .Where(c => c.Status == "active")
                         .ToList();
+
+                    // Check if tutor exceeds max active contracts
+                    if (tutorActiveContracts.Count >= maxContracts)
+                    {
+                        continue;
+                    }
 
                     bool hasOverlap = false;
                     foreach (var existingContract in tutorActiveContracts)
