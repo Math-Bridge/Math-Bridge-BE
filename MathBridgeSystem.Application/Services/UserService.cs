@@ -1,3 +1,4 @@
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -14,12 +15,14 @@ namespace MathBridgeSystem.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IWalletTransactionRepository _walletTransactionRepository;
         private readonly ICloudinaryService _cloudinaryService;
+        private readonly INotificationService _notificationService;
 
-        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository, ICloudinaryService cloudinaryService)
+        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository, ICloudinaryService cloudinaryService, INotificationService notificationService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
             _cloudinaryService = cloudinaryService ?? throw new ArgumentNullException(nameof(cloudinaryService));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         }
 
         public async Task<UserResponse> GetUserByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
@@ -139,6 +142,22 @@ namespace MathBridgeSystem.Application.Services
 
             user.Status = request.Status;
             await _userRepository.UpdateAsync(user);
+
+            // Notify all staff members (RoleId = 4)
+            var allUsers = await _userRepository.GetAllAsync();
+            var staffUsers = allUsers.Where(u => u.RoleId == 4).ToList();
+
+            foreach (var staff in staffUsers)
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = staff.UserId,
+                    Title = "User Status Updated",
+                    Message = $"User {user.FullName} ({user.Email}) status has been updated to {request.Status}.",
+                    NotificationType = "System"
+                });
+            }
+
             return user.UserId;
         }
 
