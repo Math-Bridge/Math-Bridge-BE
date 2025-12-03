@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IWalletTransactionRepository> _walletTransactionRepositoryMock;
         private readonly UserService _userService;
         private readonly Mock<ICloudinaryService> _cloudinary;
+        private readonly Mock<INotificationService> _notificationService;
 
         private readonly Guid _adminId = Guid.NewGuid();
         private readonly Guid _userId = Guid.NewGuid();
@@ -30,11 +31,13 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock = new Mock<IUserRepository>();
             _walletTransactionRepositoryMock = new Mock<IWalletTransactionRepository>();
             _cloudinary= new Mock<ICloudinaryService>();
+            _notificationService = new Mock<INotificationService>();
 
             _userService = new UserService(
                 _userRepositoryMock.Object,
                 _walletTransactionRepositoryMock.Object,
-                _cloudinary.Object
+                _cloudinary.Object,
+                _notificationService.Object
             );
         }
 
