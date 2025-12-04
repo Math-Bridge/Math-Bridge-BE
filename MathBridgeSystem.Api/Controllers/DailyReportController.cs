@@ -130,13 +130,13 @@ namespace MathBridgeSystem.Api.Controllers
         /// Takes the unit from the oldest daily report and calculates when the child will complete all units
         /// Based on average 2 weeks per unit
         /// </summary>
-        [HttpGet("child/{childId}/learning-forecast")]
+        [HttpGet("contract/{contractId}/learning-forecast")]
         [Authorize(Roles = "tutor,parent,staff,admin")]
-        public async Task<IActionResult> GetLearningCompletionForecast(Guid childId)
+        public async Task<IActionResult> GetLearningCompletionForecast(Guid contractId)
         {
             try
             {
-                var forecast = await _dailyReportService.GetLearningCompletionForecastAsync(childId);
+                var forecast = await _dailyReportService.GetLearningCompletionForecastAsync(contractId);
                 return Ok(forecast);
             }
             catch (KeyNotFoundException ex)

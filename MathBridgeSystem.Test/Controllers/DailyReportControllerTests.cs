@@ -197,12 +197,12 @@ namespace MathBridgeSystem.Tests.Controllers
         public async Task GetLearningCompletionForecast_Success_ReturnsOk()
         {
             // Arrange
-            var childId = Guid.NewGuid();
-            var forecast = new LearningCompletionForecastDto { ChildId = childId, Message = "ok" };
-            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(childId)).ReturnsAsync(forecast);
+            var contractId = Guid.NewGuid();
+            var forecast = new LearningCompletionForecastDto { ContractId = contractId, ChildId = Guid.NewGuid(), Message = "ok" };
+            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(contractId)).ReturnsAsync(forecast);
 
             // Act
-            var result = await _controller.GetLearningCompletionForecast(childId);
+            var result = await _controller.GetLearningCompletionForecast(contractId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -213,11 +213,11 @@ namespace MathBridgeSystem.Tests.Controllers
         public async Task GetLearningCompletionForecast_NotFound_ReturnsNotFound()
         {
             // Arrange
-            var childId = Guid.NewGuid();
-            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(childId)).ThrowsAsync(new KeyNotFoundException("no data"));
+            var contractId = Guid.NewGuid();
+            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(contractId)).ThrowsAsync(new KeyNotFoundException("no data"));
 
             // Act
-            var result = await _controller.GetLearningCompletionForecast(childId);
+            var result = await _controller.GetLearningCompletionForecast(contractId);
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
@@ -227,11 +227,11 @@ namespace MathBridgeSystem.Tests.Controllers
         public async Task GetLearningCompletionForecast_InvalidOperation_ReturnsBadRequest()
         {
             // Arrange
-            var childId = Guid.NewGuid();
-            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(childId)).ThrowsAsync(new InvalidOperationException("bad"));
+            var contractId = Guid.NewGuid();
+            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(contractId)).ThrowsAsync(new InvalidOperationException("bad"));
 
             // Act
-            var result = await _controller.GetLearningCompletionForecast(childId);
+            var result = await _controller.GetLearningCompletionForecast(contractId);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
@@ -241,11 +241,11 @@ namespace MathBridgeSystem.Tests.Controllers
         public async Task GetLearningCompletionForecast_Exception_ReturnsInternalServerError()
         {
             // Arrange
-            var childId = Guid.NewGuid();
-            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(childId)).ThrowsAsync(new Exception("boom"));
+            var contractId = Guid.NewGuid();
+            _mockDailyReportService.Setup(s => s.GetLearningCompletionForecastAsync(contractId)).ThrowsAsync(new Exception("boom"));
 
             // Act
-            var result = await _controller.GetLearningCompletionForecast(childId);
+            var result = await _controller.GetLearningCompletionForecast(contractId);
 
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
