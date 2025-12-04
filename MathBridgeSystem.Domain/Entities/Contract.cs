@@ -51,6 +51,8 @@ public partial class Contract
 
     public int? RescheduleCount { get; set; }
 
+    public Guid? SecondChildId { get; set; }
+
     public virtual Center? Center { get; set; }
 
     public virtual Child Child { get; set; } = null!;
@@ -68,6 +70,8 @@ public partial class Contract
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
+
+    public virtual Child? SecondChild { get; set; }
 
     public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
 
