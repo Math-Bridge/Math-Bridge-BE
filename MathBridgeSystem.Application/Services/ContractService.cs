@@ -18,19 +18,22 @@ namespace MathBridgeSystem.Application.Services
         private readonly ISessionRepository _sessionRepository;
         private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
+        private readonly IChildRepository _childRepository;
 
         public ContractService(
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
             ISessionRepository sessionRepository,
             IEmailService emailService,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IChildRepository childRepository)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
             _sessionRepository = sessionRepository;
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -44,6 +47,27 @@ namespace MathBridgeSystem.Application.Services
 
             var package = await _packageRepository.GetByIdAsync(request.PackageId);
             if (package == null) throw new Exception("Package not found");
+
+            // Validate SecondChildId if provided (for twins scenario)
+            if (request.SecondChildId.HasValue)
+            {
+                var firstChild = await _childRepository.GetByIdAsync(request.ChildId);
+                var secondChild = await _childRepository.GetByIdAsync(request.SecondChildId.Value);
+                
+                if (firstChild == null) throw new Exception("First child not found");
+                if (secondChild == null) throw new Exception("Second child not found");
+                
+                // Validate both children belong to the same parent
+                if (firstChild.ParentId != request.ParentId || secondChild.ParentId != request.ParentId)
+                    throw new ArgumentException("Both children must belong to the same parent");
+                
+                // Validate both children are at the same grade level and school for twin scenario
+                if (firstChild.Grade != secondChild.Grade)
+                    throw new ArgumentException("Both children must be at the same grade level for twin contract");
+                
+                if (firstChild.SchoolId != secondChild.SchoolId)
+                    throw new ArgumentException("Both children must attend the same school for twin contract");
+            }
 
             // VALIDATE & ÉP KIỂU DaysOfWeeks: int? → byte?
             byte? daysOfWeeksByte = null;
@@ -74,8 +98,29 @@ namespace MathBridgeSystem.Application.Services
             if (hasOverlap)
             {
                 throw new InvalidOperationException(
-                    "Cannot create contract: This child already has an overlapping contract with the same schedule. " +
+                    "Cannot create contract: The first child already has an overlapping contract with the same schedule. " +
                     "Please check the existing contracts or adjust the schedule (date range, days of week, or time slots).");
+            }
+
+            // Check for overlapping contracts for the second child if provided
+            if (request.SecondChildId.HasValue)
+            {
+                var hasSecondChildOverlap = await _contractRepository.HasOverlappingContractForChildAsync(
+                    childId: request.SecondChildId.Value,
+                    startDate: request.StartDate,
+                    endDate: request.EndDate,
+                    startTime: request.StartTime,
+                    endTime: request.EndTime,
+                    daysOfWeeks: daysOfWeeksByte,
+                    excludeContractId: null
+                );
+
+                if (hasSecondChildOverlap)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot create contract: The second child already has an overlapping contract with the same schedule. " +
+                        "Please check the existing contracts or adjust the schedule (date range, days of week, or time slots).");
+                }
             }
 
             var contract = new Contract
@@ -83,6 +128,7 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = Guid.NewGuid(),
                 ParentId = request.ParentId,
                 ChildId = request.ChildId,
+                SecondChildId = request.SecondChildId,
                 CenterId = request.CenterId,
                 PackageId = request.PackageId,
                 MainTutorId = request.MainTutorId,
@@ -204,6 +250,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = c.ContractId,
                 ChildId = c.ChildId,
                 ChildName = c.Child?.FullName ?? "Unknown Child",
+                SecondChildId = c.SecondChildId,
+                SecondChildName = c.SecondChild?.FullName,
                 PackageId = c.PackageId,
                 PackageName = c.Package?.PackageName ?? "Unknown Package",
                 Price = c.Package?.Price ?? 0,
@@ -249,6 +297,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = contract.ContractId,
                 ChildId = contract.ChildId,
                 ChildName = contract.Child?.FullName ?? "Unknown Child",
+                SecondChildId = contract.SecondChildId,
+                SecondChildName = contract.SecondChild?.FullName,
                 PackageId = contract.PackageId,
                 PackageName = contract.Package?.PackageName ?? "Unknown Package",
                 Price = contract.Package?.Price ?? 0,
@@ -407,6 +457,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = c.ContractId,
                 ChildId = c.ChildId,
                 ChildName = c.Child?.FullName ?? "Unknown Child",
+                SecondChildId = c.SecondChildId,
+                SecondChildName = c.SecondChild?.FullName,
                 PackageId = c.PackageId,
                 PackageName = c.Package?.PackageName ?? "Unknown Package",
                 Price = c.Package?.Price ?? 0,
@@ -454,6 +506,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = c.ContractId,
                 ChildId = c.ChildId,
                 ChildName = c.Child?.FullName ?? "Unknown Child",
+                SecondChildId = c.SecondChildId,
+                SecondChildName = c.SecondChild?.FullName,
                 PackageId = c.PackageId,
                 PackageName = c.Package?.PackageName ?? "Unknown Package",
                 Price = c.Package?.Price ?? 0,
