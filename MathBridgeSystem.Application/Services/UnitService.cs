@@ -131,8 +131,8 @@ namespace MathBridgeSystem.Application.Services
             var unit = await _unitRepository.GetByIdAsync(id);
             if (unit == null)
                 throw new InvalidOperationException("Unit not found.");
-
-            await _unitRepository.DeleteAsync(id);
+            unit.IsActive = false;
+            await _unitRepository.UpdateAsync(unit);
         }
 
         public async Task<UnitDto?> GetUnitByIdAsync(Guid id)
@@ -150,7 +150,11 @@ namespace MathBridgeSystem.Application.Services
             var units = await _unitRepository.GetAllAsync();
             return units.Select(MapToDto).ToList();
         }
-
+        public async Task<List<UnitDto>> GetAllActiveUnitsAsync()
+        {
+            var units = await _unitRepository.GetAllActiveAsync();
+            return units.Select(MapToDto).ToList();
+        }
 
         public async Task<List<UnitDto>> GetUnitsByCurriculumIdAsync(Guid curriculumId)
         {

@@ -58,6 +58,16 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .OrderBy(u => u.Curriculum.CurriculumName)
                 .ThenBy(u => u.UnitOrder)
                 .ToListAsync();
+        public async Task<List<Unit>> GetAllActiveAsync()
+        {
+            return await _context.Units
+                .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.Curriculum.CurriculumName)
+                .ThenBy(u => u.UnitOrder)
+                .ToListAsync();
+        }
         }
 
         public async Task<List<Unit>> GetByCurriculumIdAsync(Guid curriculumId)

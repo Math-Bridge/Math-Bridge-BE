@@ -444,11 +444,11 @@ public partial class MathBridgeDbContext : DbContext
                     "UnitsMathconcept",
                     r => r.HasOne<Unit>().WithMany()
                         .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("units_fk"),
                     l => l.HasOne<MathConcept>().WithMany()
                         .HasForeignKey("ConceptId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("concepts___fk"),
                     j =>
                     {

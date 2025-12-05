@@ -12,6 +12,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task DeleteAsync(Guid id);
         Task<Unit?> GetByIdAsync(Guid id);
         Task<List<Unit>> GetAllAsync();
+        Task<List<Unit>> GetAllActiveAsync();
         Task<List<Unit>> GetByCurriculumIdAsync(Guid curriculumId);
         Task<Unit?> GetByNameAsync(string unitName);
         Task<bool> ExistsAsync(Guid id);

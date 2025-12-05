@@ -16,5 +16,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<UnitDto?> GetUnitByNameAsync(string unitName);
         Task<List<UnitDto>> GetUnitsByContractIdAsync(Guid contractId);
         Task<List<UnitDto>> GetUnitsByMathConceptIdAsync(Guid conceptId);
+        Task<List<UnitDto>> GetAllActiveUnitsAsync();
     }
 }
