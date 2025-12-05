@@ -85,15 +85,34 @@ namespace MathBridgeSystem.Application.Services
             // 3. Get daily reports for this contract's sessions
             var sessionBookingIds = allSessions.Select(s => s.BookingId).ToList();
             var dailyReports = await _dailyReportRepository.GetByBookingIdsAsync(sessionBookingIds);
-            
+
             var completedSessions = dailyReports.Count();
             var remainingSessions = totalSessions - completedSessions;
 
-            // If no daily reports exist yet, use the contract start date as reference
+            // 4. Get curriculum and all active units
+            var curriculumId = package.CurriculumId;
+            var allCurriculumUnits = await _unitRepository.GetByCurriculumIdAsync(curriculumId);
+            if (!allCurriculumUnits.Any())
+                throw new InvalidOperationException($"No units found in curriculum {curriculumId}.");
+
+            var activeUnits = allCurriculumUnits
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.UnitOrder)
+                .ToList();
+
+            if (!activeUnits.Any())
+                throw new InvalidOperationException($"No active units found in curriculum {curriculumId}.");
+
+            var firstUnit = activeUnits.First();
+            var lastCurriculumUnit = activeUnits.Last();
+            var totalCurriculumUnits = activeUnits.Count;
+
+            // 5. Determine starting unit from the OLDEST daily report
             DateOnly? firstLessonDate = null;
             DateOnly? lastLessonDate = null;
-            Guid? currentUnitId = null;
+            Unit? startingUnit = null;
             Unit? currentUnit = null;
+            int unitsCompletedBeforeStart = 0;
 
             if (dailyReports.Any())
             {
@@ -101,40 +120,53 @@ namespace MathBridgeSystem.Application.Services
                 firstLessonDate = orderedReports.First().CreatedDate;
                 lastLessonDate = orderedReports.Last().CreatedDate;
 
-                // Get the most recent unit being studied
+                // Get the OLDEST report's unit - this is where the student started
+                var oldestReportWithUnit = orderedReports.FirstOrDefault(r => r.UnitId != Guid.Empty);
+                if (oldestReportWithUnit != null)
+                {
+                    startingUnit = oldestReportWithUnit.Unit;
+
+                    // If unit is not loaded, fetch it
+                    if (startingUnit == null)
+                    {
+                        startingUnit = await _unitRepository.GetByIdAsync(oldestReportWithUnit.UnitId);
+                    }
+
+                    // If starting unit order > 1, count all units before it as completed
+                    if (startingUnit != null && startingUnit.UnitOrder > firstUnit.UnitOrder)
+                    {
+                        unitsCompletedBeforeStart = activeUnits.Count(u => u.UnitOrder < startingUnit.UnitOrder);
+                    }
+                }
+
+                // Get the LATEST report's unit - this is where the student currently is
                 var latestReportWithUnit = orderedReports.LastOrDefault(r => r.UnitId != Guid.Empty);
                 if (latestReportWithUnit != null)
                 {
-                    currentUnitId = latestReportWithUnit.UnitId;
                     currentUnit = latestReportWithUnit.Unit;
-                    
+
                     // If unit is not loaded, fetch it
                     if (currentUnit == null)
                     {
-                        currentUnit = await _unitRepository.GetByIdAsync(currentUnitId.Value);
+                        currentUnit = await _unitRepository.GetByIdAsync(latestReportWithUnit.UnitId);
                     }
                 }
             }
 
-            // If no unit found in reports, get the first unit of the curriculum
+            // If no starting unit found in reports, use the first unit of the curriculum
+            if (startingUnit == null)
+            {
+                startingUnit = firstUnit;
+            }
+
+            // If no current unit found, use the starting unit
             if (currentUnit == null)
             {
-                var curriculumId = package.CurriculumId;
-                var allUnits = await _unitRepository.GetByCurriculumIdAsync(curriculumId);
-                if (!allUnits.Any())
-                    throw new InvalidOperationException($"No units found in curriculum {curriculumId}.");
-
-                currentUnit = allUnits
-                    .Where(u => u.IsActive)
-                    .OrderBy(u => u.UnitOrder)
-                    .FirstOrDefault();
-
-                if (currentUnit == null)
-                    throw new InvalidOperationException($"No active units found in curriculum {curriculumId}.");
+                currentUnit = startingUnit;
             }
 
             // Ensure curriculum is loaded
-            if (currentUnit.Curriculum == null)
+            if (currentUnit!.Curriculum == null)
             {
                 var unitWithCurriculum = await _unitRepository.GetByIdAsync(currentUnit.UnitId);
                 if (unitWithCurriculum?.Curriculum == null)
@@ -144,40 +176,70 @@ namespace MathBridgeSystem.Application.Services
 
             var curriculum = currentUnit.Curriculum;
 
-            // 4. Get all active units in the curriculum starting from current unit
-            var allCurriculumUnits = await _unitRepository.GetByCurriculumIdAsync(curriculum.CurriculumId);
-            var activeUnits = allCurriculumUnits
-                .Where(u => u.IsActive && u.UnitOrder >= currentUnit.UnitOrder)
-                .OrderBy(u => u.UnitOrder)
-                .ToList();
+            // 6. Calculate units progress and determine if curriculum is completed
+            var unitsFromStartToCurrent = currentUnit.UnitOrder - startingUnit!.UnitOrder + 1;
+            var totalUnitsCompleted = unitsCompletedBeforeStart + unitsFromStartToCurrent;
+            var remainingUnitsInCurriculum = activeUnits.Count(u => u.UnitOrder > currentUnit.UnitOrder);
+            var isCurriculumCompleted = remainingUnitsInCurriculum == 0;
 
-            if (!activeUnits.Any())
-                throw new InvalidOperationException("No active units found from the current learning position.");
+            // 7. Calculate estimated last unit based on remaining sessions
+            // Estimate: each unit takes approximately (total sessions / total curriculum units) sessions
+            Unit lastUnit;
+            int totalUnitsToComplete;
 
-            // 5. Calculate estimated units to cover based on package duration
-            // Assuming 2 sessions per week and each unit takes approximately 2 weeks
-            var estimatedUnitsFromDuration = package.DurationDays / 14; // 14 days = 2 weeks per unit
-            
-            // Take the units that are expected to be covered
-            var unitsToComplete = activeUnits
-                .Take(Math.Max(1, estimatedUnitsFromDuration))
-                .ToList();
+            if (isCurriculumCompleted)
+            {
+                // Student has completed all units in the curriculum
+                lastUnit = lastCurriculumUnit;
+                totalUnitsToComplete = totalCurriculumUnits;
+            }
+            else
+            {
+                // Calculate how many more units can be completed with remaining sessions
+                var sessionsPerUnit = totalSessions > 0 && totalCurriculumUnits > 0
+                    ? Math.Max(1.0, (double)totalSessions / totalCurriculumUnits)
+                    : 2.0; // Default: 2 sessions per unit
 
-            var lastUnit = unitsToComplete.LastOrDefault() ?? activeUnits.Last();
-            var totalUnitsToComplete = lastUnit.UnitOrder - currentUnit.UnitOrder + 1;
+                var estimatedAdditionalUnits = remainingSessions > 0
+                    ? (int)Math.Floor(remainingSessions / sessionsPerUnit)
+                    : 0;
 
-            // 6. Calculate estimated completion date
-            // Use actual progress if available, otherwise use contract dates
+                var estimatedLastUnitOrder = Math.Min(
+                    currentUnit.UnitOrder + estimatedAdditionalUnits,
+                    lastCurriculumUnit.UnitOrder);
+
+                lastUnit = activeUnits.FirstOrDefault(u => u.UnitOrder == estimatedLastUnitOrder) ?? lastCurriculumUnit;
+                totalUnitsToComplete = lastUnit.UnitOrder - startingUnit.UnitOrder + 1 + unitsCompletedBeforeStart;
+            }
+
+            // 8. Calculate progress percentage based on units
+            var unitProgressPercentage = totalCurriculumUnits > 0
+                ? Math.Round((double)totalUnitsCompleted / totalCurriculumUnits * 100, 2)
+                : 0.0;
+
+            // Cap at 100% if curriculum is completed
+            if (isCurriculumCompleted || unitProgressPercentage > 100)
+            {
+                unitProgressPercentage = 100.0;
+            }
+
+            // 9. Calculate estimated completion date
             DateTime estimatedCompletionDate;
             int daysToCompletion;
-            
-            if (completedSessions > 0 && remainingSessions > 0)
+
+            if (isCurriculumCompleted)
+            {
+                // Curriculum already completed
+                daysToCompletion = 0;
+                estimatedCompletionDate = lastLessonDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
+            }
+            else if (completedSessions > 0 && remainingSessions > 0)
             {
                 // Calculate average days per session from actual progress
-                var daysElapsed = (lastLessonDate!.Value.DayNumber - firstLessonDate!.Value.DayNumber);
+                var daysElapsed = lastLessonDate!.Value.DayNumber - firstLessonDate!.Value.DayNumber;
                 var averageDaysPerSession = daysElapsed > 0 && completedSessions > 1
                     ? (double)daysElapsed / (completedSessions - 1)
-                    : package.SessionsPerWeek > 0 ? 7.0 / package.SessionsPerWeek : 3.5; // Default to ~2 sessions per week
+                    : package.SessionsPerWeek > 0 ? 7.0 / package.SessionsPerWeek : 3.5;
 
                 daysToCompletion = (int)Math.Ceiling(remainingSessions * averageDaysPerSession);
                 estimatedCompletionDate = (lastLessonDate ?? DateOnly.FromDateTime(DateTime.Today))
@@ -197,24 +259,27 @@ namespace MathBridgeSystem.Application.Services
                 estimatedCompletionDate = lastLessonDate!.Value.ToDateTime(TimeOnly.MinValue);
             }
 
-            // 7. Calculate progress percentage
-            var progressPercentage = totalSessions > 0
-                ? Math.Round((double)completedSessions / totalSessions * 100, 2)
-                : 0.0;
-
-            // 8. Build result message
+            // 10. Build result message
             string message;
             if (completedSessions == 0)
             {
                 message = $"{child.FullName} has not started the contract yet. Expected to complete Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) by {estimatedCompletionDate:MMMM dd, yyyy}.";
             }
+            else if (isCurriculumCompleted)
+            {
+                message = $"{child.FullName} has completed all {totalCurriculumUnits} units in the curriculum (100%). " +
+                          $"{(remainingSessions > 0 ? $"Remaining {remainingSessions} sessions will be review/practice sessions." : "All sessions completed.")}";
+            }
             else if (remainingSessions == 0)
             {
-                message = $"{child.FullName} has completed all {totalSessions} sessions for this contract. Currently at Unit {currentUnit.UnitOrder} ({currentUnit.UnitName ?? "Current"}).";
+                message = $"{child.FullName} has completed all {totalSessions} sessions for this contract. " +
+                          $"Currently at Unit {currentUnit.UnitOrder} ({currentUnit.UnitName ?? "Current"}) with {unitProgressPercentage}% curriculum progress.";
             }
             else
             {
-                message = $"{child.FullName} has completed {completedSessions} of {totalSessions} sessions ({progressPercentage}%). Expected to finish Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) around {estimatedCompletionDate:MMMM dd, yyyy}.";
+                message = $"{child.FullName} has completed {completedSessions} of {totalSessions} sessions. " +
+                          $"Currently at Unit {currentUnit.UnitOrder} ({currentUnit.UnitName ?? "Current"}) with {unitProgressPercentage}% curriculum progress. " +
+                          $"Expected to finish Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) around {estimatedCompletionDate:MMMM dd, yyyy}.";
             }
 
             return new LearningCompletionForecastDto
@@ -243,7 +308,7 @@ namespace MathBridgeSystem.Application.Services
                 EstimatedCompletionDate = estimatedCompletionDate,
                 DaysToCompletion = daysToCompletion,
                 WeeksToCompletion = Math.Round(daysToCompletion / 7.0, 2),
-                ProgressPercentage = progressPercentage,
+                ProgressPercentage = unitProgressPercentage,
                 Message = message
             };
         }
