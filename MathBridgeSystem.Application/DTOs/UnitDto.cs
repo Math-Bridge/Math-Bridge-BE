@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MathBridgeSystem.Application.DTOs
 {
@@ -17,6 +18,14 @@ namespace MathBridgeSystem.Application.DTOs
         public string? CreatedByName { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string? UpdatedByName { get; set; }
+        public List<MathConceptSummaryDto>? MathConcepts { get; set; }
+    }
+
+    public class MathConceptSummaryDto
+    {
+        public Guid ConceptId { get; set; }
+        public string? Name { get; set; }
+        public string? Category { get; set; }
     }
 
     public class CreateUnitRequest

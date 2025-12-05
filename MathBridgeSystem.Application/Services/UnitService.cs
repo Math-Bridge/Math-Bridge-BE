@@ -98,11 +98,13 @@ namespace MathBridgeSystem.Application.Services
             return MapToDto(unit);
         }
 
+
         public async Task<List<UnitDto>> GetAllUnitsAsync()
         {
             var units = await _unitRepository.GetAllAsync();
             return units.Select(MapToDto).ToList();
         }
+
 
         public async Task<List<UnitDto>> GetUnitsByCurriculumIdAsync(Guid curriculumId)
         {
@@ -125,6 +127,12 @@ namespace MathBridgeSystem.Application.Services
             return units.Select(MapToDto).ToList();
         }
 
+        public async Task<List<UnitDto>> GetUnitsByMathConceptIdAsync(Guid conceptId)
+        {
+            var units = await _unitRepository.GetByMathConceptIdAsync(conceptId);
+            return units.Select(MapToDto).ToList();
+        }
+
         private UnitDto MapToDto(Unit unit)
         {
             return new UnitDto
@@ -141,7 +149,13 @@ namespace MathBridgeSystem.Application.Services
                 CreatedDate = unit.CreatedDate,
                 CreatedByName = unit.CreatedByNavigation?.FullName,
                 UpdatedDate = unit.UpdatedDate,
-                UpdatedByName = unit.UpdatedByNavigation?.FullName
+                UpdatedByName = unit.UpdatedByNavigation?.FullName,
+                MathConcepts = unit.Concepts?.Select(mc => new MathConceptSummaryDto
+                {
+                    ConceptId = mc.ConceptId,
+                    Name = mc.Name,
+                    Category = mc.Category
+                }).ToList()
             };
         }
     }
