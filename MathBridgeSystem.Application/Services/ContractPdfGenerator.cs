@@ -114,7 +114,7 @@ namespace MathBridgeSystem.Application.Services
             }).GeneratePdf();
         }
 
-        private static string FormatDaysOfWeek(byte? daysOfWeek)
+        private static string FormatDaysOfWeek(int? daysOfWeek)
         {
             if (!daysOfWeek.HasValue || daysOfWeek == 0) return "No schedule";
 

@@ -426,12 +426,12 @@ namespace MathBridgeSystem.Application.Services
 
             return sessions;
         }
-        private bool IsDayOfWeekSelected(DayOfWeek day, byte daysOfWeek)
+        private bool IsDayOfWeekSelected(DayOfWeek day, int daysOfWeek)
         {
             return (daysOfWeek & (1 << ((int)day))) != 0;
         }
 
-        private string FormatDaysOfWeek(byte? daysOfWeek)
+        private string FormatDaysOfWeek(int? daysOfWeek)
         {
             if (!daysOfWeek.HasValue || daysOfWeek == 0)
                 return "Do Not Have sessions";
