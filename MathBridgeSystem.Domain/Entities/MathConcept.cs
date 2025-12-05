@@ -11,7 +11,5 @@ public partial class MathConcept
 
     public string? Category { get; set; }
 
-    public Guid? UnitId { get; set; }
-
-    public virtual Unit? Unit { get; set; }
+    public virtual ICollection<Unit> Units { get; set; } = new List<Unit>();
 }

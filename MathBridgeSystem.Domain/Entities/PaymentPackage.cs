@@ -31,6 +31,10 @@ public partial class PaymentPackage
 
     public bool IsActive { get; set; }
 
+    public string? ImageUrl { get; set; }
+
+    public byte? ImageVersion { get; set; }
+
     public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
     public virtual Curriculum Curriculum { get; set; } = null!;

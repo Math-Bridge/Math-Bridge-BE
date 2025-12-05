@@ -47,7 +47,7 @@ public partial class Contract
 
     public TimeOnly? EndTime { get; set; }
 
-    public byte? DaysOfWeeks { get; set; }
+    public int? DaysOfWeeks { get; set; }
 
     public int? RescheduleCount { get; set; }
 
