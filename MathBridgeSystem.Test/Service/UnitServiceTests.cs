@@ -12,13 +12,18 @@ namespace MathBridgeSystem.Tests.Services
     {
         private readonly Mock<IUnitRepository> _unitRepositoryMock;
         private readonly Mock<ICurriculumRepository> _curriculumRepositoryMock;
+        private readonly Mock<IMathConceptRepository> _mathConceptRepositoryMock;
         private readonly UnitService _service;
 
         public UnitServiceTests()
         {
             _unitRepositoryMock = new Mock<IUnitRepository>();
             _curriculumRepositoryMock = new Mock<ICurriculumRepository>();
-            _service = new UnitService(_unitRepositoryMock.Object, _curriculumRepositoryMock.Object);
+            _mathConceptRepositoryMock = new Mock<IMathConceptRepository>();
+            _service = new UnitService(
+                _unitRepositoryMock.Object, 
+                _curriculumRepositoryMock.Object,
+                _mathConceptRepositoryMock.Object);
         }
 
         [Fact]
@@ -178,7 +183,7 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_ShouldThrowArgumentNullException_WhenUnitRepositoryIsNull()
         {
             // Act & Assert
-            var action = () => new UnitService(null!, _curriculumRepositoryMock.Object);
+            var action = () => new UnitService(null!, _curriculumRepositoryMock.Object, _mathConceptRepositoryMock.Object);
             action.Should().Throw<ArgumentNullException>();
         }
     }

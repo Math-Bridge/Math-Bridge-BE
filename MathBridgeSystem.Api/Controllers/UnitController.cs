@@ -163,7 +163,20 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving units." });
             }
         }
-
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAllActiveUnits()
+        {
+            try
+            {
+                var units = await _unitService.GetAllActiveUnitsAsync();
+                return Ok(new { data = units, totalCount = units.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving units." });
+            }
+        }
         /// <summary>
         /// Get units by curriculum ID
         /// </summary>
@@ -227,6 +240,27 @@ namespace MathBridgeSystem.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "An error occurred while retrieving the unit." });
+            }
+        }
+
+
+        /// <summary>
+        /// Get units by math concept ID
+        /// </summary>
+        /// <param name="conceptId">Math concept ID</param>
+        /// <returns>List of units linked to the math concept</returns>
+        [HttpGet("by-concept/{conceptId}")]
+        [Authorize]
+        public async Task<IActionResult> GetUnitsByMathConceptId(Guid conceptId)
+        {
+            try
+            {
+                var units = await _unitService.GetUnitsByMathConceptIdAsync(conceptId);
+                return Ok(new { data = units, totalCount = units.Count, conceptId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving units." });
             }
         }
     }

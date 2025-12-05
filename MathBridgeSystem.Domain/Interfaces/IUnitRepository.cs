@@ -12,11 +12,13 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task DeleteAsync(Guid id);
         Task<Unit?> GetByIdAsync(Guid id);
         Task<List<Unit>> GetAllAsync();
+        Task<List<Unit>> GetAllActiveAsync();
         Task<List<Unit>> GetByCurriculumIdAsync(Guid curriculumId);
         Task<Unit?> GetByNameAsync(string unitName);
         Task<bool> ExistsAsync(Guid id);
         Task<bool> ExistsByNameAsync(string unitName, Guid curriculumId);
         Task<int> GetMaxUnitOrderAsync(Guid curriculumId);
         Task<List<Unit>> GetByContractIdAsync(Guid contractId);
+        Task<List<Unit>> GetByMathConceptIdAsync(Guid conceptId);
     }
 }

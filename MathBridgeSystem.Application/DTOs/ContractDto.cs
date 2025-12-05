@@ -25,7 +25,7 @@ namespace MathBridgeSystem.Application.DTOs
         public DateOnly EndDate { get; set; }
         public TimeOnly? StartTime { get; set; }
         public TimeOnly? EndTime { get; set; }
-        public byte? DaysOfWeeks { get; set; }
+        public int? DaysOfWeeks { get; set; }
         public string DaysOfWeeksDisplay { get; set; } = null!;
         public bool IsOnline { get; set; }
 

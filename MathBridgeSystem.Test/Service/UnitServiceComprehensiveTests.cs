@@ -12,13 +12,18 @@ namespace MathBridgeSystem.Tests.Services
     {
         private readonly Mock<IUnitRepository> _unitRepositoryMock;
         private readonly Mock<ICurriculumRepository> _curriculumRepositoryMock;
+        private readonly Mock<IMathConceptRepository> _mathConceptRepositoryMock;
         private readonly UnitService _unitService;
 
         public UnitServiceComprehensiveTests()
         {
             _unitRepositoryMock = new Mock<IUnitRepository>();
             _curriculumRepositoryMock = new Mock<ICurriculumRepository>();
-            _unitService = new UnitService(_unitRepositoryMock.Object, _curriculumRepositoryMock.Object);
+            _mathConceptRepositoryMock = new Mock<IMathConceptRepository>();
+            _unitService = new UnitService(
+                _unitRepositoryMock.Object, 
+                _curriculumRepositoryMock.Object,
+                _mathConceptRepositoryMock.Object);
         }
 
         #region Constructor Tests
@@ -27,7 +32,7 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullUnitRepository_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Action act = () => new UnitService(null!, _curriculumRepositoryMock.Object);
+            Action act = () => new UnitService(null!, _curriculumRepositoryMock.Object, _mathConceptRepositoryMock.Object);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -35,7 +40,15 @@ namespace MathBridgeSystem.Tests.Services
         public void Constructor_NullCurriculumRepository_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Action act = () => new UnitService(_unitRepositoryMock.Object, null!);
+            Action act = () => new UnitService(_unitRepositoryMock.Object, null!, _mathConceptRepositoryMock.Object);
+            act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_NullMathConceptRepository_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Action act = () => new UnitService(_unitRepositoryMock.Object, _curriculumRepositoryMock.Object, null!);
             act.Should().Throw<ArgumentNullException>();
         }
 

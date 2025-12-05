@@ -89,6 +89,7 @@
     builder.Services.AddScoped<IDailyReportRepository, DailyReportRepository>();
     builder.Services.AddScoped<IUnitRepository, UnitRepository>();
     builder.Services.AddScoped<IReportRepository, ReportRepository>();
+    builder.Services.AddScoped<IMathConceptRepository, MathConceptRepository>();
 
 
 
@@ -137,6 +138,7 @@
     builder.Services.AddScoped<IUnitService, UnitService>();
     builder.Services.AddScoped<IReportService, ReportService>();
     builder.Services.AddScoped<ISessionUnitAssignmentService, SessionUnitAssignmentService>();
+    builder.Services.AddScoped<IMathConceptService, MathConceptService>();
     builder.Services.AddHttpClient<IHomeworkHelperService, GeminiHomeworkHelperService>();
 
     // === INFRASTRUCTURE SERVICES ===

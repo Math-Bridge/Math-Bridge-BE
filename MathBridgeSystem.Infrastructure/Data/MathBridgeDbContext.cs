@@ -438,11 +438,25 @@ public partial class MathBridgeDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("category");
             entity.Property(e => e.Name).HasColumnName("name");
-            entity.Property(e => e.UnitId).HasColumnName("unit_id");
 
-            entity.HasOne(d => d.Unit).WithMany(p => p.MathConcepts)
-                .HasForeignKey(d => d.UnitId)
-                .HasConstraintName("math_concepts_units_unit_id_fk");
+            entity.HasMany(d => d.Units).WithMany(p => p.Concepts)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UnitsMathconcept",
+                    r => r.HasOne<Unit>().WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("units_fk"),
+                    l => l.HasOne<MathConcept>().WithMany()
+                        .HasForeignKey("ConceptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("concepts___fk"),
+                    j =>
+                    {
+                        j.HasKey("ConceptId", "UnitId").HasName("units_mathconcepts_pk");
+                        j.ToTable("units_mathconcepts");
+                        j.IndexerProperty<Guid>("ConceptId").HasColumnName("concept_id");
+                        j.IndexerProperty<Guid>("UnitId").HasColumnName("unit_id");
+                    });
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -502,6 +516,8 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Grade)
                 .HasMaxLength(50)
                 .HasColumnName("grade");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.ImageVersion).HasColumnName("image_version");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.MaxReschedule).HasColumnName("max_reschedule");
             entity.Property(e => e.PackageName)

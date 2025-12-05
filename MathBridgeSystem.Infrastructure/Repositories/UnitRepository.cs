@@ -46,6 +46,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.Curriculum)
                 .Include(u => u.CreatedByNavigation)
                 .Include(u => u.UpdatedByNavigation)
+                .Include(u => u.Concepts)
                 .FirstOrDefaultAsync(u => u.UnitId == id);
         }
 
@@ -53,14 +54,27 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Units
                 .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
                 .OrderBy(u => u.Curriculum.CurriculumName)
                 .ThenBy(u => u.UnitOrder)
                 .ToListAsync();
+        public async Task<List<Unit>> GetAllActiveAsync()
+        {
+            return await _context.Units
+                .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.Curriculum.CurriculumName)
+                .ThenBy(u => u.UnitOrder)
+                .ToListAsync();
+        }
         }
 
         public async Task<List<Unit>> GetByCurriculumIdAsync(Guid curriculumId)
         {
             return await _context.Units
+                .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
                 .Where(u => u.CurriculumId == curriculumId)
                 .OrderBy(u => u.UnitOrder)
                 .ToListAsync();
@@ -70,6 +84,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Units
                 .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
                 .FirstOrDefaultAsync(u => u.UnitName.ToLower() == unitName.ToLower());
         }
 
@@ -88,6 +103,8 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<int> GetMaxUnitOrderAsync(Guid curriculumId)
         {
             var maxOrder = await _context.Units
+                .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
                 .Where(u => u.CurriculumId == curriculumId)
                 .MaxAsync(u => (int?)u.UnitOrder);
             
@@ -98,8 +115,20 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Units
                 .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
                 .Where(u => u.Curriculum.PaymentPackages.Any(p => p.Contracts.Any(c => c.ContractId == contractId)))
                 .OrderBy(u => u.UnitOrder)
+                .ToListAsync();
+        }
+
+        public async Task<List<Unit>> GetByMathConceptIdAsync(Guid conceptId)
+        {
+            return await _context.Units
+                .Include(u => u.Curriculum)
+                .Include(u => u.Concepts)
+                .Where(u => u.Concepts.Any(mc => mc.ConceptId == conceptId))
+                .OrderBy(u => u.Curriculum.CurriculumName)
+                .ThenBy(u => u.UnitOrder)
                 .ToListAsync();
         }
     }
