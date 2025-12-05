@@ -37,6 +37,7 @@ namespace MathBridgeSystem.Application.DTOs
         public byte? Credit { get; set; }
         public string? LearningObjectives { get; set; }
         public bool IsActive { get; set; } = true;
+        public List<Guid>? ConceptIds { get; set; }
     }
 
     public class UpdateUnitRequest
@@ -47,5 +48,6 @@ namespace MathBridgeSystem.Application.DTOs
         public byte? Credit { get; set; }
         public string? LearningObjectives { get; set; }
         public bool IsActive { get; set; }
+        public List<Guid>? ConceptIds { get; set; }
     }
 }

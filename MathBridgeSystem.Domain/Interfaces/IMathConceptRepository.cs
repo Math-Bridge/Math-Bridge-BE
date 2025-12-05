@@ -18,5 +18,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<bool> ExistsByNameAsync(string name);
         Task<List<MathConcept>> GetByCategoryAsync(string category);
         Task<bool> IsMathConceptLinkedToUnitsAsync(Guid conceptId);
+        Task<List<MathConcept>> GetByIdsAsync(List<Guid> ids);
     }
 }

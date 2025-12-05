@@ -193,5 +193,22 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 throw new InvalidOperationException("Error checking if math concept is linked to units.", ex);
             }
         }
+
+        public async Task<List<MathConcept>> GetByIdsAsync(List<Guid> ids)
+        {
+            try
+            {
+                if (ids == null || ids.Count == 0)
+                    return new List<MathConcept>();
+
+                return await _context.MathConcepts
+                    .Where(mc => ids.Contains(mc.ConceptId))
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error retrieving math concepts by IDs from database.", ex);
+            }
+        }
     }
 }
