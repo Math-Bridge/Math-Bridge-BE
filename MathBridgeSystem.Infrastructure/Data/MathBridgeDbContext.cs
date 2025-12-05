@@ -28,6 +28,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
 
+    public virtual DbSet<MathConcept> MathConcepts { get; set; }
+
     public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
@@ -235,6 +237,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.PackageId).HasColumnName("package_id");
             entity.Property(e => e.ParentId).HasColumnName("parent_id");
             entity.Property(e => e.RescheduleCount).HasColumnName("reschedule_count");
+            entity.Property(e => e.SecondChildId).HasColumnName("second_child_id");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.Status)
@@ -253,7 +256,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.CenterId)
                 .HasConstraintName("fk_contracts_center");
 
-            entity.HasOne(d => d.Child).WithMany(p => p.Contracts)
+            entity.HasOne(d => d.Child).WithMany(p => p.ContractChildren)
                 .HasForeignKey(d => d.ChildId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_contracts_child");
@@ -271,6 +274,10 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.ParentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_contracts_parent");
+
+            entity.HasOne(d => d.SecondChild).WithMany(p => p.ContractSecondChildren)
+                .HasForeignKey(d => d.SecondChildId)
+                .HasConstraintName("fk_secondchild");
 
             entity.HasOne(d => d.SubstituteTutor1).WithMany(p => p.ContractSubstituteTutor1s)
                 .HasForeignKey(d => d.SubstituteTutor1Id)
@@ -416,6 +423,26 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_final_feedback_user_id");
+        });
+
+        modelBuilder.Entity<MathConcept>(entity =>
+        {
+            entity.HasKey(e => e.ConceptId).HasName("math_concepts_pk");
+
+            entity.ToTable("math_concepts");
+
+            entity.Property(e => e.ConceptId)
+                .ValueGeneratedNever()
+                .HasColumnName("concept_id");
+            entity.Property(e => e.Category)
+                .IsUnicode(false)
+                .HasColumnName("category");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.UnitId).HasColumnName("unit_id");
+
+            entity.HasOne(d => d.Unit).WithMany(p => p.MathConcepts)
+                .HasForeignKey(d => d.UnitId)
+                .HasConstraintName("math_concepts_units_unit_id_fk");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -769,6 +796,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("status");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UnitId).HasColumnName("unit_id");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
@@ -788,6 +816,10 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.TutorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_booking_sessions_tutors");
+
+            entity.HasOne(d => d.Unit).WithMany(p => p.Sessions)
+                .HasForeignKey(d => d.UnitId)
+                .HasConstraintName("fk_unit");
         });
 
         modelBuilder.Entity<SystemSetting>(entity =>

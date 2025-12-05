@@ -35,6 +35,8 @@ public partial class Session
 
     public DateTime? UpdatedAt { get; set; }
 
+    public Guid? UnitId { get; set; }
+
     public virtual Contract Contract { get; set; } = null!;
 
     public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
@@ -46,6 +48,8 @@ public partial class Session
     public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
     public virtual User Tutor { get; set; } = null!;
+
+    public virtual Unit? Unit { get; set; }
 
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 }

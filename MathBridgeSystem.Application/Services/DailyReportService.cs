@@ -59,73 +59,192 @@ namespace MathBridgeSystem.Application.Services
             return dailyReports.Select(MapToDto);
         }
 
-        public async Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid childId)
+        public async Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid contractId)
         {
-            var oldestReport = await _dailyReportRepository.GetOldestByChildIdAsync(childId)
-                ?? throw new KeyNotFoundException($"No daily reports found for child {childId}");
+            // 1. Get contract with all related information
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract == null)
+                throw new KeyNotFoundException($"Contract with ID {contractId} not found.");
 
-            if (oldestReport.Unit == null)
-                throw new InvalidOperationException("Oldest report has no Unit assigned.");
+            if (contract.Child == null)
+                throw new InvalidOperationException($"Child information not found for contract {contractId}.");
 
-            var startingUnit = oldestReport.Unit;
+            if (contract.Package == null)
+                throw new InvalidOperationException($"Package information not found for contract {contractId}.");
 
-           
-            if (startingUnit.Curriculum == null)
+            var child = contract.Child;
+            var package = contract.Package;
+
+            // 2. Get all sessions for this contract
+            var allSessions = await _sessionRepository.GetByContractIdAsync(contractId);
+            if (!allSessions.Any())
+                throw new KeyNotFoundException($"No sessions found for contract {contractId}.");
+
+            var totalSessions = allSessions.Count();
+
+            // 3. Get daily reports for this contract's sessions
+            var sessionBookingIds = allSessions.Select(s => s.BookingId).ToList();
+            var dailyReports = await _dailyReportRepository.GetByBookingIdsAsync(sessionBookingIds);
+            
+            var completedSessions = dailyReports.Count();
+            var remainingSessions = totalSessions - completedSessions;
+
+            // If no daily reports exist yet, use the contract start date as reference
+            DateOnly? firstLessonDate = null;
+            DateOnly? lastLessonDate = null;
+            Guid? currentUnitId = null;
+            Unit? currentUnit = null;
+
+            if (dailyReports.Any())
             {
-                var unitFromDb = await _unitRepository.GetByIdAsync(startingUnit.UnitId);
-                if (unitFromDb?.Curriculum == null)
-                    throw new InvalidOperationException("Curriculum not found for the starting unit.");
-                startingUnit.Curriculum = unitFromDb.Curriculum;
+                var orderedReports = dailyReports.OrderBy(r => r.CreatedDate).ToList();
+                firstLessonDate = orderedReports.First().CreatedDate;
+                lastLessonDate = orderedReports.Last().CreatedDate;
+
+                // Get the most recent unit being studied
+                var latestReportWithUnit = orderedReports.LastOrDefault(r => r.UnitId != Guid.Empty);
+                if (latestReportWithUnit != null)
+                {
+                    currentUnitId = latestReportWithUnit.UnitId;
+                    currentUnit = latestReportWithUnit.Unit;
+                    
+                    // If unit is not loaded, fetch it
+                    if (currentUnit == null)
+                    {
+                        currentUnit = await _unitRepository.GetByIdAsync(currentUnitId.Value);
+                    }
+                }
             }
 
-            var curriculum = startingUnit.Curriculum;
+            // If no unit found in reports, get the first unit of the curriculum
+            if (currentUnit == null)
+            {
+                var curriculumId = package.CurriculumId;
+                var allUnits = await _unitRepository.GetByCurriculumIdAsync(curriculumId);
+                if (!allUnits.Any())
+                    throw new InvalidOperationException($"No units found in curriculum {curriculumId}.");
 
-            var allUnits = await _unitRepository.GetByCurriculumIdAsync(curriculum.CurriculumId);
-            if (!allUnits.Any())
-                throw new InvalidOperationException("No units found in this curriculum.");
+                currentUnit = allUnits
+                    .Where(u => u.IsActive)
+                    .OrderBy(u => u.UnitOrder)
+                    .FirstOrDefault();
 
-            var package = await _packageRepository.GetPackageByCurriculumIdAsync(curriculum.CurriculumId)
-                ?? throw new InvalidOperationException("Package not found for this curriculum.");
+                if (currentUnit == null)
+                    throw new InvalidOperationException($"No active units found in curriculum {curriculumId}.");
+            }
 
-            var numberOfUnits = package.DurationDays / 14;
+            // Ensure curriculum is loaded
+            if (currentUnit.Curriculum == null)
+            {
+                var unitWithCurriculum = await _unitRepository.GetByIdAsync(currentUnit.UnitId);
+                if (unitWithCurriculum?.Curriculum == null)
+                    throw new InvalidOperationException("Curriculum information could not be loaded.");
+                currentUnit.Curriculum = unitWithCurriculum.Curriculum;
+            }
 
-            var candidateUnits = allUnits
-                .Where(u => u.IsActive && u.UnitOrder >= startingUnit.UnitOrder)
+            var curriculum = currentUnit.Curriculum;
+
+            // 4. Get all active units in the curriculum starting from current unit
+            var allCurriculumUnits = await _unitRepository.GetByCurriculumIdAsync(curriculum.CurriculumId);
+            var activeUnits = allCurriculumUnits
+                .Where(u => u.IsActive && u.UnitOrder >= currentUnit.UnitOrder)
                 .OrderBy(u => u.UnitOrder)
-                .Take(numberOfUnits)
                 .ToList();
 
-            if (!candidateUnits.Any())
-                throw new InvalidOperationException("No active units found after starting unit.");
+            if (!activeUnits.Any())
+                throw new InvalidOperationException("No active units found from the current learning position.");
 
-            var lastUnit = candidateUnits.MaxBy(u => u.UnitOrder)!;
+            // 5. Calculate estimated units to cover based on package duration
+            // Assuming 2 sessions per week and each unit takes approximately 2 weeks
+            var estimatedUnitsFromDuration = package.DurationDays / 14; // 14 days = 2 weeks per unit
+            
+            // Take the units that are expected to be covered
+            var unitsToComplete = activeUnits
+                .Take(Math.Max(1, estimatedUnitsFromDuration))
+                .ToList();
 
-            var unitsToComplete = lastUnit.UnitOrder - startingUnit.UnitOrder + 1;
-            var totalDays = unitsToComplete * 14;
-            var estimatedCompletionDate = oldestReport.CreatedDate.AddDays(totalDays);
+            var lastUnit = unitsToComplete.LastOrDefault() ?? activeUnits.Last();
+            var totalUnitsToComplete = lastUnit.UnitOrder - currentUnit.UnitOrder + 1;
 
-            string childName = "Unknown Child";
-            if (oldestReport.Child != null)
-                childName = oldestReport.Child.FullName ?? "Unknown Child";
+            // 6. Calculate estimated completion date
+            // Use actual progress if available, otherwise use contract dates
+            DateTime estimatedCompletionDate;
+            int daysToCompletion;
+            
+            if (completedSessions > 0 && remainingSessions > 0)
+            {
+                // Calculate average days per session from actual progress
+                var daysElapsed = (lastLessonDate!.Value.DayNumber - firstLessonDate!.Value.DayNumber);
+                var averageDaysPerSession = daysElapsed > 0 && completedSessions > 1
+                    ? (double)daysElapsed / (completedSessions - 1)
+                    : package.SessionsPerWeek > 0 ? 7.0 / package.SessionsPerWeek : 3.5; // Default to ~2 sessions per week
+
+                daysToCompletion = (int)Math.Ceiling(remainingSessions * averageDaysPerSession);
+                estimatedCompletionDate = (lastLessonDate ?? DateOnly.FromDateTime(DateTime.Today))
+                    .AddDays(daysToCompletion)
+                    .ToDateTime(TimeOnly.MinValue);
+            }
+            else if (completedSessions == 0)
+            {
+                // No sessions completed yet, use contract dates
+                daysToCompletion = contract.EndDate.DayNumber - contract.StartDate.DayNumber;
+                estimatedCompletionDate = contract.EndDate.ToDateTime(TimeOnly.MinValue);
+            }
+            else
+            {
+                // All sessions completed
+                daysToCompletion = 0;
+                estimatedCompletionDate = lastLessonDate!.Value.ToDateTime(TimeOnly.MinValue);
+            }
+
+            // 7. Calculate progress percentage
+            var progressPercentage = totalSessions > 0
+                ? Math.Round((double)completedSessions / totalSessions * 100, 2)
+                : 0.0;
+
+            // 8. Build result message
+            string message;
+            if (completedSessions == 0)
+            {
+                message = $"{child.FullName} has not started the contract yet. Expected to complete Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) by {estimatedCompletionDate:MMMM dd, yyyy}.";
+            }
+            else if (remainingSessions == 0)
+            {
+                message = $"{child.FullName} has completed all {totalSessions} sessions for this contract. Currently at Unit {currentUnit.UnitOrder} ({currentUnit.UnitName ?? "Current"}).";
+            }
+            else
+            {
+                message = $"{child.FullName} has completed {completedSessions} of {totalSessions} sessions ({progressPercentage}%). Expected to finish Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) around {estimatedCompletionDate:MMMM dd, yyyy}.";
+            }
 
             return new LearningCompletionForecastDto
             {
-                ChildId = oldestReport.ChildId,
-                ChildName = childName,
+                ContractId = contractId,
+                ChildId = child.ChildId,
+                ChildName = child.FullName ?? "Unknown Child",
                 CurriculumId = curriculum.CurriculumId,
                 CurriculumName = curriculum.CurriculumName ?? "Unknown Curriculum",
-                StartingUnitId = startingUnit.UnitId,
-                StartingUnitName = startingUnit.UnitName ?? "Unit",
-                StartingUnitOrder = startingUnit.UnitOrder,
-                LastUnitId = lastUnit.UnitId,
-                LastUnitName = lastUnit.UnitName ?? "Final Unit",
-                LastUnitOrder = lastUnit.UnitOrder,
-                TotalUnitsToComplete = unitsToComplete,
-                StartDate = oldestReport.CreatedDate,
-                EstimatedCompletionDate = estimatedCompletionDate.ToDateTime(TimeOnly.MinValue),
-                DaysToCompletion = totalDays,
-                WeeksToCompletion = Math.Round(totalDays / 7.0, 2),
-                Message = $"Expected to finish Unit {lastUnit.UnitOrder} ({lastUnit.UnitName ?? "Final"}) around {estimatedCompletionDate:MMMM dd, yyyy}"
+                PackageId = package.PackageId,
+                PackageName = package.PackageName ?? "Unknown Package",
+                CurrentUnitId = currentUnit.UnitId,
+                CurrentUnitName = currentUnit.UnitName ?? "Unit",
+                CurrentUnitOrder = currentUnit.UnitOrder,
+                EstimatedLastUnitId = lastUnit.UnitId,
+                EstimatedLastUnitName = lastUnit.UnitName ?? "Final Unit",
+                EstimatedLastUnitOrder = lastUnit.UnitOrder,
+                TotalUnitsToComplete = totalUnitsToComplete,
+                CompletedSessions = completedSessions,
+                TotalSessions = totalSessions,
+                RemainingSessions = remainingSessions,
+                ContractStartDate = contract.StartDate,
+                ContractEndDate = contract.EndDate,
+                FirstLessonDate = firstLessonDate,
+                LastLessonDate = lastLessonDate,
+                EstimatedCompletionDate = estimatedCompletionDate,
+                DaysToCompletion = daysToCompletion,
+                WeeksToCompletion = Math.Round(daysToCompletion / 7.0, 2),
+                ProgressPercentage = progressPercentage,
+                Message = message
             };
         }
 

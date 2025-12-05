@@ -34,6 +34,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Child)
+                .Include(c => c.SecondChild)
                 .Include(c => c.Parent)
                 .Include(c => c.MainTutor)
                 .Include(c => c.SubstituteTutor1)
@@ -48,6 +49,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Child)
+                .Include(c => c.SecondChild)
                 .Include(c => c.Parent)
                 .Include(c => c.MainTutor)
                 .Include(c => c.SubstituteTutor1)
@@ -67,6 +69,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Child)
+                .Include(c => c.SecondChild)
                 .Include(c => c.Parent)
                 .Include(c => c.MainTutor)
                 .Include(c => c.SubstituteTutor1)
@@ -81,6 +84,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Child)
+                .Include(c => c.SecondChild)
                 .Include(c => c.Parent)
                 .Include(c => c.MainTutor)
                 .Include(c => c.SubstituteTutor1)
@@ -280,8 +284,9 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             try
             {
                 // Get all active contracts for this child (excluding cancelled ones)
+                // Also check if child is listed as SecondChildId in any contract
                 var childContracts = await _context.Contracts
-                    .Where(c => c.ChildId == childId)
+                    .Where(c => c.ChildId == childId || c.SecondChildId == childId)
                     .Where(c => c.Status != "cancelled" && c.Status != "completed")
                     .ToListAsync();
 
