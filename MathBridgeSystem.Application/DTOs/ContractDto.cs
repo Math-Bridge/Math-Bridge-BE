@@ -6,8 +6,10 @@ namespace MathBridgeSystem.Application.DTOs
     {
         public Guid ContractId { get; set; }
         public Guid ChildId { get; set; }
+        public Guid? SecondChildId { get; set; }
         public Guid ParentId { get; set; }
         public string ChildName { get; set; } = null!;
+        public string? SecondChildName { get; set; }
         public Guid PackageId { get; set; }
         public string PackageName { get; set; } = null!;
         public decimal Price { get; set; }
@@ -24,7 +26,7 @@ namespace MathBridgeSystem.Application.DTOs
 <<<<<<< Updated upstream
         public TimeOnly? StartTime { get; set; }
         public TimeOnly? EndTime { get; set; }
-        public byte? DaysOfWeeks { get; set; }
+        public int? DaysOfWeeks { get; set; }
         public string DaysOfWeeksDisplay { get; set; } = null!;
 =======
 

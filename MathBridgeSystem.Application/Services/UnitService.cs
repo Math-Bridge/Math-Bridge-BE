@@ -13,11 +13,16 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly IUnitRepository _unitRepository;
         private readonly ICurriculumRepository _curriculumRepository;
+        private readonly IMathConceptRepository _mathConceptRepository;
 
-        public UnitService(IUnitRepository unitRepository, ICurriculumRepository curriculumRepository)
+        public UnitService(
+            IUnitRepository unitRepository, 
+            ICurriculumRepository curriculumRepository,
+            IMathConceptRepository mathConceptRepository)
         {
             _unitRepository = unitRepository ?? throw new ArgumentNullException(nameof(unitRepository));
             _curriculumRepository = curriculumRepository ?? throw new ArgumentNullException(nameof(curriculumRepository));
+            _mathConceptRepository = mathConceptRepository ?? throw new ArgumentNullException(nameof(mathConceptRepository));
         }
 
         public async Task<Guid> CreateUnitAsync(CreateUnitRequest request, Guid? createdBy = null)
@@ -33,6 +38,21 @@ namespace MathBridgeSystem.Application.Services
             if (await _unitRepository.ExistsByNameAsync(request.UnitName, request.CurriculumId))
                 throw new InvalidOperationException($"Unit with name '{request.UnitName}' already exists in this curriculum.");
 
+            // Validate and retrieve concepts if provided
+            var concepts = new List<MathConcept>();
+            if (request.ConceptIds != null && request.ConceptIds.Count > 0)
+            {
+                var distinctConceptIds = request.ConceptIds.Distinct().ToList();
+                concepts = await _mathConceptRepository.GetByIdsAsync(distinctConceptIds);
+                
+                if (concepts.Count != distinctConceptIds.Count)
+                {
+                    var foundIds = concepts.Select(c => c.ConceptId).ToHashSet();
+                    var notFoundIds = distinctConceptIds.Where(id => !foundIds.Contains(id)).ToList();
+                    throw new InvalidOperationException($"Math concepts not found: {string.Join(", ", notFoundIds)}");
+                }
+            }
+
             // Auto-assign unit order if not provided
             int unitOrder = request.UnitOrder ?? await _unitRepository.GetMaxUnitOrderAsync(request.CurriculumId) + 1;
 
@@ -47,7 +67,8 @@ namespace MathBridgeSystem.Application.Services
                 LearningObjectives = request.LearningObjectives?.Trim(),
                 IsActive = request.IsActive,
                 CreatedDate = DateTime.UtcNow.ToLocalTime(),
-                CreatedBy = createdBy
+                CreatedBy = createdBy,
+                Concepts = concepts
             };
 
             await _unitRepository.AddAsync(unit);
@@ -68,6 +89,31 @@ namespace MathBridgeSystem.Application.Services
             if (existingUnit != null && existingUnit.UnitId != id && existingUnit.CurriculumId == unit.CurriculumId)
                 throw new InvalidOperationException($"Unit with name '{request.UnitName}' already exists in this curriculum.");
 
+            // Validate and update concepts if provided
+            if (request.ConceptIds != null)
+            {
+                // Clear existing concepts
+                unit.Concepts.Clear();
+
+                if (request.ConceptIds.Count > 0)
+                {
+                    var distinctConceptIds = request.ConceptIds.Distinct().ToList();
+                    var concepts = await _mathConceptRepository.GetByIdsAsync(distinctConceptIds);
+                    
+                    if (concepts.Count != distinctConceptIds.Count)
+                    {
+                        var foundIds = concepts.Select(c => c.ConceptId).ToHashSet();
+                        var notFoundIds = distinctConceptIds.Where(cid => !foundIds.Contains(cid)).ToList();
+                        throw new InvalidOperationException($"Math concepts not found: {string.Join(", ", notFoundIds)}");
+                    }
+
+                    foreach (var concept in concepts)
+                    {
+                        unit.Concepts.Add(concept);
+                    }
+                }
+            }
+
             unit.UnitName = request.UnitName.Trim();
             unit.UnitDescription = request.UnitDescription?.Trim();
             unit.UnitOrder = request.UnitOrder;
@@ -85,8 +131,8 @@ namespace MathBridgeSystem.Application.Services
             var unit = await _unitRepository.GetByIdAsync(id);
             if (unit == null)
                 throw new InvalidOperationException("Unit not found.");
-
-            await _unitRepository.DeleteAsync(id);
+            unit.IsActive = false;
+            await _unitRepository.UpdateAsync(unit);
         }
 
         public async Task<UnitDto?> GetUnitByIdAsync(Guid id)
@@ -98,9 +144,15 @@ namespace MathBridgeSystem.Application.Services
             return MapToDto(unit);
         }
 
+
         public async Task<List<UnitDto>> GetAllUnitsAsync()
         {
             var units = await _unitRepository.GetAllAsync();
+            return units.Select(MapToDto).ToList();
+        }
+        public async Task<List<UnitDto>> GetAllActiveUnitsAsync()
+        {
+            var units = await _unitRepository.GetAllActiveAsync();
             return units.Select(MapToDto).ToList();
         }
 
@@ -125,6 +177,12 @@ namespace MathBridgeSystem.Application.Services
             return units.Select(MapToDto).ToList();
         }
 
+        public async Task<List<UnitDto>> GetUnitsByMathConceptIdAsync(Guid conceptId)
+        {
+            var units = await _unitRepository.GetByMathConceptIdAsync(conceptId);
+            return units.Select(MapToDto).ToList();
+        }
+
         private UnitDto MapToDto(Unit unit)
         {
             return new UnitDto
@@ -141,7 +199,13 @@ namespace MathBridgeSystem.Application.Services
                 CreatedDate = unit.CreatedDate,
                 CreatedByName = unit.CreatedByNavigation?.FullName,
                 UpdatedDate = unit.UpdatedDate,
-                UpdatedByName = unit.UpdatedByNavigation?.FullName
+                UpdatedByName = unit.UpdatedByNavigation?.FullName,
+                MathConcepts = unit.Concepts?.Select(mc => new MathConceptSummaryDto
+                {
+                    ConceptId = mc.ConceptId,
+                    Name = mc.Name,
+                    Category = mc.Category
+                }).ToList()
             };
         }
     }

@@ -8,6 +8,7 @@ namespace MathBridgeSystem.Application.DTOs
     {
         [JsonPropertyName("parentId")] public Guid ParentId { get; set; }
         [JsonPropertyName("childId")] public Guid ChildId { get; set; }
+        [JsonPropertyName("secondChildId")] public Guid? SecondChildId { get; set; }
         [JsonPropertyName("packageId")] public Guid PackageId { get; set; }
         [JsonPropertyName("mainTutorId")] public Guid? MainTutorId { get; set; }
         [JsonPropertyName("substituteTutor1Id")] public Guid? SubstituteTutor1Id { get; set; }

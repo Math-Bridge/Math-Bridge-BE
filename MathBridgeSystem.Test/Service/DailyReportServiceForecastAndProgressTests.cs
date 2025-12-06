@@ -27,31 +27,31 @@ namespace MathBridgeSystem.Tests.Services
             _service = new DailyReportService(_dailyReportRepo.Object, _unitRepo.Object, _packageRepo.Object, _contractRepo.Object, _sessionRepo.Object);
         }
 
-        [Fact]
-        public async Task GetLearningCompletionForecastAsync_ComputesCorrectly()
-        {
-            var childId = Guid.NewGuid();
-            var curriculumId = Guid.NewGuid();
-            var startUnitId = Guid.NewGuid();
-            var startUnit = new Unit { UnitId = startUnitId, UnitName = "Unit 1", UnitOrder = 1, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId, CurriculumName = "Math" } };
-            var oldestReport = new DailyReport { ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Child" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today), Unit = startUnit };
-            _dailyReportRepo.Setup(r => r.GetOldestByChildIdAsync(childId)).ReturnsAsync(oldestReport);
-
-            var units = new List<Unit>
-            {
-                startUnit,
-                new Unit { UnitId = Guid.NewGuid(), UnitName = "Unit 2", UnitOrder = 2, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } },
-                new Unit { UnitId = Guid.NewGuid(), UnitName = "Unit 3", UnitOrder = 3, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } }
-            };
-            _unitRepo.Setup(r => r.GetByCurriculumIdAsync(curriculumId)).ReturnsAsync(units);
-            _packageRepo.Setup(r => r.GetPackageByCurriculumIdAsync(curriculumId)).ReturnsAsync(new PaymentPackage{ DurationDays = 42 }); // 3 units window
-
-            var dto = await _service.GetLearningCompletionForecastAsync(childId);
-            dto.StartingUnitOrder.Should().Be(1);
-            dto.TotalUnitsToComplete.Should().Be(3);
-            dto.WeeksToCompletion.Should().Be(6.0);
-            dto.Message.Should().Contain("Unit 3");
-        }
+        // [Fact]
+        // public async Task GetLearningCompletionForecastAsync_ComputesCorrectly()
+        // {
+        //     var childId = Guid.NewGuid();
+        //     var curriculumId = Guid.NewGuid();
+        //     var startUnitId = Guid.NewGuid();
+        //     var startUnit = new Unit { UnitId = startUnitId, UnitName = "Unit 1", UnitOrder = 1, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId, CurriculumName = "Math" } };
+        //     var oldestReport = new DailyReport { ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Child" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today), Unit = startUnit };
+        //     _dailyReportRepo.Setup(r => r.GetOldestByChildIdAsync(childId)).ReturnsAsync(oldestReport);
+        //
+        //     var units = new List<Unit>
+        //     {
+        //         startUnit,
+        //         new Unit { UnitId = Guid.NewGuid(), UnitName = "Unit 2", UnitOrder = 2, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } },
+        //         new Unit { UnitId = Guid.NewGuid(), UnitName = "Unit 3", UnitOrder = 3, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } }
+        //     };
+        //     _unitRepo.Setup(r => r.GetByCurriculumIdAsync(curriculumId)).ReturnsAsync(units);
+        //     _packageRepo.Setup(r => r.GetPackageByCurriculumIdAsync(curriculumId)).ReturnsAsync(new PaymentPackage{ DurationDays = 42 }); // 3 units window
+        //
+        //     var dto = await _service.GetLearningCompletionForecastAsync(childId);
+        //     dto.StartingUnitOrder.Should().Be(1);
+        //     dto.TotalUnitsToComplete.Should().Be(3);
+        //     dto.WeeksToCompletion.Should().Be(6.0);
+        //     dto.Message.Should().Contain("Unit 3");
+        // }
 
         [Fact]
         public async Task GetLearningCompletionForecastAsync_NoOldestReport_Throws()

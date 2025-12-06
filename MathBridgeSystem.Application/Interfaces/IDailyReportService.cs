@@ -8,11 +8,16 @@ namespace MathBridgeSystem.Application.Interfaces
 {
     public interface IDailyReportService
     {
+        Task<IEnumerable<DailyReportDto>> GetAllDailyReportsAsync();
         Task<DailyReportDto> GetDailyReportByIdAsync(Guid reportId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByTutorIdAsync(Guid tutorId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByChildIdAsync(Guid childId);
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByBookingIdAsync(Guid bookingId);
-        Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid childId);
+        /// <summary>
+        /// Gets the learning completion forecast for a specific contract.
+        /// Forecasts the expected curriculum completion based on the contract's package, sessions, and progress.
+        /// </summary>
+        Task<LearningCompletionForecastDto> GetLearningCompletionForecastAsync(Guid contractId);
         /// <summary>
         /// Gets the unit progress for a contract's child based on session completion.
         /// </summary>

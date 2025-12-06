@@ -28,6 +28,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<FinalFeedback> FinalFeedbacks { get; set; }
 
+    public virtual DbSet<MathConcept> MathConcepts { get; set; }
+
     public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<PaymentPackage> PaymentPackages { get; set; }
@@ -43,6 +45,8 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<SepayTransaction> SepayTransactions { get; set; }
 
     public virtual DbSet<Session> Sessions { get; set; }
+
+    public virtual DbSet<SystemSetting> SystemSettings { get; set; }
 
     public virtual DbSet<TestResult> TestResults { get; set; }
 
@@ -141,6 +145,10 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.ChildId)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("child_id");
+            entity.Property(e => e.AvatarUrl)
+                .IsUnicode(false)
+                .HasColumnName("avatar_url");
+            entity.Property(e => e.AvatarVersion).HasColumnName("avatar_version");
             entity.Property(e => e.CenterId).HasColumnName("center_id");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
@@ -227,6 +235,7 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.PackageId).HasColumnName("package_id");
             entity.Property(e => e.ParentId).HasColumnName("parent_id");
             entity.Property(e => e.RescheduleCount).HasColumnName("reschedule_count");
+            entity.Property(e => e.SecondChildId).HasColumnName("second_child_id");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
@@ -244,7 +253,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.CenterId)
                 .HasConstraintName("fk_contracts_center");
 
-            entity.HasOne(d => d.Child).WithMany(p => p.Contracts)
+            entity.HasOne(d => d.Child).WithMany(p => p.ContractChildren)
                 .HasForeignKey(d => d.ChildId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_contracts_child");
@@ -262,6 +271,10 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.ParentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_contracts_parent");
+
+            entity.HasOne(d => d.SecondChild).WithMany(p => p.ContractSecondChildren)
+                .HasForeignKey(d => d.SecondChildId)
+                .HasConstraintName("fk_secondchild");
 
             entity.HasOne(d => d.SubstituteTutor1).WithMany(p => p.ContractSubstituteTutor1s)
                 .HasForeignKey(d => d.SubstituteTutor1Id)
@@ -409,6 +422,40 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("FK_final_feedback_user_id");
         });
 
+        modelBuilder.Entity<MathConcept>(entity =>
+        {
+            entity.HasKey(e => e.ConceptId).HasName("math_concepts_pk");
+
+            entity.ToTable("math_concepts");
+
+            entity.Property(e => e.ConceptId)
+                .ValueGeneratedNever()
+                .HasColumnName("concept_id");
+            entity.Property(e => e.Category)
+                .IsUnicode(false)
+                .HasColumnName("category");
+            entity.Property(e => e.Name).HasColumnName("name");
+
+            entity.HasMany(d => d.Units).WithMany(p => p.Concepts)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UnitsMathconcept",
+                    r => r.HasOne<Unit>().WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("units_fk"),
+                    l => l.HasOne<MathConcept>().WithMany()
+                        .HasForeignKey("ConceptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("concepts___fk"),
+                    j =>
+                    {
+                        j.HasKey("ConceptId", "UnitId").HasName("units_mathconcepts_pk");
+                        j.ToTable("units_mathconcepts");
+                        j.IndexerProperty<Guid>("ConceptId").HasColumnName("concept_id");
+                        j.IndexerProperty<Guid>("UnitId").HasColumnName("unit_id");
+                    });
+        });
+
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.HasKey(e => e.NotificationId).HasName("PK__notifica__20CF2E126179812C");
@@ -466,6 +513,8 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.Grade)
                 .HasMaxLength(50)
                 .HasColumnName("grade");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
+            entity.Property(e => e.ImageVersion).HasColumnName("image_version");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.MaxReschedule).HasColumnName("max_reschedule");
             entity.Property(e => e.PackageName)
@@ -760,6 +809,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("status");
             entity.Property(e => e.TutorId).HasColumnName("tutor_id");
+            entity.Property(e => e.UnitId).HasColumnName("unit_id");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
@@ -779,6 +829,23 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.TutorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_booking_sessions_tutors");
+
+            entity.HasOne(d => d.Unit).WithMany(p => p.Sessions)
+                .HasForeignKey(d => d.UnitId)
+                .HasConstraintName("fk_unit");
+        });
+
+        modelBuilder.Entity<SystemSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__SystemSe__3214EC0727281F5C");
+
+            entity.ToTable("system_settings");
+
+            entity.HasIndex(e => e.Key, "UQ__SystemSe__C41E0289AAADB1A8").IsUnique();
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Key).HasMaxLength(100);
         });
 
         modelBuilder.Entity<TestResult>(entity =>

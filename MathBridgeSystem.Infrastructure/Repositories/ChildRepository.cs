@@ -35,8 +35,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Children
                 .Include(c => c.Parent)
-                                .Include(c => c.Center)
-                .Include(c => c.Contracts)
+                .Include(c => c.Center)
+                .Include(c => c.ContractChildren)
+                .Include(c=> c.ContractSecondChildren)
+                .Include(c => c.School)
                 .FirstOrDefaultAsync(c => c.ChildId == id);
         }
 
@@ -45,7 +47,9 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.Children
                 .Include(c => c.Parent)
                                 .Include(c => c.Center)
-                .Include(c => c.Contracts)
+                .Include(c => c.ContractChildren)
+                .Include(c=> c.ContractSecondChildren)
+                .Include(c => c.School)
                 .Where(c => c.ParentId == parentId)
                 .ToListAsync();
         }
@@ -55,7 +59,9 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.Children
                 .Include(c => c.Parent)
                                 .Include(c => c.Center)
-                .Include(c => c.Contracts)
+                .Include(c => c.ContractChildren)
+                .Include(c=> c.ContractSecondChildren)
+                .Include(c => c.School)
                 .ToListAsync();
         }
 

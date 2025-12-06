@@ -19,5 +19,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<ChildDto>> GetAllChildrenAsync();
         Task LinkCenterAsync(Guid childId, LinkCenterRequest request);
         Task<List<ContractDto>> GetChildContractsAsync(Guid childId);
+        Task<string> UpdateChildProfilePictureAsync(Guid childId, UpdateProfilePictureCommand command, Guid currentUserId, string currentUserRole);
     }
 }

@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using MathBridgeSystem.Domain.Entities;
@@ -93,7 +93,7 @@ namespace MathBridgeSystem.Application.Services
                                 column.Item().Text(center.Name);
                             }
 
-                            // LỊCH HỌC LINH HOẠT – ĐẸP NHẤT
+                            // LỊCH HỌC LINH HOẠT – ĐẸP NHƯ HỢP ĐỒNG CAO CẤP
                             column.Item().PaddingTop(20).Text("Weekly Schedule:").Bold().FontSize(14);
                             column.Item().PaddingTop(8).Element(ComposeScheduleTable);
 
@@ -156,12 +156,8 @@ namespace MathBridgeSystem.Application.Services
             }).GeneratePdf();
         }
 
-<<<<<<< Updated upstream
-        private static string FormatDaysOfWeek(byte? daysOfWeek)
-=======
-        // Helper: Chuyển DayOfWeek → tên ngày đẹp
+        // Helper: Chuyển DayOfWeek → tên ngày tiếng Anh đẹp
         private static string GetDayName(DayOfWeek day)
->>>>>>> Stashed changes
         {
             return day switch
             {

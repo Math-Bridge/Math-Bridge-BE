@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MathBridgeSystem.Infrastructure.Services;
 
 namespace MathBridgeSystem.Tests.Services
 {
@@ -18,6 +19,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<ICenterRepository> _centerRepositoryMock;
         private readonly ChildService _childService;
+        private readonly CloudinaryService _cloudinaryService;
 
         public ChildServiceTests()
         {
@@ -30,9 +32,11 @@ namespace MathBridgeSystem.Tests.Services
             _childRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Child>());
 
             _childService = new ChildService(
+                
                 _childRepositoryMock.Object,
                 _userRepositoryMock.Object,
-                _centerRepositoryMock.Object
+                _centerRepositoryMock.Object,
+                _cloudinaryService
             );
         }
 

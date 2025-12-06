@@ -35,5 +35,9 @@ public partial class Unit
 
     public virtual ICollection<DailyReport> DailyReports { get; set; } = new List<DailyReport>();
 
+    public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
+
     public virtual User? UpdatedByNavigation { get; set; }
+
+    public virtual ICollection<MathConcept> Concepts { get; set; } = new List<MathConcept>();
 }
