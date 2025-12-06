@@ -17,7 +17,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly ISessionRepository _sessionRepository;
         private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
-        readonly IChildRepository _childRepository;
+        private readonly IChildRepository _childRepository;
 
         public ContractService(
             IContractRepository contractRepository,
@@ -26,8 +26,6 @@ namespace MathBridgeSystem.Application.Services
             IEmailService emailService,
             IUserRepository userRepository,
             IChildRepository childRepository)
-        {
-            : base()
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
@@ -50,7 +48,7 @@ namespace MathBridgeSystem.Application.Services
             var package = await _packageRepository.GetByIdAsync(request.PackageId)
                           ?? throw new Exception("Package not found");
 
-            // Validate twin children (if provided)
+            // Validate twin children
             if (request.SecondChildId.HasValue)
             {
                 var firstChild = await _childRepository.GetByIdAsync(request.ChildId)
@@ -86,7 +84,6 @@ namespace MathBridgeSystem.Application.Services
 
             var maxDistanceKm = request.MaxDistanceKm ?? 15;
 
-            // CREATE CONTRACT
             var contract = new Contract
             {
                 ContractId = Guid.NewGuid(),
@@ -111,7 +108,7 @@ namespace MathBridgeSystem.Application.Services
                 CreatedDate = DateTime.UtcNow
             };
 
-            // ADD FLEXIBLE SCHEDULES
+            // Add flexible schedules
             foreach (var s in request.Schedules)
             {
                 contract.Schedules.Add(new ContractSchedule
@@ -127,7 +124,7 @@ namespace MathBridgeSystem.Application.Services
 
             await _contractRepository.AddAsync(contract);
 
-            // GENERATE SESSIONS
+            // Generate sessions only if main tutor is assigned and contract is not cancelled
             if (contract.MainTutorId.HasValue && contract.Status != "cancelled")
             {
                 var sessions = GenerateSessions(contract, package.SessionCount);
@@ -140,6 +137,7 @@ namespace MathBridgeSystem.Application.Services
             return contract.ContractId;
         }
 
+        // FIXED: This method was missing!
         public async Task<bool> AssignTutorsAsync(Guid contractId, AssignTutorToContractRequest request, Guid staffId)
         {
             var contract = await _contractRepository.GetByIdWithPackageAsync(contractId)
@@ -151,6 +149,7 @@ namespace MathBridgeSystem.Application.Services
             if (request.MainTutorId == Guid.Empty)
                 throw new ArgumentException("MainTutorId is required.");
 
+            // Update tutors
             contract.MainTutorId = request.MainTutorId;
             contract.SubstituteTutor1Id = request.SubstituteTutor1Id;
             contract.SubstituteTutor2Id = request.SubstituteTutor2Id;
@@ -158,6 +157,7 @@ namespace MathBridgeSystem.Application.Services
 
             await _contractRepository.UpdateAsync(contract);
 
+            // Generate sessions using the new flexible schedule
             var sessions = GenerateSessions(contract, contract.Package.SessionCount);
             await _sessionRepository.AddRangeAsync(sessions);
 
@@ -175,7 +175,9 @@ namespace MathBridgeSystem.Application.Services
 
             while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
             {
-                var schedule = contract.Schedules.FirstOrDefault(s => s.DayOfWeek == currentDate.DayOfWeek);
+                var schedule = contract.Schedules.FirstOrDefault(s =>
+                    s.DayOfWeek == currentDate.DayOfWeek);
+
                 if (schedule != null)
                 {
                     var start = currentDate.ToDateTime(schedule.StartTime);
@@ -198,6 +200,7 @@ namespace MathBridgeSystem.Application.Services
                         CreatedAt = DateTime.UtcNow
                     });
                 }
+
                 currentDate = currentDate.AddDays(1);
             }
 

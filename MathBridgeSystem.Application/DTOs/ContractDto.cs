@@ -1,4 +1,5 @@
 ﻿using MathBridgeSystem.Application.DTOs;
+using System.Collections.Generic;
 
 namespace MathBridgeSystem.Application.DTOs
 {
@@ -8,38 +9,42 @@ namespace MathBridgeSystem.Application.DTOs
         public Guid ChildId { get; set; }
         public Guid? SecondChildId { get; set; }
         public Guid ParentId { get; set; }
+
         public string ChildName { get; set; } = null!;
         public string? SecondChildName { get; set; }
+
         public Guid PackageId { get; set; }
         public string PackageName { get; set; } = null!;
         public decimal Price { get; set; }
+
         public Guid? MainTutorId { get; set; }
-        public string? MainTutorName { get; set; } = null!;
+        public string? MainTutorName { get; set; }
+
         public Guid? substitute_tutor1_id { get; set; }
         public string? substitute_tutor1_name { get; set; }
+
         public Guid? substitute_tutor2_id { get; set; }
         public string? substitute_tutor2_name { get; set; }
+
         public Guid? CenterId { get; set; }
         public string? CenterName { get; set; }
+
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
-<<<<<<< Updated upstream
-        public TimeOnly? StartTime { get; set; }
-        public TimeOnly? EndTime { get; set; }
-        public int? DaysOfWeeks { get; set; }
-        public string DaysOfWeeksDisplay { get; set; } = null!;
-=======
+
+        // ĐÃ XÓA HOÀN TOÀN CÁC TRƯỜNG CŨ
+        // → Không còn StartTime, EndTime, DaysOfWeeks, DaysOfWeeksDisplay
 
         // ĐÃ THAY BẰNG LỊCH LINH HOẠT
         public List<ContractScheduleDto> Schedules { get; set; } = new();
 
->>>>>>> Stashed changes
         public bool IsOnline { get; set; }
         public string? VideoCallPlatform { get; set; }
         public string? OfflineAddress { get; set; }
         public decimal? OfflineLatitude { get; set; }
         public decimal? OfflineLongitude { get; set; }
         public decimal? MaxDistanceKm { get; set; }
+
         public int RescheduleCount { get; set; }
         public string Status { get; set; } = null!;
     }
