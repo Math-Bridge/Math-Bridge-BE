@@ -163,6 +163,7 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving units." });
             }
         }
+        [HttpGet ("active")]
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAllActiveUnits()

@@ -63,7 +63,7 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<VideoConferenceSession> VideoConferenceSessions { get; set; }
 
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
-
+    public virtual DbSet<ContractSchedule> ContractSchedules { get; set; } = null!;
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Only configure if not already configured (e.g., when used outside of DI container)
@@ -216,9 +216,7 @@ public partial class MathBridgeDbContext : DbContext
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.DaysOfWeeks).HasColumnName("days_of_weeks");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
-            entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.IsOnline).HasColumnName("is_online");
             entity.Property(e => e.MainTutorId).HasColumnName("main_tutor_id");
             entity.Property(e => e.MaxDistanceKm)
@@ -239,7 +237,6 @@ public partial class MathBridgeDbContext : DbContext
             entity.Property(e => e.RescheduleCount).HasColumnName("reschedule_count");
             entity.Property(e => e.SecondChildId).HasColumnName("second_child_id");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
-            entity.Property(e => e.StartTime).HasColumnName("start_time");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasColumnName("status");
@@ -1204,7 +1201,43 @@ public partial class MathBridgeDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_video_conference_creator");
         });
+        modelBuilder.Entity<ContractSchedule>(entity =>
+        {
+            entity.ToTable("contract_schedules");
 
+            entity.HasKey(e => e.ScheduleId);
+
+            entity.Property(e => e.ScheduleId)
+                  .HasDefaultValueSql("(newid())")
+                  .HasColumnName("schedule_id");
+
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+
+            entity.Property(e => e.DayOfWeek)
+                  .HasColumnName("day_of_week")          
+                  .HasColumnType("tinyint")               
+                  .HasConversion<byte>();                 
+
+            entity.Property(e => e.StartTime)
+                  .HasColumnName("start_time");
+
+            entity.Property(e => e.EndTime)
+                  .HasColumnName("end_time");
+
+            entity.Property(e => e.CreatedDate)
+                  .HasDefaultValueSql("(getutcdate())")
+                  .HasColumnType("datetime")
+                  .HasColumnName("created_date");
+
+            entity.Property(e => e.UpdatedDate)
+                  .HasColumnType("datetime")
+                  .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.Contract)
+                  .WithMany(p => p.Schedules)
+                  .HasForeignKey(d => d.ContractId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
             entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AF384090BD");
