@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Contract;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -170,42 +170,61 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Main tutor must be assigned to generate sessions.");
 
             var sessions = new List<Session>();
-            var currentDate = DateOnly.FromDateTime(DateTime.Today).AddDays(1);
-            var endDate = contract.EndDate;
 
-            while (currentDate <= endDate && sessions.Count < totalSessionsNeeded)
+            // BƯỚC 1: Tìm ngày bắt đầu hợp lệ đầu tiên (phải >= StartDate và chưa qua)
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var currentDate = contract.StartDate;
+
+            // Nếu StartDate là quá khứ hoặc hôm nay → tìm ngày hợp lệ tiếp theo
+            if (currentDate < today)
             {
-                var schedule = contract.Schedules.FirstOrDefault(s =>
-                    s.DayOfWeek == currentDate.DayOfWeek);
+                currentDate = today;
+            }
+
+            // BƯỚC 2: Từ ngày currentDate, tìm buổi học hợp lệ đầu tiên trong lịch
+            // → Tức là: nếu hôm nay là Thứ 3, mà StartDate là Thứ 3 → bỏ qua hôm nay → tìm ngày tiếp theo trong lịch
+            while (currentDate <= contract.EndDate && sessions.Count < totalSessionsNeeded)
+            {
+                var schedule = contract.Schedules.FirstOrDefault(s => s.DayOfWeek == currentDate.DayOfWeek);
 
                 if (schedule != null)
                 {
-                    var start = currentDate.ToDateTime(schedule.StartTime);
-                    var end = currentDate.ToDateTime(schedule.EndTime);
+                    var sessionDateTime = currentDate.ToDateTime(schedule.StartTime);
 
-                    sessions.Add(new Session
+                    // CHỈ TẠO BUỔI HỌC NẾU:
+                    // Ngày đó là TƯƠNG LAI (ngày mai trở đi) HOẶC
+                    // Ngày đó là HÔM NAY NHƯNG giờ chưa tới (sessionStart > Now)
+                    if (sessionDateTime > DateTime.Now ||
+                        (currentDate > today)) 
                     {
-                        BookingId = Guid.NewGuid(),
-                        ContractId = contract.ContractId,
-                        TutorId = contract.MainTutorId.Value,
-                        SessionDate = currentDate,
-                        StartTime = start,
-                        EndTime = end,
-                        IsOnline = contract.IsOnline,
-                        VideoCallPlatform = contract.VideoCallPlatform,
-                        OfflineAddress = contract.OfflineAddress,
-                        OfflineLatitude = contract.OfflineLatitude,
-                        OfflineLongitude = contract.OfflineLongitude,
-                        Status = "scheduled",
-                        CreatedAt = DateTime.UtcNow
-                    });
+                        sessions.Add(new Session
+                        {
+                            BookingId = Guid.NewGuid(),
+                            ContractId = contract.ContractId,
+                            TutorId = contract.MainTutorId.Value,
+                            SessionDate = currentDate,
+                            StartTime = sessionDateTime,
+                            EndTime = currentDate.ToDateTime(schedule.EndTime),
+                            IsOnline = contract.IsOnline,
+                            VideoCallPlatform = contract.VideoCallPlatform,
+                            OfflineAddress = contract.OfflineAddress,
+                            OfflineLatitude = contract.OfflineLatitude,
+                            OfflineLongitude = contract.OfflineLongitude,
+                            Status = "scheduled",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
                 }
 
                 currentDate = currentDate.AddDays(1);
             }
 
             if (sessions.Count < totalSessionsNeeded)
-                throw new InvalidOperationException($"Only {sessions.Count} session(s) generated. Need {totalSessionsNeeded}.");
+            {
+                throw new InvalidOperationException(
+                    $"Only {sessions.Count} session(s) can be scheduled from the next available date to {contract.EndDate:dd/MM/yyyy}. " +
+                    $"Need {totalSessionsNeeded}. Please extend the contract duration or adjust the schedule.");
+            }
 
             return sessions;
         }
