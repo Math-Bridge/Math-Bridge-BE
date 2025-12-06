@@ -1,4 +1,4 @@
-﻿﻿using MathBridgeSystem.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +40,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
+                .Include(c => c.Schedules)
                 .Where(c => c.ParentId == parentId)
                 .ToListAsync();
         }
@@ -54,6 +55,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
+                .Include(c => c.Schedules)
                 .FirstOrDefaultAsync(c => c.ContractId == id);
         }
 
@@ -61,8 +63,10 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Package)
+                .Include(c => c.Schedules)
                 .FirstOrDefaultAsync(c => c.ContractId == contractId);
         }
+
         public async Task<List<Contract>> GetAllWithDetailsAsync()
         {
             return await _context.Contracts
@@ -73,6 +77,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
+                .Include(c => c.Schedules)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToListAsync();
         }
@@ -87,6 +92,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
+                .Include(c => c.Schedules)
                 .Include(c => c.Sessions)
                 .Include(c => c.RescheduleRequests)
                 .Include(c => c.WalletTransactions)
@@ -98,16 +104,39 @@ namespace MathBridgeSystem.Infrastructure.Repositories
 
         public async Task<List<User>> GetAvailableTutorsForContractAsync(Guid contractId)
         {
-            try
+            var contract = await _context.Contracts
+                .Include(c => c.Child)
+                .Include(c => c.Schedules)
+                .FirstOrDefaultAsync(c => c.ContractId == contractId)
+                ?? throw new KeyNotFoundException($"Contract {contractId} not found");
+
+            if (!contract.Schedules.Any())
+                throw new InvalidOperationException("Contract has no schedule defined.");
+
+            var maxContractsSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == "MaxContractsPerTutor");
+            int maxContracts = maxContractsSetting != null && int.TryParse(maxContractsSetting.Value, out int val) ? val : 5;
+
+            var tutors = await _context.Users
+                .Include(u => u.FinalFeedbacks)
+                .Include(u => u.Role)
+                .Include(u => u.TutorCenters)
+                .Include(u => u.ContractMainTutors)
+                    .ThenInclude(c => c.Schedules)
+                .Where(u => u.Role.RoleName == "tutor" && u.Status == "active" && u.TutorCenters.Any())
+                .ToListAsync();
+
+            var availableTutors = new List<User>();
+
+            foreach (var tutor in tutors)
             {
-                // FIX: Include Child to avoid NullReferenceException
-                var inputContract = await _context.Contracts
-                    .Include(c => c.Child) 
-                    .FirstOrDefaultAsync(c => c.ContractId == contractId);
+                var activeContracts = tutor.ContractMainTutors
+                    .Where(c => c.Status == "active")
+                    .ToList();
 
-                if (inputContract == null)
-                    throw new KeyNotFoundException($"Contract with ID {contractId} not found.");
+                if (activeContracts.Count >= maxContracts) continue;
 
+<<<<<<< Updated upstream
                 // Validate required properties
                 if (!inputContract.DaysOfWeeks.HasValue)
                     throw new InvalidOperationException("Contract must have DaysOfWeeks defined.");
@@ -155,158 +184,84 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     if (inputContract.IsOnline)
                     {
                         // Online: only tutors with centers (filtered above)
+=======
+                bool hasOverlap = activeContracts.Any(existing =>
+                    HasScheduleOverlap(contract.Schedules, existing.Schedules) &&
+                    HasDateOverlap(contract.StartDate, contract.EndDate, existing.StartDate, existing.EndDate));
+
+                if (hasOverlap) continue;
+
+                if (contract.IsOnline)
+                {
+                    availableTutors.Add(tutor);
+                }
+                else
+                {
+                    var childCenterId = contract.Child?.CenterId;
+                    if (childCenterId.HasValue &&
+                        tutor.TutorCenters.Any(tc => tc.CenterId == childCenterId.Value))
+                    {
+>>>>>>> Stashed changes
                         availableTutors.Add(tutor);
                     }
-                    else
-                    {
-                        // Must be in the same center as the child (if the child has a center)
-                        var childCenterId = inputContract.Child?.CenterId;
-                        if (!childCenterId.HasValue)
-                        {
-                            // Child has no center → does not accept offline
-                            continue;
-                        }
-
-                        var tutorCenterIds = tutor.TutorCenters.Select(tc => tc.CenterId).ToList();
-                        if (tutorCenterIds.Contains(childCenterId.Value))
-                        {
-                            availableTutors.Add(tutor);
-                        }
-                    }
                 }
+            }
 
-                return availableTutors;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error retrieving available tutors: {ex.Message}", ex);
-            }
+            return availableTutors;
         }
 
-        private bool CheckOverlap(Contract inputContract, Contract existingContract)
+        private bool HasScheduleOverlap(ICollection<ContractSchedule> s1, ICollection<ContractSchedule> s2)
         {
-            try
-            {
-                // Condition 1: Check days of week overlap (bitmask)
-                if (!inputContract.DaysOfWeeks.HasValue || !existingContract.DaysOfWeeks.HasValue)
-                    return false;
-
-                var daysOverlap = (inputContract.DaysOfWeeks.Value & existingContract.DaysOfWeeks.Value) > 0;
-                if (!daysOverlap)
-                    return false;
-
-                // Condition 2: Check time range overlap
-                if (!inputContract.StartTime.HasValue || !inputContract.EndTime.HasValue ||
-                    !existingContract.StartTime.HasValue || !existingContract.EndTime.HasValue)
-                    return false;
-
-                var timeOverlap = TimeRangesOverlap(
-                    inputContract.StartTime.Value,
-                    inputContract.EndTime.Value,
-                    existingContract.StartTime.Value,
-                    existingContract.EndTime.Value);
-
-                if (!timeOverlap)
-                    return false;
-
-                // Condition 3: Check date range overlap
-                var dateOverlap = DateRangesOverlap(
-                    inputContract.StartDate,
-                    inputContract.EndDate,
-                    existingContract.StartDate,
-                    existingContract.EndDate);
-
-                if (!dateOverlap)
-                    return false;
-                
-
-                // All overlap conditions met - check for the 1h30m exception rule
-                // If input contract's StartTime is at least 90 minutes after existing contract's EndTime, no overlap
-                var gapInMinutes = (inputContract.StartTime.Value.ToTimeSpan() - existingContract.EndTime.Value.ToTimeSpan()).TotalMinutes;
-                if (gapInMinutes >= 90)
-                    return false; 
-
-                // All conditions met and no exception applies - there is overlap
-                return true;
-            }
-            catch
-            {
-                // If any error occurs during overlap checking, assume no overlap for safety
-                return false;
-            }
+            foreach (var a in s1)
+                foreach (var b in s2)
+                    if (a.DayOfWeek == b.DayOfWeek &&
+                        a.StartTime < b.EndTime && b.StartTime < a.EndTime)
+                    {
+                        var gap = a.StartTime > b.EndTime
+                            ? a.StartTime - b.EndTime
+                            : b.StartTime - a.EndTime;
+                        if (gap.TotalMinutes < 90)
+                            return true;
+                    }
+            return false;
         }
 
-        private bool TimeRangesOverlap(TimeOnly start1, TimeOnly end1, TimeOnly start2, TimeOnly end2)
-        {
-            // Convert to TimeSpan for comparison
-            var span1Start = start1.ToTimeSpan();
-            var span1End = end1.ToTimeSpan();
-            var span2Start = start2.ToTimeSpan();
-            var span2End = end2.ToTimeSpan();
+        private bool HasDateOverlap(DateOnly s1, DateOnly e1, DateOnly s2, DateOnly e2)
+            => s1 <= e2 && s2 <= e1;
 
-            // Check if ranges overlap
-            return span1Start < span2End && span2Start < span1End;
-        }
-
-        private bool DateRangesOverlap(DateOnly start1, DateOnly end1, DateOnly start2, DateOnly end2)
-        {
-            // Check if date ranges overlap
-            return start1 <= end2 && start2 <= end1;
-        }
-
+        // ĐÃ SỬA: Dùng entity ContractSchedule thay vì DTO
         public async Task<bool> HasOverlappingContractForChildAsync(
-            Guid childId, 
-            DateOnly startDate, 
-            DateOnly endDate, 
-            TimeOnly? startTime, 
-            TimeOnly? endTime, 
-            byte? daysOfWeeks, 
+            Guid childId,
+            DateOnly startDate,
+            DateOnly endDate,
+            List<ContractSchedule> newSchedules,
             Guid? excludeContractId = null)
         {
-            try
+            var childContracts = await _context.Contracts
+                .Include(c => c.Schedules)
+                .Where(c => (c.ChildId == childId || c.SecondChildId == childId)
+                            && c.Status != "cancelled" && c.Status != "completed")
+                .Where(c => excludeContractId == null || c.ContractId != excludeContractId)
+                .ToListAsync();
+
+            foreach (var existing in childContracts)
             {
+<<<<<<< Updated upstream
                 // Get all active contracts for this child (excluding cancelled ones)
                 var childContracts = await _context.Contracts
                     .Where(c => c.ChildId == childId)
                     .Where(c => c.Status != "cancelled" && c.Status != "completed")
                     .ToListAsync();
+=======
+                if (!HasDateOverlap(startDate, endDate, existing.StartDate, existing.EndDate))
+                    continue;
+>>>>>>> Stashed changes
 
-                // If excludeContractId is provided, filter it out (used for updates)
-                if (excludeContractId.HasValue)
-                {
-                    childContracts = childContracts.Where(c => c.ContractId != excludeContractId.Value).ToList();
-                }
-
-                // If no active contracts exist, no overlap
-                if (!childContracts.Any())
-                    return false;
-
-                // Create a temporary contract object for overlap checking
-                var newContract = new Contract
-                {
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    DaysOfWeeks = daysOfWeeks
-                };
-
-                // Check for overlap with each existing contract
-                foreach (var existingContract in childContracts)
-                {
-                    if (CheckOverlap(newContract, existingContract))
-                    {
-                        return true; // Overlap found
-                    }
-                }
-
-                return false; // No overlap
+                if (HasScheduleOverlap(newSchedules, existing.Schedules))
+                    return true;
             }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error checking for overlapping contracts: {ex.Message}", ex);
-            }
+
+            return false;
         }
     }
 }
-

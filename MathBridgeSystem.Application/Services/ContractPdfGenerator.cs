@@ -2,7 +2,9 @@
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using MathBridgeSystem.Domain.Entities;
-using System.IO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MathBridgeSystem.Application.Services
 {
@@ -28,7 +30,7 @@ namespace MathBridgeSystem.Application.Services
                     page.Header()
                         .AlignCenter()
                         .Text("TUTORING CONTRACT - MATHBRIDGE")
-                        .FontSize(20)
+                        .FontSize(22)
                         .Bold()
                         .FontColor(Colors.Blue.Darken2);
 
@@ -36,24 +38,26 @@ namespace MathBridgeSystem.Application.Services
                         .PaddingVertical(20)
                         .Column(column =>
                         {
+                            // Thông tin học sinh & phụ huynh
                             column.Item().Row(row =>
                             {
                                 row.RelativeItem().Column(col =>
                                 {
-                                    col.Item().Text("Student Information:").Bold();
+                                    col.Item().Text("Student Information:").Bold().FontSize(14);
                                     col.Item().Text($"Name: {child.FullName}");
                                     col.Item().Text($"Grade: {child.Grade}");
                                 });
                                 row.RelativeItem().Column(col =>
                                 {
-                                    col.Item().Text("Parent Information:").Bold();
+                                    col.Item().Text("Parent Information:").Bold().FontSize(14);
                                     col.Item().Text($"Name: {parent.FullName}");
                                     col.Item().Text($"Email: {parent.Email}");
                                     col.Item().Text($"Phone: {parent.PhoneNumber}");
                                 });
                             });
 
-                            column.Item().PaddingTop(15).Text("Package Details:").Bold();
+                            // Gói học
+                            column.Item().PaddingTop(15).Text("Package Details:").Bold().FontSize(14);
                             column.Item().Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -69,40 +73,78 @@ namespace MathBridgeSystem.Application.Services
                                 table.Cell().Text($"{package.SessionCount} sessions");
 
                                 table.Cell().Text("Price").Bold();
-                                table.Cell().Text($"{package.Price:0,0} VND");
+                                table.Cell().Text($"{package.Price:N0} VND");
 
                                 table.Cell().Text("Duration").Bold();
                                 table.Cell().Text($"{contract.StartDate:dd/MM/yyyy} to {contract.EndDate:dd/MM/yyyy}");
                             });
 
+                            // Gia sư chính
                             if (mainTutor != null)
                             {
-                                column.Item().PaddingTop(15).Text("Main Tutor:").Bold();
+                                column.Item().PaddingTop(12).Text("Main Tutor:").Bold().FontSize(14);
                                 column.Item().Text(mainTutor.FullName);
                             }
 
+                            // Trung tâm (nếu học offline)
                             if (center != null)
                             {
-                                column.Item().PaddingTop(15).Text("Center:").Bold();
+                                column.Item().PaddingTop(12).Text("Center:").Bold().FontSize(14);
                                 column.Item().Text(center.Name);
                             }
 
-                            column.Item().PaddingTop(20).Text("Schedule:").Bold();
-                            column.Item().Text(FormatDaysOfWeek(contract.DaysOfWeeks));
-                            column.Item().Text($"Time: {contract.StartTime} - {contract.EndTime}");
+                            // LỊCH HỌC LINH HOẠT – ĐẸP NHẤT
+                            column.Item().PaddingTop(20).Text("Weekly Schedule:").Bold().FontSize(14);
+                            column.Item().PaddingTop(8).Element(ComposeScheduleTable);
 
-                            column.Item().PaddingTop(30)
-                                .AlignCenter()
-                                .Text("Thank you for choosing MathBridge!")
-                                .FontSize(14)
-                                .Italic()
-                                .FontColor(Colors.Grey.Darken2);
+                            void ComposeScheduleTable(IContainer container)
+                            {
+                                container.Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.ConstantColumn(100); // Day
+                                        columns.ConstantColumn(120); // Time
+                                    });
 
-                            column.Item().PaddingTop(20)
-                                .AlignCenter()
-                                .Text($"Contract ID: {contract.ContractId}")
-                                .FontSize(10)
-                                .FontColor(Colors.Grey.Medium);
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Border(1).Background(Colors.Grey.Lighten2).Padding(5)
+                                              .Text("Day of Week").Bold();
+                                        header.Cell().Border(1).Background(Colors.Grey.Lighten2).Padding(5)
+                                              .Text("Time").Bold();
+                                    });
+
+                                    foreach (var schedule in contract.Schedules.OrderBy(s => s.DayOfWeek))
+                                    {
+                                        table.Cell().Border(1).Padding(5)
+                                             .Text(GetDayName(schedule.DayOfWeek));
+
+                                        table.Cell().Border(1).Padding(5)
+                                             .Text($"{schedule.StartTime:HH:mm} - {schedule.EndTime:HH:mm}");
+                                    }
+
+                                    if (!contract.Schedules.Any())
+                                    {
+                                        table.Cell().ColumnSpan(2).Padding(10)
+                                             .Text("No schedule defined").Italic().FontColor(Colors.Grey.Medium);
+                                    }
+                                });
+                            }
+
+                            // Footer cảm ơn
+                            column.Item().PaddingTop(40)
+                                  .AlignCenter()
+                                  .Text("Thank you for choosing MathBridge!")
+                                  .FontSize(16)
+                                  .Italic()
+                                  .FontColor(Colors.Grey.Darken2);
+
+                            column.Item().PaddingTop(15)
+                                  .AlignCenter()
+                                  .Text($"Contract ID: {contract.ContractId}")
+                                  .FontSize(10)
+                                  .FontColor(Colors.Grey.Medium);
                         });
 
                     page.Footer()
@@ -114,20 +156,24 @@ namespace MathBridgeSystem.Application.Services
             }).GeneratePdf();
         }
 
+<<<<<<< Updated upstream
         private static string FormatDaysOfWeek(byte? daysOfWeek)
+=======
+        // Helper: Chuyển DayOfWeek → tên ngày đẹp
+        private static string GetDayName(DayOfWeek day)
+>>>>>>> Stashed changes
         {
-            if (!daysOfWeek.HasValue || daysOfWeek == 0) return "No schedule";
-
-            var days = new List<string>();
-            var value = daysOfWeek.Value;
-            if ((value & 1) != 0) days.Add("Sun");
-            if ((value & 2) != 0) days.Add("Mon");
-            if ((value & 4) != 0) days.Add("Tue");
-            if ((value & 8) != 0) days.Add("Wed");
-            if ((value & 16) != 0) days.Add("Thu");
-            if ((value & 32) != 0) days.Add("Fri");
-            if ((value & 64) != 0) days.Add("Sat");
-            return string.Join(", ", days);
+            return day switch
+            {
+                DayOfWeek.Monday => "Monday",
+                DayOfWeek.Tuesday => "Tuesday",
+                DayOfWeek.Wednesday => "Wednesday",
+                DayOfWeek.Thursday => "Thursday",
+                DayOfWeek.Friday => "Friday",
+                DayOfWeek.Saturday => "Saturday",
+                DayOfWeek.Sunday => "Sunday",
+                _ => day.ToString()
+            };
         }
     }
 }

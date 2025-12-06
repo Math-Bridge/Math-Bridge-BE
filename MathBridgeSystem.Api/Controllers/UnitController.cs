@@ -163,7 +163,24 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving units." });
             }
         }
+<<<<<<< Updated upstream
 
+=======
+        [HttpGet ("active")]
+        [Authorize]
+        public async Task<IActionResult> GetAllActiveUnits()
+        {
+            try
+            {
+                var units = await _unitService.GetAllActiveUnitsAsync();
+                return Ok(new { data = units, totalCount = units.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving units." });
+            }
+        }
+>>>>>>> Stashed changes
         /// <summary>
         /// Get units by curriculum ID
         /// </summary>

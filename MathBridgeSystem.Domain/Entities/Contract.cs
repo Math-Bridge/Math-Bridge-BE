@@ -42,6 +42,7 @@ public partial class Contract
     public DateTime? UpdatedDate { get; set; }
 
     public Guid? CenterId { get; set; }
+<<<<<<< Updated upstream
 
     public TimeOnly? StartTime { get; set; }
 
@@ -51,6 +52,12 @@ public partial class Contract
 
     public int? RescheduleCount { get; set; }
 
+=======
+    public int? RescheduleCount { get; set; }
+
+    public Guid? SecondChildId { get; set; }
+
+>>>>>>> Stashed changes
     public virtual Center? Center { get; set; }
 
     public virtual Child Child { get; set; } = null!;
@@ -68,7 +75,13 @@ public partial class Contract
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 
     public virtual ICollection<RescheduleRequest> RescheduleRequests { get; set; } = new List<RescheduleRequest>();
+<<<<<<< Updated upstream
 
+=======
+
+    public virtual Child? SecondChild { get; set; }
+
+>>>>>>> Stashed changes
     public virtual ICollection<SepayTransaction> SepayTransactions { get; set; } = new List<SepayTransaction>();
 
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
@@ -82,4 +95,5 @@ public partial class Contract
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+    public virtual ICollection<ContractSchedule> Schedules { get; set; } = new List<ContractSchedule>();
 }
