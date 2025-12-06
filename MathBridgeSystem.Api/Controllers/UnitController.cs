@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -163,7 +163,7 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving units." });
             }
         }
-        [HttpGet("active")]
+        [HttpGet ("active")]
         [Authorize]
         public async Task<IActionResult> GetAllActiveUnits()
         {

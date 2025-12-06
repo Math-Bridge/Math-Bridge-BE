@@ -15,6 +15,11 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<List<Contract>> GetAllWithDetailsAsync();
         Task<List<Contract>> GetByParentPhoneNumberAsync(string phoneNumber);
         Task<List<User>> GetAvailableTutorsForContractAsync(Guid contractId);
-        Task<bool> HasOverlappingContractForChildAsync(Guid childId, DateOnly startDate, DateOnly endDate, TimeOnly? startTime, TimeOnly? endTime, byte? daysOfWeeks, Guid? excludeContractId = null);
+        Task<bool> HasOverlappingContractForChildAsync(
+                    Guid childId,
+                    DateOnly startDate,
+                    DateOnly endDate,
+                    List<ContractSchedule> newSchedules, 
+                    Guid? excludeContractId = null);
     }
 }
