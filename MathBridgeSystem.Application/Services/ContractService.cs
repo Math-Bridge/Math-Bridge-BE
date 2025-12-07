@@ -427,25 +427,42 @@ namespace MathBridgeSystem.Application.Services
                     throw new ArgumentException($"Start time must be before end time for {s.DayOfWeek}");
             }
 
-            // 2. Lấy thông tin học sinh + trung tâm
-            var child = await _childRepository.GetByIdAsync(request.ChildId)
-                        ?? throw new ArgumentException("Child not found.");
+            // 2. LẤY THÔNG TIN CẢ 2 BÉ (nếu có)
+            var firstChild = await _childRepository.GetByIdAsync(request.ChildId)
+                             ?? throw new ArgumentException("First child not found.");
 
-            var childCenterId = child.CenterId;
+            Guid? firstCenterId = firstChild.CenterId;
 
-            if (!request.IsOnline && !childCenterId.HasValue)
-                throw new ArgumentException("Offline classes require the child to be assigned to a center.");
+            Guid? secondCenterId = null;
+            if (request.SecondChildId.HasValue)
+            {
+                var secondChild = await _childRepository.GetByIdAsync(request.SecondChildId.Value)
+                                  ?? throw new ArgumentException("Second child not found.");
 
-            // 3. Tạo hợp đồng tạm
+                secondCenterId = secondChild.CenterId;
+
+                // BẮT BUỘC: 2 bé phải cùng trung tâm nếu học offline
+                if (!request.IsOnline && firstCenterId != secondCenterId)
+                    throw new ArgumentException("Both children must be in the same center for offline twin contracts.");
+            }
+
+            // 3. XÁC ĐỊNH TRUNG TÂM DÙNG ĐỂ LỌC TUTOR (OFFLINE)
+            var requiredCenterId = !request.IsOnline ? firstCenterId : null;
+
+            if (!request.IsOnline && !requiredCenterId.HasValue)
+                throw new ArgumentException("Offline classes require child(ren) to be assigned to a center.");
+
+            // 4. Tạo hợp đồng tạm
             var tempContract = new Contract
             {
                 ChildId = request.ChildId,
+                SecondChildId = request.SecondChildId,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
                 IsOnline = request.IsOnline,
                 OfflineLatitude = request.OfflineLatitude,
                 OfflineLongitude = request.OfflineLongitude,
-                MaxDistanceKm = request.MaxDistanceKm ?? 15, // mặc định 15km
+                MaxDistanceKm = request.MaxDistanceKm ?? 15,
                 Schedules = request.Schedules.Select(s => new ContractSchedule
                 {
                     DayOfWeek = s.DayOfWeek,
@@ -454,19 +471,25 @@ namespace MathBridgeSystem.Application.Services
                 }).ToList()
             };
 
-            // 4. Lấy danh sách tutor khả dụng (cùng trung tâm + không trùng lịch)
+            // 5. Lấy tất cả tutor khả dụng (không trùng lịch)
             var allAvailableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(tempContract);
 
-            // 5. LỌC THEO KHOẢNG CÁCH (CHỈ CHO OFFLINE)
+            // 6. LỌC THEO TRUNG TÂM + KHOẢNG CÁCH (CHỈ CHO OFFLINE)
             var finalTutors = request.IsOnline
                 ? allAvailableTutors
                 : allAvailableTutors.Where(t =>
                 {
+                    // Phải thuộc trung tâm của bé 1 (và bé 2 nếu có)
+                    bool inCorrectCenter = t.TutorCenters.Any(tc => tc.CenterId == requiredCenterId.Value);
+
+                    // Phải trong khoảng cách MaxDistanceKm
                     var distance = CalculateDistance(tempContract, t);
-                    return distance <= tempContract.MaxDistanceKm;
+                    bool withinDistance = distance <= tempContract.MaxDistanceKm;
+
+                    return inCorrectCenter && withinDistance;
                 }).ToList();
 
-            // 6. Trả về kết quả
+            // 7. Trả về kết quả
             return finalTutors.Select(t => new AvailableTutorResponse
             {
                 UserId = t.UserId,
@@ -479,8 +502,8 @@ namespace MathBridgeSystem.Application.Services
                 FeedbackCount = t.FinalFeedbacks?.Count ?? 0,
                 DistanceKm = !request.IsOnline ? CalculateDistance(tempContract, t) : null
             })
-            .OrderByDescending(t => t.AverageRating)
-            .ThenBy(t => t.DistanceKm ?? decimal.MaxValue)
+            .OrderBy(t => t.DistanceKm ?? decimal.MaxValue)
+            .ThenByDescending(t => t.AverageRating)
             .ToList();
         }
     }

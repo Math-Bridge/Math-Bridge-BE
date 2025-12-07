@@ -11,6 +11,7 @@ namespace MathBridgeSystem.Application.DTOs
     {
         [Required] public Guid PackageId { get; set; }
         [Required] public Guid ChildId { get; set; }
+        public Guid? SecondChildId { get; set; }
         [Required] public DateOnly StartDate { get; set; }
         [Required] public DateOnly EndDate { get; set; }
         [Required] public List<ContractScheduleDto> Schedules { get; set; } = new();
