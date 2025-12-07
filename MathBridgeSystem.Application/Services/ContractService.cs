@@ -427,17 +427,16 @@ namespace MathBridgeSystem.Application.Services
                     throw new ArgumentException($"Start time must be before end time for {s.DayOfWeek}");
             }
 
-            // 2. Lấy thông tin học sinh → biết trung tâm (rất quan trọng nếu học offline)
+            // 2. Lấy thông tin học sinh + trung tâm
             var child = await _childRepository.GetByIdAsync(request.ChildId)
                         ?? throw new ArgumentException("Child not found.");
 
             var childCenterId = child.CenterId;
 
-            // Nếu học offline mà học sinh chưa có trung tâm → báo lỗi ngay
             if (!request.IsOnline && !childCenterId.HasValue)
                 throw new ArgumentException("Offline classes require the child to be assigned to a center.");
 
-            // 3. Tạo hợp đồng tạm (không lưu vào DB)
+            // 3. Tạo hợp đồng tạm
             var tempContract = new Contract
             {
                 ChildId = request.ChildId,
@@ -446,7 +445,7 @@ namespace MathBridgeSystem.Application.Services
                 IsOnline = request.IsOnline,
                 OfflineLatitude = request.OfflineLatitude,
                 OfflineLongitude = request.OfflineLongitude,
-                MaxDistanceKm = request.MaxDistanceKm ?? 15,
+                MaxDistanceKm = request.MaxDistanceKm ?? 15, // mặc định 15km
                 Schedules = request.Schedules.Select(s => new ContractSchedule
                 {
                     DayOfWeek = s.DayOfWeek,
@@ -455,16 +454,19 @@ namespace MathBridgeSystem.Application.Services
                 }).ToList()
             };
 
-            // 4. Dùng lại logic kiểm tra giáo viên khả dụng
+            // 4. Lấy danh sách tutor khả dụng (cùng trung tâm + không trùng lịch)
             var allAvailableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(tempContract);
 
-            // 5. LỌC THEO TRUNG TÂM CHỈ KHI NÀO ĐĂNG KÍ OFFLINE THÔI
+            // 5. LỌC THEO KHOẢNG CÁCH (CHỈ CHO OFFLINE)
             var finalTutors = request.IsOnline
-                ? allAvailableTutors 
-                : allAvailableTutors.Where(t => t.TutorCenters.Any(tc => tc.CenterId == childCenterId.Value))
-                                   .ToList();
+                ? allAvailableTutors
+                : allAvailableTutors.Where(t =>
+                {
+                    var distance = CalculateDistance(tempContract, t);
+                    return distance <= tempContract.MaxDistanceKm;
+                }).ToList();
 
-            // 6. Trả về danh sách giáo viên phù hợp
+            // 6. Trả về kết quả
             return finalTutors.Select(t => new AvailableTutorResponse
             {
                 UserId = t.UserId,
