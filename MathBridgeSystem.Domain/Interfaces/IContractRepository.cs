@@ -21,5 +21,6 @@ namespace MathBridgeSystem.Domain.Interfaces
                     DateOnly endDate,
                     List<ContractSchedule> newSchedules, 
                     Guid? excludeContractId = null);
+        Task<List<User>> GetAvailableTutorsForContractAsync(Contract contract);
     }
 }

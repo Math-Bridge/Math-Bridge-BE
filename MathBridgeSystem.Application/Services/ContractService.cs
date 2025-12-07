@@ -411,5 +411,75 @@ namespace MathBridgeSystem.Application.Services
 
             return (decimal)Math.Round(distance, 2);
         }
+        public async Task<List<AvailableTutorResponse>> CheckTutorsAvailabilityBeforeCreateAsync(CheckTutorAvailabilityRequest request)
+        {
+            // 1. Validate lịch học
+            if (request.Schedules == null || request.Schedules.Count == 0)
+                throw new ArgumentException("Please select at least one schedule.");
+            if (request.Schedules.Count > 7)
+                throw new ArgumentException("Cannot select more than 7 days per week.");
+            if (request.Schedules.GroupBy(s => s.DayOfWeek).Any(g => g.Count() > 1))
+                throw new ArgumentException("Cannot have duplicate days.");
+
+            foreach (var s in request.Schedules)
+            {
+                if (s.StartTime >= s.EndTime)
+                    throw new ArgumentException($"Start time must be before end time for {s.DayOfWeek}");
+            }
+
+            // 2. Lấy thông tin học sinh → biết trung tâm (rất quan trọng nếu học offline)
+            var child = await _childRepository.GetByIdAsync(request.ChildId)
+                        ?? throw new ArgumentException("Child not found.");
+
+            var childCenterId = child.CenterId;
+
+            // Nếu học offline mà học sinh chưa có trung tâm → báo lỗi ngay
+            if (!request.IsOnline && !childCenterId.HasValue)
+                throw new ArgumentException("Offline classes require the child to be assigned to a center.");
+
+            // 3. Tạo hợp đồng tạm (không lưu vào DB)
+            var tempContract = new Contract
+            {
+                ChildId = request.ChildId,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                IsOnline = request.IsOnline,
+                OfflineLatitude = request.OfflineLatitude,
+                OfflineLongitude = request.OfflineLongitude,
+                MaxDistanceKm = request.MaxDistanceKm ?? 15,
+                Schedules = request.Schedules.Select(s => new ContractSchedule
+                {
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                }).ToList()
+            };
+
+            // 4. Dùng lại logic kiểm tra giáo viên khả dụng
+            var allAvailableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(tempContract);
+
+            // 5. LỌC THEO TRUNG TÂM CHỈ KHI NÀO ĐĂNG KÍ OFFLINE THÔI
+            var finalTutors = request.IsOnline
+                ? allAvailableTutors 
+                : allAvailableTutors.Where(t => t.TutorCenters.Any(tc => tc.CenterId == childCenterId.Value))
+                                   .ToList();
+
+            // 6. Trả về danh sách giáo viên phù hợp
+            return finalTutors.Select(t => new AvailableTutorResponse
+            {
+                UserId = t.UserId,
+                FullName = t.FullName,
+                Email = t.Email,
+                PhoneNumber = t.PhoneNumber,
+                AverageRating = t.FinalFeedbacks?.Any() == true
+                    ? (decimal)t.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
+                    : 0m,
+                FeedbackCount = t.FinalFeedbacks?.Count ?? 0,
+                DistanceKm = !request.IsOnline ? CalculateDistance(tempContract, t) : null
+            })
+            .OrderByDescending(t => t.AverageRating)
+            .ThenBy(t => t.DistanceKm ?? decimal.MaxValue)
+            .ToList();
+        }
     }
 }

@@ -1,4 +1,4 @@
-using MathBridgeSystem.Domain.Entities;
+﻿using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using MathBridgeSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -209,6 +209,64 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             }
 
             return false;
+        }
+
+        // Nhận trực tiếp Contract object (dùng cho check trước khi tạo)
+        public async Task<List<User>> GetAvailableTutorsForContractAsync(Contract contract)
+        {
+            // Reuse logic cũ nhưng lấy thông tin từ contract object thay vì contractId
+            var child = await _context.Children
+                .Include(c => c.Center)
+                .FirstOrDefaultAsync(c => c.ChildId == contract.ChildId)
+                ?? throw new KeyNotFoundException("Child not found.");
+
+            var childCenterId = child.CenterId;
+
+            if (!contract.IsOnline && !childCenterId.HasValue)
+                throw new InvalidOperationException("Offline contract requires child to have a center.");
+
+            var maxContractsSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == "MaxContractsPerTutor");
+            int maxContracts = maxContractsSetting != null && int.TryParse(maxContractsSetting.Value, out int val) ? val : 5;
+
+            var tutors = await _context.Users
+                .Include(u => u.FinalFeedbacks)
+                .Include(u => u.Role)
+                .Include(u => u.TutorCenters)
+                .Include(u => u.ContractMainTutors)
+                    .ThenInclude(c => c.Schedules)
+                .Where(u => u.Role.RoleName == "tutor" && u.Status == "active" && u.TutorCenters.Any())
+                .ToListAsync();
+
+            var availableTutors = new List<User>();
+
+            foreach (var tutor in tutors)
+            {
+                var activeContracts = tutor.ContractMainTutors
+                    .Where(c => c.Status == "active")
+                    .ToList();
+
+                if (activeContracts.Count >= maxContracts)
+                    continue;
+
+                bool hasOverlap = activeContracts.Any(existing =>
+                    HasScheduleOverlap(contract.Schedules, existing.Schedules) &&
+                    HasDateOverlap(contract.StartDate, contract.EndDate, existing.StartDate, existing.EndDate));
+
+                if (hasOverlap)
+                    continue;
+
+                // Chỉ tutor cùng trung tâm với học sinh khi offline
+                if (!contract.IsOnline)
+                {
+                    if (!tutor.TutorCenters.Any(tc => tc.CenterId == childCenterId.Value))
+                        continue;
+                }
+
+                availableTutors.Add(tutor);
+            }
+
+            return availableTutors;
         }
     }
 }
