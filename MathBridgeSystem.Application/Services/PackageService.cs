@@ -2,17 +2,20 @@
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace MathBridgeSystem.Application.Services
 {
     public class PackageService : IPackageService
     {
         private readonly IPackageRepository _packageRepository;
+        private readonly ICloudinaryService _cloudinaryService;
         private readonly string[] _validGrades = { "grade 9", "grade 10", "grade 11", "grade 12" };
 
-        public PackageService(IPackageRepository packageRepository)
+        public PackageService(IPackageRepository packageRepository, ICloudinaryService cloudinaryService)
         {
             _packageRepository = packageRepository ?? throw new ArgumentNullException(nameof(packageRepository));
+            _cloudinaryService = cloudinaryService ?? throw new ArgumentNullException(nameof(cloudinaryService));
         }
 
         public async Task<Guid> CreatePackageAsync(CreatePackageRequest request)
@@ -46,7 +49,9 @@ namespace MathBridgeSystem.Application.Services
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow.ToLocalTime(),
                 CurriculumId = request.CurriculumId,
-                IsActive = request.IsActive
+                IsActive = request.IsActive,
+                ImageUrl = request.ImageUrl,
+                ImageVersion = request.ImageVersion
             };
 
             await _packageRepository.AddAsync(package);
@@ -68,7 +73,9 @@ namespace MathBridgeSystem.Application.Services
                 DurationDays = p.DurationDays,
                 Description = p.Description,
                 IsActive = p.IsActive,
-                CurriculumId = p.CurriculumId
+                CurriculumId = p.CurriculumId,
+                ImageUrl = p.ImageUrl,
+                ImageVersion = p.ImageVersion
             }).ToList();
         }
 
@@ -87,7 +94,9 @@ namespace MathBridgeSystem.Application.Services
                 DurationDays = package.DurationDays,
                 Description = package.Description,
                 IsActive = package.IsActive,
-                CurriculumId = package.CurriculumId
+                CurriculumId = package.CurriculumId,
+                ImageUrl = package.ImageUrl,
+                ImageVersion = package.ImageVersion
             };
         }
 
@@ -128,6 +137,8 @@ namespace MathBridgeSystem.Application.Services
             if (request.Description != null) package.Description = request.Description;
             if (request.CurriculumId.HasValue) package.CurriculumId = request.CurriculumId.Value;
             if (request.IsActive.HasValue) package.IsActive = request.IsActive.Value;
+            if (request.ImageUrl != null) package.ImageUrl = request.ImageUrl;
+            if (request.ImageVersion.HasValue) package.ImageVersion = request.ImageVersion.Value;
 
             package.UpdatedDate = DateTime.UtcNow.ToLocalTime();
 
@@ -144,7 +155,9 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = package.MaxReschedule,
                 DurationDays = package.DurationDays,
                 Description = package.Description,
-                IsActive = package.IsActive
+                IsActive = package.IsActive,
+                ImageUrl = package.ImageUrl,
+                ImageVersion = package.ImageVersion
             };
         }
 
@@ -175,7 +188,9 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = p.MaxReschedule,
                 DurationDays = p.DurationDays,
                 Description = p.Description,
-                IsActive = p.IsActive
+                IsActive = p.IsActive,
+                ImageUrl = p.ImageUrl,
+                ImageVersion = p.ImageVersion
             }).ToList();
         }
 
@@ -196,8 +211,58 @@ namespace MathBridgeSystem.Application.Services
                 MaxReschedule = package.MaxReschedule,
                 DurationDays = package.DurationDays,
                 Description = package.Description,
-                IsActive = package.IsActive
+                IsActive = package.IsActive,
+                ImageUrl = package.ImageUrl,
+                ImageVersion = package.ImageVersion
             };
+        }
+
+        public async Task<string> UploadPackageImageAsync(Guid packageId, IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    throw new ArgumentException("No file uploaded or file is empty.");
+
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    throw new ArgumentException("Invalid file type. Only JPG, PNG, and WebP are allowed.");
+
+                // Validate file size (2MB limit)
+                if (file.Length > 2 * 1024 * 1024)
+                    throw new ArgumentException("File size exceeds 2MB limit.");
+
+                // Get package
+                var package = await _packageRepository.GetByIdAsync(packageId);
+                if (package == null)
+                    throw new KeyNotFoundException($"Package with ID {packageId} not found.");
+
+                // Upload to Cloudinary
+                string imageUrl = await _cloudinaryService.UploadAvatarAsync(file, packageId);
+
+                // Update package with new image URL and increment version
+                package.ImageUrl = imageUrl;
+                package.ImageVersion = (byte)((package.ImageVersion ?? 0) + 1);
+                package.UpdatedDate = DateTime.UtcNow.ToLocalTime();
+
+                await _packageRepository.UpdateAsync(package);
+
+                return imageUrl;
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to upload package image: {ex.Message}", ex);
+            }
         }
     }
 }

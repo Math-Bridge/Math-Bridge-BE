@@ -88,5 +88,36 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Upload or update package image
+        /// </summary>
+        /// <param name="id">Package ID</param>
+        /// <param name="file">Image file (JPG, PNG, WebP, max 2MB)</param>
+        /// <returns>URL of the uploaded image</returns>
+        [HttpPost("{id}/image")]
+        public async Task<IActionResult> UploadPackageImage(Guid id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "No file uploaded" });
+
+            try
+            {
+                var imageUrl = await _packageService.UploadPackageImageAsync(id, file);
+                return Ok(new { imageUrl, message = "Package image uploaded successfully" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }

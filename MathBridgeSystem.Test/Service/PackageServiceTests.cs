@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
@@ -16,12 +16,14 @@ namespace MathBridgeSystem.Tests.Services
     public class PackageServiceTests
     {
         private readonly Mock<IPackageRepository> _packageRepositoryMock;
+        private readonly Mock<ICloudinaryService> _cloudinaryServiceMock;
         private readonly PackageService _packageService;
 
         public PackageServiceTests()
         {
             _packageRepositoryMock = new Mock<IPackageRepository>();
-            _packageService = new PackageService(_packageRepositoryMock.Object);
+            _cloudinaryServiceMock = new Mock<ICloudinaryService>();
+            _packageService = new PackageService(_packageRepositoryMock.Object, _cloudinaryServiceMock.Object);
         }
 
 
