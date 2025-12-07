@@ -239,5 +239,43 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve available tutors.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Check available tutors BEFORE creating a contract
+        /// Only returns matching tutors — no data is saved
+        /// </summary>
+        [HttpPost("check-available-tutors")]
+        [Authorize(Roles = "parent,staff,admin")]
+        public async Task<IActionResult> CheckAvailableTutorsBeforeCreate([FromBody] CheckTutorAvailabilityRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Invalid data", errors = ModelState });
+
+            try
+            {
+                var tutors = await _contractService.CheckTutorsAvailabilityBeforeCreateAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = tutors.Count > 0
+                        ? $"Found {tutors.Count} tutor(s) available for your schedule."
+                        : "No tutor matches your requested schedule and center at the moment.",
+                    data = new
+                    {
+                        totalAvailable = tutors.Count,
+                        tutors = tutors
+                    }
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "System error", details = ex.Message });
+            }
+        }
     }
 }
