@@ -283,7 +283,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(contractId)).ReturnsAsync(contract);
 
             // Act
-            var result = await _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole);
+            var result = await _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole, package.Price);
 
             // Assert
             result.AmountDeducted.Should().Be(1500);
@@ -305,7 +305,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync((Contract)null);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole, 500);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract not found");
         }
@@ -320,7 +320,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, request.ContractId, _adminId, _adminRole,500);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("Contract does not belong to this parent");
         }
@@ -334,7 +334,7 @@ namespace MathBridgeSystem.Tests.Services
             _userRepositoryMock.Setup(r => r.GetByIdAsync(_userId)).ReturnsAsync(parent);
             _userRepositoryMock.Setup(r => r.GetContractWithPackageAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole);
+            Func<Task> act = () => _userService.DeductWalletAsync(_userId, new Guid(), _adminId, _adminRole,500);
 
             await act.Should().ThrowAsync<Exception>().WithMessage("*Insufficient wallet balance*");
         }

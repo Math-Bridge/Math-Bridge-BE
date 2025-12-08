@@ -115,7 +115,7 @@ namespace MathBridgeSystem.Application.Services
                                               .Text("Time").Bold();
                                     });
 
-                                    foreach (var schedule in contract.Schedules.OrderBy(s => s.DayOfWeek))
+                                    foreach (var schedule in contract.ContractSchedules.OrderBy(s => s.DayOfWeek))
                                     {
                                         table.Cell().Border(1).Padding(5)
                                              .Text(GetDayName(schedule.DayOfWeek));
@@ -124,7 +124,7 @@ namespace MathBridgeSystem.Application.Services
                                              .Text($"{schedule.StartTime:HH:mm} - {schedule.EndTime:HH:mm}");
                                     }
 
-                                    if (!contract.Schedules.Any())
+                                    if (!contract.ContractSchedules.Any())
                                     {
                                         table.Cell().ColumnSpan(2).Padding(10)
                                              .Text("No schedule defined").Italic().FontColor(Colors.Grey.Medium);
