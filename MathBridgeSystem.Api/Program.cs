@@ -120,7 +120,7 @@
     // Register ZoomProvider
     builder.Services.AddHttpClient<ZoomProvider>();
     builder.Services.AddScoped<IVideoConferenceProvider, ZoomProvider>();
-
+    builder.Services.AddHttpContextAccessor();
     // === CORE BUSINESS SERVICES ===
     builder.Services.AddScoped<ISessionService, SessionService>();
     builder.Services.AddScoped<IRescheduleService, RescheduleService>();
