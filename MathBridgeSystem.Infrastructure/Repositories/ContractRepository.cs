@@ -41,7 +41,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .Where(c => c.ParentId == parentId)
                 .ToListAsync();
         }
@@ -57,7 +57,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .FirstOrDefaultAsync(c => c.ContractId == id);
         }
 
@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             return await _context.Contracts
                 .Include(c => c.Package)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .FirstOrDefaultAsync(c => c.ContractId == contractId);
         }
 
@@ -80,7 +80,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToListAsync();
         }
@@ -96,7 +96,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(c => c.SubstituteTutor2)
                 .Include(c => c.Package)
                 .Include(c => c.Center)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .Include(c => c.Sessions)
                 .Include(c => c.RescheduleRequests)
                 .Include(c => c.WalletTransactions)
@@ -110,11 +110,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         {
             var contract = await _context.Contracts
                 .Include(c => c.Child)
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .FirstOrDefaultAsync(c => c.ContractId == contractId)
                 ?? throw new KeyNotFoundException($"Contract {contractId} not found");
 
-            if (!contract.Schedules.Any())
+            if (!contract.ContractSchedules.Any())
                 throw new InvalidOperationException("Contract has no schedule defined.");
 
             var maxContractsSetting = await _context.SystemSettings
@@ -127,7 +127,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.Role)
                 .Include(u => u.TutorCenters)
                 .Include(u => u.ContractMainTutors)
-                    .ThenInclude(c => c.Schedules)
+                    .ThenInclude(c => c.ContractSchedules)
                 .Where(u => u.Role.RoleName == "tutor" && u.Status == "active" && u.TutorCenters.Any())
                 .ToListAsync();
 
@@ -143,7 +143,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     continue;
 
                 bool hasOverlap = activeContracts.Any(existing =>
-                    HasScheduleOverlap(contract.Schedules, existing.Schedules) &&
+                    HasScheduleOverlap(contract.ContractSchedules, existing.ContractSchedules) &&
                     HasDateOverlap(contract.StartDate, contract.EndDate, existing.StartDate, existing.EndDate));
 
                 if (hasOverlap) 
@@ -193,7 +193,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             Guid? excludeContractId = null)
         {
             var childContracts = await _context.Contracts
-                .Include(c => c.Schedules)
+                .Include(c => c.ContractSchedules)
                 .Where(c => (c.ChildId == childId || c.SecondChildId == childId)
                             && c.Status != "cancelled" && c.Status != "completed")
                 .Where(c => excludeContractId == null || c.ContractId != excludeContractId)
@@ -204,7 +204,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 if (!HasDateOverlap(startDate, endDate, existing.StartDate, existing.EndDate))
                     continue;
 
-                if (HasScheduleOverlap(newSchedules, existing.Schedules))
+                if (HasScheduleOverlap(newSchedules, existing.ContractSchedules))
                     return true;
             }
 
@@ -234,7 +234,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(u => u.Role)
                 .Include(u => u.TutorCenters)
                 .Include(u => u.ContractMainTutors)
-                    .ThenInclude(c => c.Schedules)
+                    .ThenInclude(c => c.ContractSchedules)
                 .Where(u => u.Role.RoleName == "tutor" && u.Status == "active" && u.TutorCenters.Any())
                 .ToListAsync();
 
@@ -250,7 +250,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                     continue;
 
                 bool hasOverlap = activeContracts.Any(existing =>
-                    HasScheduleOverlap(contract.Schedules, existing.Schedules) &&
+                    HasScheduleOverlap(contract.ContractSchedules, existing.ContractSchedules) &&
                     HasDateOverlap(contract.StartDate, contract.EndDate, existing.StartDate, existing.EndDate));
 
                 if (hasOverlap)
