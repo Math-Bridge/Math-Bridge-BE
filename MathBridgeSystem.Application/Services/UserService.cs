@@ -161,7 +161,7 @@ namespace MathBridgeSystem.Application.Services
             return user.UserId;
         }
 
-        public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid cid, Guid currentUserId, string currentUserRole)
+        public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid cid, Guid currentUserId, string currentUserRole, decimal price)
         {
             if (cid == null)
                 throw new ArgumentNullException(nameof(cid));
@@ -184,12 +184,10 @@ namespace MathBridgeSystem.Application.Services
             if (contract.ParentId != parentId)
                 throw new Exception("Contract does not belong to this parent");
 
-            // Get the package price
-            decimal packagePrice = contract.Package.Price;
 
             // Check if parent has sufficient balance
-            if (parent.WalletBalance < packagePrice)
-                throw new Exception($"Insufficient wallet balance. Required: {packagePrice:N2}, Available: {parent.WalletBalance:N2}");
+            if (parent.WalletBalance < price)
+                throw new Exception($"Insufficient wallet balance. Required: {price:N2}, Available: {parent.WalletBalance:N2}");
 
             // Create wallet transaction
             var transaction = new WalletTransaction
@@ -197,7 +195,7 @@ namespace MathBridgeSystem.Application.Services
                 TransactionId = Guid.NewGuid(),
                 ParentId = parentId,
                 ContractId = cid,
-                Amount = packagePrice,
+                Amount = price,
                 TransactionType = "withdrawal",
                 Description = $"Payment for contract {cid} - Package: {contract.Package.PackageName}",
                 TransactionDate = DateTime.UtcNow,
@@ -207,7 +205,7 @@ namespace MathBridgeSystem.Application.Services
             };
 
             // Deduct from parent's wallet balance
-            parent.WalletBalance -= packagePrice;
+            parent.WalletBalance -= price;
 
             // Save transaction and update user balance
             await _walletTransactionRepository.AddAsync(transaction);
@@ -216,7 +214,7 @@ namespace MathBridgeSystem.Application.Services
             return new DeductWalletResponse
             {
                 TransactionId = transaction.TransactionId,
-                AmountDeducted = packagePrice,
+                AmountDeducted = price,
                 NewWalletBalance = parent.WalletBalance,
                 TransactionStatus = transaction.Status,
                 TransactionDate = transaction.TransactionDate,
