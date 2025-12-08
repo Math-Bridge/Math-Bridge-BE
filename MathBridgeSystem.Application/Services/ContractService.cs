@@ -111,7 +111,7 @@ namespace MathBridgeSystem.Application.Services
             // Add flexible schedules
             foreach (var s in request.Schedules)
             {
-                contract.Schedules.Add(new ContractSchedule
+                contract.ContractSchedules.Add(new ContractSchedule
                 {
                     DayOfWeek = s.DayOfWeek,
                     StartTime = s.StartTime,
@@ -185,7 +185,7 @@ namespace MathBridgeSystem.Application.Services
             // → Tức là: nếu hôm nay là Thứ 3, mà StartDate là Thứ 3 → bỏ qua hôm nay → tìm ngày tiếp theo trong lịch
             while (currentDate <= contract.EndDate && sessions.Count < totalSessionsNeeded)
             {
-                var schedule = contract.Schedules.FirstOrDefault(s => s.DayOfWeek == currentDate.DayOfWeek);
+                var schedule = contract.ContractSchedules.FirstOrDefault(s => s.DayOfWeek == currentDate.DayOfWeek);
 
                 if (schedule != null)
                 {
@@ -318,7 +318,7 @@ namespace MathBridgeSystem.Application.Services
             CenterName = c.Center?.Name ?? "No Center",
             StartDate = c.StartDate,
             EndDate = c.EndDate,
-            Schedules = c.Schedules.Select(s => new ContractScheduleDto
+            Schedules = c.ContractSchedules.Select(s => new ContractScheduleDto
             {
                 DayOfWeek = s.DayOfWeek,
                 StartTime = s.StartTime,
@@ -463,7 +463,7 @@ namespace MathBridgeSystem.Application.Services
                 OfflineLatitude = request.OfflineLatitude,
                 OfflineLongitude = request.OfflineLongitude,
                 MaxDistanceKm = request.MaxDistanceKm ?? 15,
-                Schedules = request.Schedules.Select(s => new ContractSchedule
+                ContractSchedules = request.Schedules.Select(s => new ContractSchedule
                 {
                     DayOfWeek = s.DayOfWeek,
                     StartTime = s.StartTime,
