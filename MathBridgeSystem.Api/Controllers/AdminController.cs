@@ -53,26 +53,29 @@ namespace MathBridgeSystem.Presentation.Controllers
         public async Task<IActionResult> UpdateUserStatus(Guid id, [FromBody] UpdateStatusRequest request)
         {
             if (!ModelState.IsValid)
-            {
-                Console.WriteLine($"ModelState errors in UpdateUserStatus: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
-            }
 
             try
             {
-                var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(currentUserRole))
-                {
-                    Console.WriteLine("UpdateUserStatus: Role not found in token");
-                    return Unauthorized(new { error = "Role not found in token" });
-                }
+                // GET CURRENT USER EMAIL FROM TOKEN
+                var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value
+                                    ?? User.FindFirst("email")?.Value;
 
-                var userId = await _userService.UpdateUserStatusAsync(id, request, currentUserRole);
+                bool isSuperAdmin = currentUserEmail != null &&
+                                    currentUserEmail.Equals("admin_1@mathbridge.vn", StringComparison.OrdinalIgnoreCase);
+
+                // PASS SUPER ADMIN STATUS TO SERVICE
+                var userId = await _userService.UpdateUserStatusAsync(id, request, isSuperAdmin ? "super_admin" : "admin");
+
                 return Ok(new { userId });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Specific protection messages
+                return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateUserStatus: {ex.ToString()}");
                 var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error while updating status" : ex.Message;
                 return StatusCode(500, new { error = errorMessage });
             }

@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.Notification;
+﻿using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace MathBridgeSystem.Application.Services
 {
@@ -16,13 +18,16 @@ namespace MathBridgeSystem.Application.Services
         private readonly IWalletTransactionRepository _walletTransactionRepository;
         private readonly ICloudinaryService _cloudinaryService;
         private readonly INotificationService _notificationService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository, ICloudinaryService cloudinaryService, INotificationService notificationService)
+        public UserService(IUserRepository userRepository, IWalletTransactionRepository walletTransactionRepository, ICloudinaryService cloudinaryService, INotificationService notificationService, IHttpContextAccessor httpContextAccessor)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
             _cloudinaryService = cloudinaryService ?? throw new ArgumentNullException(nameof(cloudinaryService));
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+
         }
 
         public async Task<UserResponse> GetUserByIdAsync(Guid id, Guid currentUserId, string currentUserRole)
@@ -134,16 +139,50 @@ namespace MathBridgeSystem.Application.Services
                 throw new ArgumentNullException(nameof(request));
 
             if (string.IsNullOrEmpty(currentUserRole) || currentUserRole != "admin")
-                throw new Exception("Only admins can update user status");
+                throw new UnauthorizedAccessException("Only admins can update user status");
 
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null)
-                throw new Exception("User not found");
+            var userToUpdate = await _userRepository.GetByIdAsync(id)
+                               ?? throw new KeyNotFoundException("User not found");
 
-            user.Status = request.Status;
-            await _userRepository.UpdateAsync(user);
+            // GET CURRENT USER ID FROM TOKEN (your token already has "sub")
+            var currentUserIdString = _httpContextAccessor.HttpContext?.User
+                .FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? _httpContextAccessor.HttpContext?.User
+                   .FindFirst("sub")?.Value;
 
-            // Notify all staff members (RoleId = 4)
+            // SUPER ADMIN USER ID – HARDCODED (your admin_1)
+            var superAdminId = Guid.Parse("220402f5-eb5c-4de9-adec-6d5c204bf7eb");
+
+            bool isSuperAdmin = Guid.TryParse(currentUserIdString, out var currentUserId)
+                                && currentUserId == superAdminId;
+
+            // 1. NO ONE CAN BAN THE SUPER ADMIN (except himself – optional)
+            if (userToUpdate.UserId == superAdminId && !isSuperAdmin)
+            {
+                throw new InvalidOperationException(
+                    "The root admin account (admin_1@mathbridge.vn) is protected and cannot be modified by anyone except itself."
+                );
+            }
+
+            // 2. REGULAR ADMINS CANNOT BAN OTHER ADMINS
+            // BUT SUPER ADMIN CAN BAN ANYONE
+            if (!isSuperAdmin && userToUpdate.Role.RoleName == "admin")
+            {
+                throw new InvalidOperationException("Regular admins cannot change the status of other admin accounts.");
+            }
+
+            // SUPER ADMIN CAN BAN ANYONE – INCLUDING OTHER ADMINS
+            userToUpdate.Status = request.Status;
+
+            // Destroy password when banning
+            if (request.Status is "banned" or "inactive")
+            {
+                userToUpdate.PasswordHash = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+            }
+
+            await _userRepository.UpdateAsync(userToUpdate);
+
+            // Notify staff (RoleId = 4)
             var allUsers = await _userRepository.GetAllAsync();
             var staffUsers = allUsers.Where(u => u.RoleId == 4).ToList();
 
@@ -153,12 +192,12 @@ namespace MathBridgeSystem.Application.Services
                 {
                     UserId = staff.UserId,
                     Title = "User Status Updated",
-                    Message = $"User {user.FullName} ({user.Email}) status has been updated to {request.Status}.",
+                    Message = $"User {userToUpdate.FullName} ({userToUpdate.Email}) status changed to '{request.Status}' by {(isSuperAdmin ? "Super Admin" : "Admin")}.",
                     NotificationType = "System"
                 });
             }
 
-            return user.UserId;
+            return userToUpdate.UserId;
         }
 
         public async Task<DeductWalletResponse> DeductWalletAsync(Guid parentId, Guid cid, Guid currentUserId, string currentUserRole, decimal price)
