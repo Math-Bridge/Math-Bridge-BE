@@ -411,5 +411,100 @@ namespace MathBridgeSystem.Application.Services
 
             return (decimal)Math.Round(distance, 2);
         }
+        public async Task<List<AvailableTutorResponse>> CheckTutorsAvailabilityBeforeCreateAsync(CheckTutorAvailabilityRequest request)
+        {
+            // 1. Validate lịch học
+            if (request.Schedules == null || request.Schedules.Count == 0)
+                throw new ArgumentException("Please select at least one schedule.");
+            if (request.Schedules.Count > 7)
+                throw new ArgumentException("Cannot select more than 7 days per week.");
+            if (request.Schedules.GroupBy(s => s.DayOfWeek).Any(g => g.Count() > 1))
+                throw new ArgumentException("Cannot have duplicate days.");
+
+            foreach (var s in request.Schedules)
+            {
+                if (s.StartTime >= s.EndTime)
+                    throw new ArgumentException($"Start time must be before end time for {s.DayOfWeek}");
+            }
+
+            // 2. LẤY THÔNG TIN CẢ 2 BÉ (nếu có)
+            var firstChild = await _childRepository.GetByIdAsync(request.ChildId)
+                             ?? throw new ArgumentException("First child not found.");
+
+            Guid? firstCenterId = firstChild.CenterId;
+
+            Guid? secondCenterId = null;
+            if (request.SecondChildId.HasValue)
+            {
+                var secondChild = await _childRepository.GetByIdAsync(request.SecondChildId.Value)
+                                  ?? throw new ArgumentException("Second child not found.");
+
+                secondCenterId = secondChild.CenterId;
+
+                // BẮT BUỘC: 2 bé phải cùng trung tâm nếu học offline
+                if (!request.IsOnline && firstCenterId != secondCenterId)
+                    throw new ArgumentException("Both children must be in the same center for offline twin contracts.");
+            }
+
+            // 3. XÁC ĐỊNH TRUNG TÂM DÙNG ĐỂ LỌC TUTOR (OFFLINE)
+            var requiredCenterId = !request.IsOnline ? firstCenterId : null;
+
+            if (!request.IsOnline && !requiredCenterId.HasValue)
+                throw new ArgumentException("Offline classes require child(ren) to be assigned to a center.");
+
+            // 4. Tạo hợp đồng tạm
+            var tempContract = new Contract
+            {
+                ChildId = request.ChildId,
+                SecondChildId = request.SecondChildId,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                IsOnline = request.IsOnline,
+                OfflineLatitude = request.OfflineLatitude,
+                OfflineLongitude = request.OfflineLongitude,
+                MaxDistanceKm = request.MaxDistanceKm ?? 15,
+                Schedules = request.Schedules.Select(s => new ContractSchedule
+                {
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                }).ToList()
+            };
+
+            // 5. Lấy tất cả tutor khả dụng (không trùng lịch)
+            var allAvailableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(tempContract);
+
+            // 6. LỌC THEO TRUNG TÂM + KHOẢNG CÁCH (CHỈ CHO OFFLINE)
+            var finalTutors = request.IsOnline
+                ? allAvailableTutors
+                : allAvailableTutors.Where(t =>
+                {
+                    // Phải thuộc trung tâm của bé 1 (và bé 2 nếu có)
+                    bool inCorrectCenter = t.TutorCenters.Any(tc => tc.CenterId == requiredCenterId.Value);
+
+                    // Phải trong khoảng cách MaxDistanceKm
+                    var distance = CalculateDistance(tempContract, t);
+                    bool withinDistance = distance <= tempContract.MaxDistanceKm;
+
+                    return inCorrectCenter && withinDistance;
+                }).ToList();
+
+            // 7. Trả về kết quả
+            return finalTutors.Select(t => new AvailableTutorResponse
+            {
+                UserId = t.UserId,
+                FullName = t.FullName,
+                Email = t.Email,
+                PhoneNumber = t.PhoneNumber,
+                AverageRating = t.FinalFeedbacks?.Any() == true
+                    ? (decimal)t.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
+                    : 0m,
+                FeedbackCount = t.FinalFeedbacks?.Count ?? 0,
+                DistanceKm = !request.IsOnline ? CalculateDistance(tempContract, t) : null
+            })
+            .OrderBy(t => t.DistanceKm ?? decimal.MaxValue)
+            .ThenByDescending(t => t.AverageRating)
+            .ToList();
+        }
     }
 }
