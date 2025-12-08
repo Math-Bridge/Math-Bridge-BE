@@ -104,4 +104,8 @@ public partial class User
     public virtual ICollection<VideoConferenceSession> VideoConferenceSessions { get; set; } = new List<VideoConferenceSession>();
 
     public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+
+    public virtual ICollection<WithdrawalRequest> WithdrawalRequestParents { get; set; } = new List<WithdrawalRequest>();
+
+    public virtual ICollection<WithdrawalRequest> WithdrawalRequestStaffs { get; set; } = new List<WithdrawalRequest>();
 }
