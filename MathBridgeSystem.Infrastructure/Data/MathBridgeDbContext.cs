@@ -22,6 +22,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<Contract> Contracts { get; set; }
 
+    public virtual DbSet<ContractSchedule> ContractSchedules { get; set; }
+
     public virtual DbSet<Curriculum> Curricula { get; set; }
 
     public virtual DbSet<DailyReport> DailyReports { get; set; }
@@ -63,7 +65,7 @@ public partial class MathBridgeDbContext : DbContext
     public virtual DbSet<VideoConferenceSession> VideoConferenceSessions { get; set; }
 
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
-    public virtual DbSet<ContractSchedule> ContractSchedules { get; set; } = null!;
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Only configure if not already configured (e.g., when used outside of DI container)
@@ -285,6 +287,36 @@ public partial class MathBridgeDbContext : DbContext
                 .HasConstraintName("fk_contracts_substitute_tutor2");
         });
 
+        modelBuilder.Entity<ContractSchedule>(entity =>
+        {
+            entity.HasKey(e => e.ScheduleId);
+
+            entity.ToTable("contract_schedules");
+
+            entity.HasIndex(e => e.ContractId, "IX_contract_schedules_contract");
+
+            entity.HasIndex(e => new { e.ContractId, e.DayOfWeek }, "UQ_contract_day_unique").IsUnique();
+
+            entity.Property(e => e.ScheduleId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("schedule_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.DayOfWeek).HasColumnName("day_of_week");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.UpdatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_date");
+
+            entity.HasOne(d => d.Contract).WithMany(p => p.ContractSchedules)
+                .HasForeignKey(d => d.ContractId)
+                .HasConstraintName("FK_contract_schedules_contract");
+        });
+
         modelBuilder.Entity<Curriculum>(entity =>
         {
             entity.HasKey(e => e.CurriculumId).HasName("PK__curricul__17583C76AA08A06B");
@@ -441,11 +473,11 @@ public partial class MathBridgeDbContext : DbContext
                     "UnitsMathconcept",
                     r => r.HasOne<Unit>().WithMany()
                         .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("units_fk"),
                     l => l.HasOne<MathConcept>().WithMany()
                         .HasForeignKey("ConceptId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("concepts___fk"),
                     j =>
                     {
@@ -1201,43 +1233,7 @@ public partial class MathBridgeDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_video_conference_creator");
         });
-        modelBuilder.Entity<ContractSchedule>(entity =>
-        {
-            entity.ToTable("contract_schedules");
 
-            entity.HasKey(e => e.ScheduleId);
-
-            entity.Property(e => e.ScheduleId)
-                  .HasDefaultValueSql("(newid())")
-                  .HasColumnName("schedule_id");
-
-            entity.Property(e => e.ContractId).HasColumnName("contract_id");
-
-            entity.Property(e => e.DayOfWeek)
-                  .HasColumnName("day_of_week")          
-                  .HasColumnType("tinyint")               
-                  .HasConversion<byte>();                 
-
-            entity.Property(e => e.StartTime)
-                  .HasColumnName("start_time");
-
-            entity.Property(e => e.EndTime)
-                  .HasColumnName("end_time");
-
-            entity.Property(e => e.CreatedDate)
-                  .HasDefaultValueSql("(getutcdate())")
-                  .HasColumnType("datetime")
-                  .HasColumnName("created_date");
-
-            entity.Property(e => e.UpdatedDate)
-                  .HasColumnType("datetime")
-                  .HasColumnName("updated_date");
-
-            entity.HasOne(d => d.Contract)
-                  .WithMany(p => p.Schedules)
-                  .HasForeignKey(d => d.ContractId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
             entity.HasKey(e => e.TransactionId).HasName("PK__wallet_t__85C600AF384090BD");
