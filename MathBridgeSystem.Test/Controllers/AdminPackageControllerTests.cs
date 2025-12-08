@@ -1,6 +1,7 @@
 using MathBridgeSystem.Api.Controllers;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
@@ -320,6 +321,143 @@ namespace MathBridgeSystem.Tests.Controllers
 
             // Act
             var result = await _controller.DeletePackage(packageId);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+            Assert.NotNull(statusCodeResult.Value);
+        }
+        #endregion
+
+        #region UploadPackageImage Tests
+        [Fact]
+        public async Task UploadPackageImage_ValidFile_ReturnsOkWithImageUrl()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var imageUrl = "https://cloudinary.com/image123.jpg";
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(1024); // 1KB
+            fileMock.Setup(f => f.FileName).Returns("test.jpg");
+
+            _mockPackageService.Setup(s => s.UploadPackageImageAsync(packageId, fileMock.Object))
+                .ReturnsAsync(imageUrl);
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+            _mockPackageService.Verify(s => s.UploadPackageImageAsync(packageId, fileMock.Object), Times.Once);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_NullFile_ReturnsBadRequest()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, null!);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+            _mockPackageService.Verify(s => s.UploadPackageImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_EmptyFile_ReturnsBadRequest()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(0);
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+            _mockPackageService.Verify(s => s.UploadPackageImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_PackageNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(1024);
+            fileMock.Setup(f => f.FileName).Returns("test.jpg");
+
+            _mockPackageService.Setup(s => s.UploadPackageImageAsync(packageId, fileMock.Object))
+                .ThrowsAsync(new KeyNotFoundException("Package not found"));
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_InvalidFileType_ReturnsBadRequest()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(1024);
+            fileMock.Setup(f => f.FileName).Returns("test.pdf");
+
+            _mockPackageService.Setup(s => s.UploadPackageImageAsync(packageId, fileMock.Object))
+                .ThrowsAsync(new ArgumentException("Invalid file type. Only JPG, PNG, and WebP are allowed."));
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_FileSizeExceedsLimit_ReturnsBadRequest()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(3 * 1024 * 1024); // 3MB
+            fileMock.Setup(f => f.FileName).Returns("test.jpg");
+
+            _mockPackageService.Setup(s => s.UploadPackageImageAsync(packageId, fileMock.Object))
+                .ThrowsAsync(new ArgumentException("File size exceeds 2MB limit."));
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task UploadPackageImage_GenericException_ReturnsInternalServerError()
+        {
+            // Arrange
+            var packageId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(1024);
+            fileMock.Setup(f => f.FileName).Returns("test.jpg");
+
+            _mockPackageService.Setup(s => s.UploadPackageImageAsync(packageId, fileMock.Object))
+                .ThrowsAsync(new Exception("Cloudinary upload failed"));
+
+            // Act
+            var result = await _controller.UploadPackageImage(packageId, fileMock.Object);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result);

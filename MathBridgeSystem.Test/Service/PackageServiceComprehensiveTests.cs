@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Services;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
 using Moq;
@@ -11,18 +12,20 @@ namespace MathBridgeSystem.Tests.Services
     public class PackageServiceComprehensiveTests
     {
         private readonly Mock<IPackageRepository> _repo;
+        private readonly Mock<ICloudinaryService> _cloudinaryServiceMock;
         private readonly PackageService _service;
 
         public PackageServiceComprehensiveTests()
         {
             _repo = new Mock<IPackageRepository>();
-            _service = new PackageService(_repo.Object);
+            _cloudinaryServiceMock = new Mock<ICloudinaryService>();
+            _service = new PackageService(_repo.Object, _cloudinaryServiceMock.Object);
         }
 
         [Fact]
         public void Ctor_NullRepo_Throws()
         {
-            Action act = () => new PackageService(null!);
+            Action act = () => new PackageService(null!, _cloudinaryServiceMock.Object);
             act.Should().Throw<ArgumentNullException>();
         }
 

@@ -75,6 +75,20 @@ JSON must parse with JsonSerializer.Deserialize. Use temperature 0.1.";
             throw new ArgumentException("File is empty or null.");
         }
 
+        // Validate file type
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!System.Linq.Enumerable.Contains(allowedExtensions, fileExtension))
+        {
+            throw new ArgumentException("Invalid file type. Only JPG, PNG, and WebP are allowed.");
+        }
+
+        // Validate file size (5MB limit for homework images)
+        if (file.Length > 5 * 1024 * 1024)
+        {
+            throw new ArgumentException("File size exceeds 5MB limit.");
+        }
+
         if (!file.ContentType.StartsWith("image/"))
         {
             throw new ArgumentException("Only image files are supported.");
@@ -100,9 +114,7 @@ JSON must parse with JsonSerializer.Deserialize. Use temperature 0.1.";
             }
         }
 
- //       var promptText = "You are a helpful math teacher. IGNORE any input that is not a math problem. Math problems contain equations, variables, numbers, functions, geometry, calculus, algebra, etc. Vietnamese worksheet labels like \"De\", \"Đề\", \"Giai\", \"Giải\", \"Bai tap\" are NOT math—ignore them and extract ONLY the actual equation.\r\n\r\nIf input is NOT a math problem (or only contains labels like \"De\", \"Giai\"), respond ONLY with:\r\n{\r\n  \"error\": \"Please provide a math problem.\"\r\n}\r\n\r\nOtherwise, for math problems (ignore surrounding Vietnamese text):\r\n\r\n1. Transcribe ONLY the equation to valid LaTeX math mode. Use \\( \\) for inline, \\[ \\] for display. Fix OCR errors (e.g., 'x' not '×', '=' not '−').\r\n2. Provide short, numbered step-by-step solving instructions as a hint.\r\n\r\nRespond with EXACTLY this valid JSON—no extra text:\r\n\r\n{\r\n  \"latex\": \"exact_latex_here\",\r\n  \"hint\": \"Step 1: ...\\nStep 2: ...\\nStep 3: ...\"\r\n}\r\n\r\nExample OCR input: \"De 1: Giai 40:5x2=40:10\"\r\nExample output (ignores labels, fixes OCR):\r\n{\r\n  \"latex\": \"40 \\\\div 5 \\\\times 2 = 40 \\\\div 10\",\r\n  \"hint\": \"Step 1: Left: 40÷5=8, 8×2=16.\\nStep 2: Right: 40÷10=4.\\nStep 3: 16 ≠ 4, so false.\"\r\n}\r\n\r\nExample math: \"Solve x^2 + 2x + 1 = 0\"\r\nExample output:\r\n{\r\n  \"latex\": \"x^2 + 2x + 1 = 0\",\r\n  \"hint\": \"Step 1: Recognize (x+1)^2.\\nStep 2: (x+1)^2=0.\\nStep 3: x=-1.\"\r\n}\r\n\r\nExample OCR input: \"Giai sin(x^2)\"\r\nExample output:\r\n{\r\n  \"latex\": \"\\\\frac{d}{dx} \\\\sin(x^2)\",\r\n  \"hint\": \"Step 1: Chain rule: \\\\cos(x^2) \\\\cdot 2x.\\nStep 2: Final: 2x \\\\cos(x^2).\"\r\n}\r\n\r\nJSON must parse with json.loads(). Use temperature 0.1.\r\n";
-
-        var promptText= GetMathPrompt();
+        var promptText = GetMathPrompt();
         var requestPayload = new
         {
             contents = new[]

@@ -27,6 +27,16 @@ public class CloudinaryService : ICloudinaryService
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is empty");
 
+        // Validate file type
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!System.Linq.Enumerable.Contains(allowedExtensions, fileExtension))
+            throw new ArgumentException("Invalid file type. Only JPG, PNG, and WebP are allowed.");
+
+        // Validate file size (5MB limit)
+        if (file.Length > 5 * 1024 * 1024)
+            throw new ArgumentException("File size exceeds 5MB limit.");
+
         using var stream = file.OpenReadStream();
         
         var uploadParams = new ImageUploadParams

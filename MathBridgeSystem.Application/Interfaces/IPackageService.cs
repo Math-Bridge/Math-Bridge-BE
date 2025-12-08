@@ -1,5 +1,6 @@
 ﻿﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +18,6 @@ namespace MathBridgeSystem.Application.Interfaces
         public Task<PaymentPackageDto> GetPackageByIdAsync(Guid id);
         Task<List<PaymentPackageDto>> GetAllActivePackagesAsync();
         Task<PaymentPackageDto> GetActivePackageByIdAsync(Guid id);
+        Task<string> UploadPackageImageAsync(Guid packageId, IFormFile file);
     }
 }

@@ -17,5 +17,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string? Description { get; set; }
         public Guid CurriculumId { get; set; } 
         public bool IsActive { get; set; }
+        public string? ImageUrl { get; set; }
+        public byte? ImageVersion { get; set; }
     }
 }
