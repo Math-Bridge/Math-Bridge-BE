@@ -66,6 +66,8 @@ public partial class MathBridgeDbContext : DbContext
 
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
 
+    public virtual DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Only configure if not already configured (e.g., when used outside of DI container)
@@ -1287,6 +1289,50 @@ public partial class MathBridgeDbContext : DbContext
                 .HasForeignKey(d => d.ParentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_wallet_transactions_parent");
+        });
+
+        modelBuilder.Entity<WithdrawalRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("withdrawal_request_pk");
+
+            entity.ToTable("withdrawal_request");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("amount");
+            entity.Property(e => e.BankAccountNumber)
+                .IsUnicode(false)
+                .HasColumnName("bank_account_number");
+            entity.Property(e => e.BankHolderName)
+                .IsUnicode(false)
+                .HasColumnName("bank_holder_name");
+            entity.Property(e => e.BankName)
+                .IsUnicode(false)
+                .HasColumnName("bank_name");
+            entity.Property(e => e.CreatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.ParentId).HasColumnName("parent_id");
+            entity.Property(e => e.ProcessedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("processed_date");
+            entity.Property(e => e.StaffId).HasColumnName("staff_id");
+            entity.Property(e => e.Status)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("status");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.WithdrawalRequestParents)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("withdrawal_request_users_user_id_fk_2");
+
+            entity.HasOne(d => d.Staff).WithMany(p => p.WithdrawalRequestStaffs)
+                .HasForeignKey(d => d.StaffId)
+                .HasConstraintName("withdrawal_request_users_user_id_fk");
         });
 
         OnModelCreatingPartial(modelBuilder);
