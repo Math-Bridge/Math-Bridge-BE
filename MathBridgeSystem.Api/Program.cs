@@ -132,6 +132,7 @@
     builder.Services.AddScoped<ICurriculumService, CurriculumService>();
     builder.Services.AddScoped<IFinalFeedbackService, FinalFeedbackService>();
     builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>();
+    builder.Services.AddScoped<IWithdrawalService, WithdrawalService>();
     builder.Services.AddScoped<IStatisticsService, StatisticsService>();
     builder.Services.AddScoped<ITestResultService, TestResultService>();
     builder.Services.AddScoped<IDailyReportService, DailyReportService>();
