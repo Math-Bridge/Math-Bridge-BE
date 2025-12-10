@@ -85,7 +85,7 @@ namespace MathBridgeSystem.Tests.Services
                 .ReturnsAsync(new PlaceDetailsResponse { Success = false });
 
             Func<Task> act = () => _centerService.CreateCenterAsync(request);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Failed to fetch place details from Google Maps");
+            await act.Should().ThrowAsync<Exception>().WithMessage("Failed to retrieve place details from Google Maps. Invalid PlaceId.");
         }
 
         // Test: Tạo trung tâm thành công với request hợp lệ
@@ -122,7 +122,7 @@ namespace MathBridgeSystem.Tests.Services
         public async Task CreateCenterAsync_DuplicateCenter_ThrowsException()
         {
             var request = new CreateCenterRequest { Name = "Existing Center", PlaceId = "valid-place-id" };
-            var placeDetailsResponse = new PlaceDetailsResponse { Success = true, Place = new PlaceDetails { City = "City", District = "District" } };
+            var placeDetailsResponse = new PlaceDetailsResponse { Success = true, Place = new PlaceDetails { FormattedAddress = "Address", City = "City", District = "District" } };
             var existingCenters = new List<Center> { new Center { Name = "Existing Center", City = "City", District = "District" } };
             _googleMapsServiceMock.Setup(service => service.GetPlaceDetailsAsync(It.IsAny<string>())).ReturnsAsync(placeDetailsResponse);
             _centerRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(existingCenters);
@@ -163,18 +163,18 @@ namespace MathBridgeSystem.Tests.Services
         {
             var id = Guid.NewGuid();
             var request = new UpdateCenterRequest { Name = "Existing Name" };
-            var center = new Center { CenterId = id, Name = "Old Name", City = "City", District = "District" };
+            var center = new Center { CenterId = id, Name = "Old Name", GooglePlaceId = "old-place", City = "City", District = "District" };
             var existingCenters = new List<Center>
             {
                 center,
-                new Center { CenterId = Guid.NewGuid(), Name = "Existing Name", City = "City", District = "District" }
+                new Center { CenterId = Guid.NewGuid(), Name = "Existing Name", GooglePlaceId = "existing-place", City = "City", District = "District" }
             };
 
             _centerRepositoryMock.Setup(repo => repo.GetByIdAsync(id)).ReturnsAsync(center);
             _centerRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(existingCenters);
 
             Func<Task> act = () => _centerService.UpdateCenterAsync(id, request);
-            await act.Should().ThrowAsync<Exception>().WithMessage($"Another center with name 'Existing Name' at location City, District already exists");
+            await act.Should().ThrowAsync<Exception>().WithMessage("A center named \"Existing Name\" already exists in City, District.");
         }
 
         // Test: Ném lỗi khi cập nhật địa điểm nhưng Google Maps thất bại
@@ -190,7 +190,7 @@ namespace MathBridgeSystem.Tests.Services
                 .ReturnsAsync(new PlaceDetailsResponse { Success = false });
 
             Func<Task> act = () => _centerService.UpdateCenterAsync(id, request);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Failed to fetch place details from Google Maps");
+            await act.Should().ThrowAsync<Exception>().WithMessage("Failed to retrieve new place details from Google Maps.");
         }
 
         // Test: Không gọi UpdateAsync nếu không có gì thay đổi
@@ -217,7 +217,7 @@ namespace MathBridgeSystem.Tests.Services
             _centerRepositoryMock.Setup(repo => repo.GetByIdAsync(id)).ReturnsAsync((Center)null);
 
             Func<Task> act = () => _centerService.UpdateCenterAsync(id, request);
-            await act.Should().ThrowAsync<Exception>().WithMessage("Center not found");
+            await act.Should().ThrowAsync<Exception>().WithMessage("Center not found.");
         }
 
         // Test: Ném lỗi khi xóa trung tâm không tìm thấy

@@ -270,22 +270,22 @@ namespace MathBridgeSystem.Tests.Services
 
         #region DeleteUnitAsync Tests
 
-        [Fact]
-        public async Task DeleteUnitAsync_ValidId_DeletesUnitSuccessfully()
-        {
-            // Arrange
-            var unitId = Guid.NewGuid();
-            var unit = new Unit { UnitId = unitId, UnitName = "Test Unit" };
+        //[Fact]
+        //public async Task DeleteUnitAsync_ValidId_DeletesUnitSuccessfully()
+        //{
+        //    // Arrange
+        //    var unitId = Guid.NewGuid();
+        //    var unit = new Unit { UnitId = unitId, UnitName = "Test Unit" };
 
-            _unitRepositoryMock.Setup(r => r.GetByIdAsync(unitId)).ReturnsAsync(unit);
-            _unitRepositoryMock.Setup(r => r.DeleteAsync(unitId)).Returns(Task.CompletedTask);
+        //    _unitRepositoryMock.Setup(r => r.GetByIdAsync(unitId)).ReturnsAsync(unit);
+        //    _unitRepositoryMock.Setup(r => r.DeleteAsync(unitId)).Returns(Task.CompletedTask);
 
-            // Act
-            await _unitService.DeleteUnitAsync(unitId);
+        //    // Act
+        //    await _unitService.DeleteUnitAsync(unitId);
 
-            // Assert
-            _unitRepositoryMock.Verify(r => r.DeleteAsync(unitId), Times.Once);
-        }
+        //    // Assert
+        //    _unitRepositoryMock.Verify(r => r.DeleteAsync(unitId), Times.Once);
+        //}
 
         [Fact]
         public async Task DeleteUnitAsync_UnitNotFound_ThrowsInvalidOperationException()

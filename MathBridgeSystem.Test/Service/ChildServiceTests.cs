@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -9,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MathBridgeSystem.Infrastructure.Services;
 
 namespace MathBridgeSystem.Tests.Services
 {
@@ -18,25 +18,25 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IChildRepository> _childRepositoryMock;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<ICenterRepository> _centerRepositoryMock;
+        private readonly Mock<ICloudinaryService> _cloudinaryServiceMock;
         private readonly ChildService _childService;
-        private readonly CloudinaryService _cloudinaryService;
 
         public ChildServiceTests()
         {
             _childRepositoryMock = new Mock<IChildRepository>();
             _userRepositoryMock = new Mock<IUserRepository>();
             _centerRepositoryMock = new Mock<ICenterRepository>();
+            _cloudinaryServiceMock = new Mock<ICloudinaryService>();
 
             // Default behaviors used by multiple tests to avoid null enumerables
             _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(It.IsAny<Guid>())).ReturnsAsync(new List<Child>());
             _childRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Child>());
 
             _childService = new ChildService(
-                
                 _childRepositoryMock.Object,
                 _userRepositoryMock.Object,
                 _centerRepositoryMock.Object,
-                _cloudinaryService
+                _cloudinaryServiceMock.Object
             );
         }
 
@@ -50,12 +50,29 @@ namespace MathBridgeSystem.Tests.Services
             var request = new AddChildRequest { FullName = "Test Child", SchoolId = Guid.NewGuid(), Grade = "grade 10" };
             var parent = new User { RoleId = 3 }; 
             _userRepositoryMock.Setup(repo => repo.GetByIdAsync(parentId)).ReturnsAsync(parent);
+            _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(parentId)).ReturnsAsync(new List<Child>());
             _childRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Child>())).Returns(Task.CompletedTask);
 
             var result = await _childService.AddChildAsync(parentId, request);
 
             result.Should().NotBe(Guid.Empty);
             _childRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Child>()), Times.Once);
+        }
+
+        // Test: Ném lỗi khi thêm trẻ với tên trùng lặp
+        [Fact]
+        public async Task AddChildAsync_DuplicateChildName_ThrowsException()
+        {
+            var parentId = Guid.NewGuid();
+            var request = new AddChildRequest { FullName = "Test Child", SchoolId = Guid.NewGuid(), Grade = "grade 10" };
+            var parent = new User { RoleId = 3 };
+            var existingChild = new Child { FullName = "Test Child", Status = "active" };
+            
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(parentId)).ReturnsAsync(parent);
+            _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(parentId)).ReturnsAsync(new List<Child> { existingChild });
+
+            Func<Task> act = () => _childService.AddChildAsync(parentId, request);
+            await act.Should().ThrowAsync<Exception>().WithMessage("A child with the same name already exists for this parent");
         }
 
         // Test: Ném lỗi khi thêm trẻ nhưng không tìm thấy parent
@@ -109,6 +126,7 @@ namespace MathBridgeSystem.Tests.Services
             var center = new Center { CenterId = centerId };
 
             _userRepositoryMock.Setup(repo => repo.GetByIdAsync(parentId)).ReturnsAsync(parent);
+            _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(parentId)).ReturnsAsync(new List<Child>());
             _centerRepositoryMock.Setup(repo => repo.GetByIdAsync(centerId)).ReturnsAsync(center);
 
             await _childService.AddChildAsync(parentId, request);
@@ -124,6 +142,7 @@ namespace MathBridgeSystem.Tests.Services
             var request = new AddChildRequest { FullName = "Test Child", SchoolId = Guid.NewGuid(), Grade = "invalid" };
             var parent = new User { RoleId = 3 };
             _userRepositoryMock.Setup(repo => repo.GetByIdAsync(parentId)).ReturnsAsync(parent);
+            _childRepositoryMock.Setup(repo => repo.GetByParentIdAsync(parentId)).ReturnsAsync(new List<Child>());
 
             Func<Task> act = () => _childService.AddChildAsync(parentId, request);
             await act.Should().ThrowAsync<Exception>().WithMessage("Invalid grade");

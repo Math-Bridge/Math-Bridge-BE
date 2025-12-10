@@ -96,7 +96,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
             var tutorId = Guid.NewGuid();
             var (session, _) = BuildSessionContract(parentId, tutorId);
             _sessionRepo.Setup(s => s.GetByIdAsync(session.BookingId)).ReturnsAsync(session);
-            _reqRepo.Setup(r => r.HasPendingRequestForBookingAsync(session.BookingId)).ReturnsAsync(true);
+            _reqRepo.Setup(r => r.HasPendingRequestInContractAsync(session.ContractId)).ReturnsAsync(true);
             var dto = new CreateRescheduleRequestDto
             {
                 BookingId = session.BookingId,
@@ -117,7 +117,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
             var (session, contract) = BuildSessionContract(parentId, tutorId);
             contract.Status = "pending"; // not active
             _sessionRepo.Setup(s => s.GetByIdAsync(session.BookingId)).ReturnsAsync(session);
-            _reqRepo.Setup(r => r.HasPendingRequestForBookingAsync(session.BookingId)).ReturnsAsync(false);
+            _reqRepo.Setup(r => r.HasPendingRequestInContractAsync(session.ContractId)).ReturnsAsync(false);
             _contractRepo.Setup(c => c.GetByIdWithPackageAsync(session.ContractId)).ReturnsAsync(contract);
             var dto = new CreateRescheduleRequestDto
             {
@@ -139,7 +139,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
             var (session, contract) = BuildSessionContract(parentId, tutorId);
             contract.RescheduleCount = 0; // No attempts left
             _sessionRepo.Setup(s => s.GetByIdAsync(session.BookingId)).ReturnsAsync(session);
-            _reqRepo.Setup(r => r.HasPendingRequestForBookingAsync(session.BookingId)).ReturnsAsync(false);
+            _reqRepo.Setup(r => r.HasPendingRequestInContractAsync(session.ContractId)).ReturnsAsync(false);
             _contractRepo.Setup(c => c.GetByIdWithPackageAsync(session.ContractId)).ReturnsAsync(contract);
             var dto = new CreateRescheduleRequestDto
             {
@@ -174,6 +174,7 @@ namespace MathBridgeSystem.Test.Service.Advanced
                 Status = "pending"
             };
             _reqRepo.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(resReq);
+            _userRepo.Setup(u => u.GetByIdAsync(tutorId)).ReturnsAsync(new User { UserId = tutorId, RoleId = 2 });
             _sessionRepo.Setup(s => s.IsTutorAvailableAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(false);
             var service = CreateService();
