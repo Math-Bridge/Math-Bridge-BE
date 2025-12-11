@@ -3,6 +3,7 @@ using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
+using Org.BouncyCastle.Tls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,6 +99,7 @@ namespace MathBridgeSystem.Application.Services
                 EndTime = dto.EndTime,
                 Reason = dto.Reason,
                 Status = "pending",
+                RequestedTutorId = oldSession.TutorId,
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
@@ -331,6 +333,8 @@ namespace MathBridgeSystem.Application.Services
                 BookingId = request.BookingId,
                 ParentId = request.ParentId,
                 ParentName = request.Parent?.FullName ?? "N/A",
+                ChildId = request.Contract.ChildId,
+                ChildName = request.Contract.Child?.FullName ?? "N/A",
                 ContractId = request.ContractId,
                 RequestedDate = request.RequestedDate,
                 StartTime = request.StartTime,
@@ -408,6 +412,50 @@ namespace MathBridgeSystem.Application.Services
                 Status = "cancelled",
                 Message = $"Session cancelled successfully. Refund {refundAmount:N0} VND has been added to your wallet.",
                 ProcessedDate = DateTime.UtcNow.ToLocalTime()
+            };
+        }
+        public async Task<object> CreateTutorReplacementRequestAsync(Guid bookingId, Guid tutorId, string reason)
+        {
+            var session = await _sessionRepo.GetByIdAsync(bookingId)
+                ?? throw new KeyNotFoundException("No lesson found.");
+
+            if (session.TutorId != tutorId)
+                throw new UnauthorizedAccessException("You can only submit requests for your own lessons.");
+
+            if (session.SessionDate <= DateOnly.FromDateTime(DateTime.Today))
+                throw new InvalidOperationException("Replacements are only permitted for appointments starting tomorrow.");
+
+            if (session.Status != "scheduled")
+                throw new InvalidOperationException("The lesson has been canceled or completed.");
+
+            // Không gửi trùng
+            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(bookingId);
+            if (hasPending)
+                throw new InvalidOperationException("There are pending requests for this lesson.");
+
+            var rescheduleRequest = new RescheduleRequest
+            {
+                RequestId = Guid.NewGuid(),
+                BookingId = bookingId,
+                ContractId = session.ContractId,
+                ParentId = session.Contract.ParentId,
+                RequestedDate = session.SessionDate,
+                StartTime = TimeOnly.FromDateTime(session.StartTime),
+                EndTime = TimeOnly.FromDateTime(session.EndTime),
+                Reason = $"[CHANGE TUTOR] {reason}",
+                Status = "pending",
+                RequestedTutorId = session.TutorId,
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
+            };
+
+            await _rescheduleRepo.AddAsync(rescheduleRequest);
+            return new
+            {
+                requestId = rescheduleRequest.RequestId,
+                bookingId,
+                sessionDate = session.SessionDate,
+                originalTutor = session.Tutor.FullName,
+                message = "The request to replace the tutor has been successfully submitted. Please wait for staff to process it."
             };
         }
     }

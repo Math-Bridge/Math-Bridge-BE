@@ -170,10 +170,57 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while cancelling the session.", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Tutor bận → gửi yêu cầu cho Staff chọn SubTutor thay thế (không đổi ngày giờ)
+        /// </summary>
+        [HttpPost("tutor-replacement")]
+        [Authorize(Roles = "tutor")]
+        public async Task<IActionResult> RequestTutorReplacement([FromBody] TutorReplacementRequest request)
+        {
+            var tutorId = GetUserId();
+
+            try
+            {
+                var result = await _rescheduleService.CreateTutorReplacementRequestAsync(
+                    request.BookingId,
+                    tutorId,
+                    request.Reason ?? "I'm too busy to teach this session."
+                );
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "The request to replace the tutor has been successfully submitted! Staff will select a replacement as soon as possible.",
+                    data = result
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "No lesson found." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "System error", details = ex.Message });
+            }
+        }
     }
 
     public class RejectRequestDto
     {
         public string Reason { get; set; } = null!;
+    }
+
+    public class TutorReplacementRequest
+    {
+        public Guid BookingId { get; set; }
+        public string? Reason { get; set; }
     }
 }

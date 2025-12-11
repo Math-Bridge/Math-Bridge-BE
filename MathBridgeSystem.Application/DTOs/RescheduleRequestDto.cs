@@ -8,6 +8,8 @@ namespace MathBridgeSystem.Application.DTOs
         public Guid BookingId { get; set; }
         public Guid ParentId { get; set; }
         public string ParentName { get; set; } = null!;
+        public Guid ChildId { get; set; }
+        public string ChildName { get; set; } = null!;
         public Guid ContractId { get; set; }
         public DateOnly RequestedDate { get; set; }
         public TimeOnly StartTime { get; set; }
@@ -27,6 +29,7 @@ namespace MathBridgeSystem.Application.DTOs
         public DateTime OriginalEndTime { get; set; }
         public Guid OriginalTutorId { get; set; }
         public string OriginalTutorName { get; set; } = null!;
+
     }
 }
 
