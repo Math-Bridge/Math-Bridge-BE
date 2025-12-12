@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -15,6 +16,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<ISessionRepository> _sessionRepo;
         private readonly Mock<IUserRepository> _userRepo;
         private readonly Mock<IWalletTransactionRepository> _walletRepo;
+        private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly RescheduleService _service;
 
         public RescheduleServiceComprehensiveTests()
@@ -24,7 +27,9 @@ namespace MathBridgeSystem.Tests.Services
             _sessionRepo = new Mock<ISessionRepository>();
             _userRepo = new Mock<IUserRepository>();
             _walletRepo = new Mock<IWalletTransactionRepository>();
-            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object);
+            _emailServiceMock = new Mock<IEmailService>();
+            _notificationServiceMock = new Mock<INotificationService>();
+            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object, _emailServiceMock.Object, _notificationServiceMock.Object);
         }
 
         private Session BuildSession(Guid contractId, Guid tutorId, DateOnly sessionDate)

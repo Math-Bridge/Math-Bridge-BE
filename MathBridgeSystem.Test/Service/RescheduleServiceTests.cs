@@ -19,6 +19,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<ISessionRepository> _sessionRepoMock;
         private readonly Mock<IUserRepository> _userRepoMock;
         private readonly Mock<IWalletTransactionRepository> _walletRepoMock;
+        private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly RescheduleService _rescheduleService;
 
         private readonly Guid _parentId = Guid.NewGuid();
@@ -37,13 +39,17 @@ namespace MathBridgeSystem.Tests.Services
             _sessionRepoMock = new Mock<ISessionRepository>();
             _userRepoMock = new Mock<IUserRepository>();
             _walletRepoMock = new Mock<IWalletTransactionRepository>();
+            _emailServiceMock = new Mock<IEmailService>();
+            _notificationServiceMock = new Mock<INotificationService>();
 
             _rescheduleService = new RescheduleService(
                 _rescheduleRepoMock.Object,
                 _contractRepoMock.Object,
                 _sessionRepoMock.Object,
-                _userRepoMock.Object
-                , _walletRepoMock.Object
+                _userRepoMock.Object,
+                _walletRepoMock.Object,
+                _emailServiceMock.Object,
+                _notificationServiceMock.Object
             );
 
             // --- Khởi tạo dữ liệu Mock chung ---

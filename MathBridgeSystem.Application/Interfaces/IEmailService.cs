@@ -24,5 +24,10 @@ namespace MathBridgeSystem.Application.Interfaces
         // Report Emails
         Task SendReportSubmittedAsync(string email, string parentName, Guid reportId);
         Task SendReportStatusUpdateAsync(string email, string parentName, Guid reportId, string status, string reason);
+
+        // Reschedule Emails
+        Task SendRescheduleRequestCreatedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string requestedDate, string requestedTime, string reason);
+        Task SendRescheduleApprovedAsync(string email, string parentName, string childName, string newDate, string newTime, string tutorName);
+        Task SendRescheduleRejectedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string reason);
     }
 }
