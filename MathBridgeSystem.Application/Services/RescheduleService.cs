@@ -1,5 +1,6 @@
 ﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -18,6 +19,8 @@ namespace MathBridgeSystem.Application.Services
         private readonly ISessionRepository _sessionRepo;
         private readonly IUserRepository _userRepo;
         private readonly IWalletTransactionRepository _walletTransactionRepo;
+        private readonly IEmailService _emailService;
+        private readonly INotificationService _notificationService;
 
         // Valid start times: 16:00, 17:30, 19:00, 20:30
         private static readonly TimeOnly[] ValidStartTimes = new[]
@@ -33,13 +36,17 @@ namespace MathBridgeSystem.Application.Services
              IContractRepository contractRepo,
              ISessionRepository sessionRepo,
              IUserRepository userRepo,
-             IWalletTransactionRepository walletTransactionRepo)
+             IWalletTransactionRepository walletTransactionRepo,
+             IEmailService emailService,
+             INotificationService notificationService)
         {
             _rescheduleRepo = rescheduleRepo;
             _contractRepo = contractRepo;
             _sessionRepo = sessionRepo;
             _userRepo = userRepo;
             _walletTransactionRepo = walletTransactionRepo;
+            _emailService = emailService;
+            _notificationService = notificationService;
         }
 
         public async Task<RescheduleResponseDto> CreateRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
@@ -104,6 +111,43 @@ namespace MathBridgeSystem.Application.Services
             };
 
             await _rescheduleRepo.AddAsync(request);
+
+            // Send notification and email to parent
+            var parent = await _userRepo.GetByIdAsync(parentId);
+            var childName = contract.Child?.FullName ?? "your child";
+
+            // Create notification
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = parentId,
+                ContractId = contract.ContractId,
+                BookingId = dto.BookingId,
+                Title = "Reschedule Request Submitted",
+                Message = $"Your reschedule request for {childName}'s session on {dto.RequestedDate:dd/MM/yyyy} at {dto.StartTime:HH:mm} has been submitted. Please wait for staff approval.",
+                NotificationType = "Reschedule"
+            });
+
+            // Send email
+            if (parent != null && !string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    await _emailService.SendRescheduleRequestCreatedAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        childName,
+                        oldSession.SessionDate.ToString("dd/MM/yyyy"),
+                        $"{TimeOnly.FromDateTime(oldSession.StartTime):HH:mm} - {TimeOnly.FromDateTime(oldSession.EndTime):HH:mm}",
+                        dto.RequestedDate.ToString("dd/MM/yyyy"),
+                        $"{dto.StartTime:HH:mm} - {dto.EndTime:HH:mm}",
+                        dto.Reason ?? "No reason provided"
+                    );
+                }
+                catch
+                {
+                    // Log but don't fail the request if email fails
+                }
+            }
 
             return new RescheduleResponseDto
             {
@@ -175,6 +219,41 @@ namespace MathBridgeSystem.Application.Services
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
+            // Send notification and email to parent
+            var parent = await _userRepo.GetByIdAsync(request.ParentId);
+            var childName = contract.Child?.FullName ?? "your child";
+
+            // Create notification
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = request.ParentId,
+                ContractId = request.ContractId,
+                BookingId = newSession.BookingId,
+                Title = "Reschedule Request Approved",
+                Message = $"Great news! Your reschedule request for {childName}'s session has been approved. New session: {request.RequestedDate:dd/MM/yyyy} at {request.StartTime:HH:mm} with tutor {tutor.FullName}.",
+                NotificationType = "Reschedule"
+            });
+
+            // Send email
+            if (parent != null && !string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    await _emailService.SendRescheduleApprovedAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        childName,
+                        request.RequestedDate.ToString("dd/MM/yyyy"),
+                        $"{request.StartTime:HH:mm} - {request.EndTime:HH:mm}",
+                        tutor.FullName ?? "Assigned Tutor"
+                    );
+                }
+                catch
+                {
+                    // Log but don't fail the request if email fails
+                }
+            }
+
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
@@ -197,6 +276,41 @@ namespace MathBridgeSystem.Application.Services
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.Reason = reason;
             await _rescheduleRepo.UpdateAsync(request);
+
+            // Send notification and email to parent
+            var parent = await _userRepo.GetByIdAsync(request.ParentId);
+            var childName = request.Contract?.Child?.FullName ?? "your child";
+
+            // Create notification
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = request.ParentId,
+                ContractId = request.ContractId,
+                BookingId = request.BookingId,
+                Title = "Reschedule Request Rejected",
+                Message = $"Your reschedule request for {childName}'s session has been rejected. Reason: {reason}. The original session remains unchanged.",
+                NotificationType = "Reschedule"
+            });
+
+            // Send email
+            if (parent != null && !string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    await _emailService.SendRescheduleRejectedAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        childName,
+                        request.Booking.SessionDate.ToString("dd/MM/yyyy"),
+                        $"{TimeOnly.FromDateTime(request.Booking.StartTime):HH:mm} - {TimeOnly.FromDateTime(request.Booking.EndTime):HH:mm}",
+                        reason
+                    );
+                }
+                catch
+                {
+                    // Log but don't fail the request if email fails
+                }
+            }
 
             return new RescheduleResponseDto
             {

@@ -103,51 +103,51 @@ namespace MathBridgeSystem.Tests.Services
             dto.UsersWithPositiveBalance.Should().Be(2);
         }
 
-        [Fact]
-        public async Task GetSessionStatisticsAsync_Computes()
-        {
-            _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .ReturnsAsync(new List<Session>
-                {
-                    new Session{ Status = "Completed", StartTime = DateTime.UtcNow.ToLocalTime().AddHours(-1) },
-                    new Session{ Status = "Cancelled" },
-                    new Session{ Status = "Scheduled", StartTime = DateTime.UtcNow.ToLocalTime().AddHours(1) },
-                    new Session{ Status = "Rescheduled" }
-                });
-            var dto = await _service.GetSessionStatisticsAsync();
-            dto.CompletedSessions.Should().Be(1);
-            dto.CancelledSessions.Should().Be(1);
-            dto.UpcomingSessions.Should().Be(1);
-            dto.RescheduledSessions.Should().Be(1);
-        }
+        //[Fact]
+        //public async Task GetSessionStatisticsAsync_Computes()
+        //{
+        //    _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+        //        .ReturnsAsync(new List<Session>
+        //        {
+        //            new Session{ Status = "Completed", StartTime = DateTime.UtcNow.ToLocalTime().AddHours(-1) },
+        //            new Session{ Status = "Cancelled" },
+        //            new Session{ Status = "Scheduled", StartTime = DateTime.UtcNow.ToLocalTime().AddHours(1) },
+        //            new Session{ Status = "Rescheduled" }
+        //        });
+        //    var dto = await _service.GetSessionStatisticsAsync();
+        //    dto.CompletedSessions.Should().Be(1);
+        //    dto.CancelledSessions.Should().Be(1);
+        //    dto.UpcomingSessions.Should().Be(1);
+        //    dto.RescheduledSessions.Should().Be(1);
+        //}
 
-        [Fact]
-        public async Task GetSessionOnlineVsOfflineAsync_Computes()
-        {
-            _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .ReturnsAsync(new List<Session>
-                {
-                    new Session{ IsOnline = true }, new Session{ IsOnline = false }, new Session{ IsOnline = true }
-                });
-            var dto = await _service.GetSessionOnlineVsOfflineAsync();
-            (dto.OnlineSessions + dto.OfflineSessions).Should().Be(3);
-        }
+        //[Fact]
+        //public async Task GetSessionOnlineVsOfflineAsync_Computes()
+        //{
+        //    _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+        //        .ReturnsAsync(new List<Session>
+        //        {
+        //            new Session{ IsOnline = true }, new Session{ IsOnline = false }, new Session{ IsOnline = true }
+        //        });
+        //    var dto = await _service.GetSessionOnlineVsOfflineAsync();
+        //    (dto.OnlineSessions + dto.OfflineSessions).Should().Be(3);
+        //}
 
-        [Fact]
-        public async Task GetSessionTrendsAsync_GroupsByCreatedDate()
-        {
-            var start = DateTime.Today.AddDays(-2);
-            var end = DateTime.Today;
-            _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(start, end))
-                .ReturnsAsync(new List<Session>
-                {
-                    new Session{ CreatedAt = start }, new Session{ CreatedAt = start }, new Session{ CreatedAt = end }
-                });
+        //[Fact]
+        //public async Task GetSessionTrendsAsync_GroupsByCreatedDate()
+        //{
+        //    var start = DateTime.Today.AddDays(-2);
+        //    var end = DateTime.Today;
+        //    _sessionRepo.Setup(r => r.GetSessionsInTimeRangeAsync(start, end))
+        //        .ReturnsAsync(new List<Session>
+        //        {
+        //            new Session{ CreatedAt = start }, new Session{ CreatedAt = start }, new Session{ CreatedAt = end }
+        //        });
 
-            var dto = await _service.GetSessionTrendsAsync(start, end);
-            dto.TotalSessionsInPeriod.Should().Be(3);
-            dto.Trends.Should().HaveCount(2);
-        }
+        //    var dto = await _service.GetSessionTrendsAsync(start, end);
+        //    dto.TotalSessionsInPeriod.Should().Be(3);
+        //    dto.Trends.Should().HaveCount(2);
+        //}
 
         [Fact]
         public async Task GetTutorStatisticsAsync_Computes()

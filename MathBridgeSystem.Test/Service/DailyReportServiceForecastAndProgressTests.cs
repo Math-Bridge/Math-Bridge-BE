@@ -64,39 +64,40 @@ namespace MathBridgeSystem.Tests.Services
         [Fact]
         public async Task GetLearningCompletionForecastAsync_NoActiveUnits_Throws()
         {
-            var childId = Guid.NewGuid();
-            var curriculumId = Guid.NewGuid();
-            var startUnit = new Unit { UnitId = Guid.NewGuid(), UnitName = "Unit 1", UnitOrder = 10, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } };
-            var oldestReport = new DailyReport { ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Child" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today), Unit = startUnit };
-            _dailyReportRepo.Setup(r => r.GetOldestByChildIdAsync(childId)).ReturnsAsync(oldestReport);
-            _unitRepo.Setup(r => r.GetByCurriculumIdAsync(curriculumId)).ReturnsAsync(new List<Unit>());
-            _packageRepo.Setup(r => r.GetPackageByCurriculumIdAsync(curriculumId)).ReturnsAsync(new PaymentPackage{ DurationDays = 14 });
+            var contractId = Guid.NewGuid();
+            _contractRepo.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync((Contract)null);
 
-            await FluentActions.Invoking(() => _service.GetLearningCompletionForecastAsync(childId))
-                .Should().ThrowAsync<InvalidOperationException>();
+            await FluentActions.Invoking(() => _service.GetLearningCompletionForecastAsync(contractId))
+                .Should().ThrowAsync<KeyNotFoundException>();
         }
 
         [Fact]
         public async Task GetChildUnitProgressAsync_ComputesUnitsProgress()
         {
+            var contractId = Guid.NewGuid();
             var childId = Guid.NewGuid();
             var curriculumId = Guid.NewGuid();
             var unit1 = new Unit { UnitId = Guid.NewGuid(), UnitName = "U1", UnitOrder = 1, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } };
             var unit2 = new Unit { UnitId = Guid.NewGuid(), UnitName = "U2", UnitOrder = 2, IsActive = true, Curriculum = new Curriculum{ CurriculumId = curriculumId } };
+            var child = new Child { ChildId = childId, FullName = "Kid" };
+            var contract = new Contract { ContractId = contractId, ChildId = childId, Child = child };
+            
+            var session1 = new Session { BookingId = Guid.NewGuid(), ContractId = contractId };
+            var session2 = new Session { BookingId = Guid.NewGuid(), ContractId = contractId };
+            var session3 = new Session { BookingId = Guid.NewGuid(), ContractId = contractId };
+            
             var reports = new List<DailyReport>
             {
-                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Kid" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-10)), UnitId = unit1.UnitId, Unit = unit1, OnTrack = true, HaveHomework = false },
-                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Kid" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-5)), UnitId = unit1.UnitId, Unit = unit1, OnTrack = true, HaveHomework = true },
-                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Kid" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-2)), UnitId = unit2.UnitId, Unit = unit2, OnTrack = false, HaveHomework = false }
+                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = child, BookingId = session1.BookingId, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-10)), UnitId = unit1.UnitId, Unit = unit1, OnTrack = true, HaveHomework = false },
+                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = child, BookingId = session2.BookingId, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-5)), UnitId = unit1.UnitId, Unit = unit1, OnTrack = true, HaveHomework = true },
+                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = child, BookingId = session3.BookingId, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-2)), UnitId = unit2.UnitId, Unit = unit2, OnTrack = false, HaveHomework = false }
             };
+            
+            _contractRepo.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync(contract);
+            _sessionRepo.Setup(r => r.GetByContractIdAsync(contractId)).ReturnsAsync(new List<Session> { session1, session2, session3 });
             _dailyReportRepo.Setup(r => r.GetByChildIdAsync(childId)).ReturnsAsync(reports);
 
-            // Forecast dependencies
-            _dailyReportRepo.Setup(r => r.GetOldestByChildIdAsync(childId)).ReturnsAsync(new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = new Child{ ChildId = childId, FullName = "Kid" }, CreatedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-10)), Unit = unit1 });
-            _unitRepo.Setup(r => r.GetByCurriculumIdAsync(curriculumId)).ReturnsAsync(new List<Unit>{ unit1, unit2 });
-            _packageRepo.Setup(r => r.GetPackageByCurriculumIdAsync(curriculumId)).ReturnsAsync(new PaymentPackage{ DurationDays = 28 });
-
-            var dto = await _service.GetChildUnitProgressAsync(childId);
+            var dto = await _service.GetChildUnitProgressAsync(contractId);
             dto.TotalUnitsLearned.Should().Be(2);
             dto.UniqueLessonsCompleted.Should().Be(3);
             dto.UnitsProgress.Should().HaveCount(2);
@@ -107,24 +108,25 @@ namespace MathBridgeSystem.Tests.Services
         [Fact]
         public async Task GetChildUnitProgressAsync_NoReports_Throws()
         {
-            _dailyReportRepo.Setup(r => r.GetByChildIdAsync(It.IsAny<Guid>())).ReturnsAsync(new List<DailyReport>());
-            await FluentActions.Invoking(() => _service.GetChildUnitProgressAsync(Guid.NewGuid()))
+            var contractId = Guid.NewGuid();
+            var child = new Child { ChildId = Guid.NewGuid(), FullName = "Child" };
+            var contract = new Contract { ContractId = contractId, Child = child };
+            
+            _contractRepo.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync(contract);
+            _sessionRepo.Setup(r => r.GetByContractIdAsync(contractId)).ReturnsAsync(new List<Session>());
+            
+            await FluentActions.Invoking(() => _service.GetChildUnitProgressAsync(contractId))
                 .Should().ThrowAsync<KeyNotFoundException>();
         }
 
         [Fact]
         public async Task GetChildUnitProgressAsync_ChildNull_Throws()
         {
-            var childId = Guid.NewGuid();
-            var unit = new Unit { UnitId = Guid.NewGuid(), UnitName = "U1", UnitOrder = 1, IsActive = true, Curriculum = new Curriculum{ CurriculumId = Guid.NewGuid() } };
-            var reports = new List<DailyReport>
-            {
-                new DailyReport{ ReportId = Guid.NewGuid(), ChildId = childId, Child = null! as Child, CreatedDate = DateOnly.FromDateTime(DateTime.Today), UnitId = unit.UnitId, Unit = unit, OnTrack = true }
-            };
-            _dailyReportRepo.Setup(r => r.GetByChildIdAsync(childId)).ReturnsAsync(reports);
+            var contractId = Guid.NewGuid();
+            _contractRepo.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync((Contract)null);
 
-            await FluentActions.Invoking(() => _service.GetChildUnitProgressAsync(childId))
-                .Should().ThrowAsync<InvalidOperationException>();
+            await FluentActions.Invoking(() => _service.GetChildUnitProgressAsync(contractId))
+                .Should().ThrowAsync<KeyNotFoundException>();
         }
     }
 }

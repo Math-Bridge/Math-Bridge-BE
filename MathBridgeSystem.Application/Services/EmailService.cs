@@ -639,6 +639,174 @@ namespace MathBridgeSystem.Application.Services
             }
         }
 
+        public async Task SendRescheduleRequestCreatedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string requestedDate, string requestedTime, string reason)
+        {
+            try
+            {
+                var subject = "Reschedule Request Submitted - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #17a2b8; padding: 20px; text-align: center; color: white; border-radius: 5px 5px 0 0; }}
+        .content {{ padding: 20px; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid #17a2b8; margin: 15px 0; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Reschedule Request Submitted</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>Your reschedule request for <strong>{childName}</strong>'s tutoring session has been submitted successfully.</p>
+            <div class='info-box'>
+                <p><strong>Original Session:</strong></p>
+                <p>Date: {originalDate}</p>
+                <p>Time: {originalTime}</p>
+                <br/>
+                <p><strong>Requested New Schedule:</strong></p>
+                <p>Date: {requestedDate}</p>
+                <p>Time: {requestedTime}</p>
+                <br/>
+                <p><strong>Reason:</strong> {reason}</p>
+            </div>
+            <p>Our staff will review your request and notify you once it has been processed.</p>
+            <p>Thank you for using MathBridge!</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Reschedule request created email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send reschedule request created email to {email}");
+                throw;
+            }
+        }
+
+        public async Task SendRescheduleApprovedAsync(string email, string parentName, string childName, string newDate, string newTime, string tutorName)
+        {
+            try
+            {
+                var subject = "Reschedule Request Approved - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #28a745; padding: 20px; text-align: center; color: white; border-radius: 5px 5px 0 0; }}
+        .content {{ padding: 20px; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Reschedule Request Approved!</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>Great news! Your reschedule request for <strong>{childName}</strong>'s tutoring session has been <strong>approved</strong>.</p>
+            <div class='info-box'>
+                <p><strong>New Session Details:</strong></p>
+                <p>Date: {newDate}</p>
+                <p>Time: {newTime}</p>
+                <p>Tutor: {tutorName}</p>
+            </div>
+            <p>Please make sure your child is ready for the session at the scheduled time.</p>
+            <p>Thank you for choosing MathBridge!</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Reschedule approved email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send reschedule approved email to {email}");
+                throw;
+            }
+        }
+
+        public async Task SendRescheduleRejectedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string reason)
+        {
+            try
+            {
+                var subject = "Reschedule Request Rejected - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #dc3545; padding: 20px; text-align: center; color: white; border-radius: 5px 5px 0 0; }}
+        .content {{ padding: 20px; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid #dc3545; margin: 15px 0; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Reschedule Request Rejected</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>We regret to inform you that your reschedule request for <strong>{childName}</strong>'s tutoring session has been <strong>rejected</strong>.</p>
+            <div class='info-box'>
+                <p><strong>Original Session (remains unchanged):</strong></p>
+                <p>Date: {originalDate}</p>
+                <p>Time: {originalTime}</p>
+                <br/>
+                <p><strong>Reason for rejection:</strong> {reason}</p>
+            </div>
+            <p>Please ensure your child attends the original scheduled session. If you have any questions, please contact our support team.</p>
+            <p>Thank you for your understanding.</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Reschedule rejected email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send reschedule rejected email to {email}");
+                throw;
+            }
+        }
+
         private async Task SendEmailWithAttachmentAsync(string to, string subject, string htmlBody, byte[] attachmentBytes, string attachmentName)
         {
             try

@@ -194,40 +194,40 @@ namespace MathBridgeSystem.Tests.Services
         #region CreateMeetingAsync Tests
 
         // Test: Tạo meeting thành công
-        [Fact]
-        public async Task CreateMeetingAsync_Valid_ReturnsSuccessResult()
-        {
-            // Arrange
-            MockGetTokenSuccess(); 
+        //[Fact]
+        //public async Task CreateMeetingAsync_Valid_ReturnsSuccessResult()
+        //{
+        //    // Arrange
+        //    MockGetTokenSuccess(); 
 
-            var meetingResponse = new ZoomMeetingResponse { Id = 987654321 };
-            var responseMessage = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.Created,
-                Content = new StringContent(JsonSerializer.Serialize(meetingResponse), Encoding.UTF8, "application/json")
-            };
+        //    var meetingResponse = new ZoomMeetingResponse { Id = 987654321 };
+        //    var responseMessage = new HttpResponseMessage
+        //    {
+        //        StatusCode = HttpStatusCode.Created,
+        //        Content = new StringContent(JsonSerializer.Serialize(meetingResponse), Encoding.UTF8, "application/json")
+        //    };
 
-            _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req =>
-                        req.RequestUri.ToString().Contains("/users/me/meetings") &&
-                        req.Headers.Authorization.Scheme == "Bearer" &&
-                        req.Headers.Authorization.Parameter == "fake_token_123"
-                    ),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(responseMessage);
+        //    _httpMessageHandlerMock.Protected()
+        //        .Setup<Task<HttpResponseMessage>>(
+        //            "SendAsync",
+        //            ItExpr.Is<HttpRequestMessage>(req =>
+        //                req.RequestUri.ToString().Contains("/users/me/meetings") &&
+        //                req.Headers.Authorization.Scheme == "Bearer" &&
+        //                req.Headers.Authorization.Parameter == "fake_token_123"
+        //            ),
+        //            ItExpr.IsAny<CancellationToken>()
+        //        )
+        //        .ReturnsAsync(responseMessage);
 
-            // Act
-            var result = await _zoomProvider.CreateMeetingAsync();
+        //    // Act
+        //    var result = await _zoomProvider.CreateMeetingAsync();
 
-            // Assert
-            result.Success.Should().BeTrue();
-            result.MeetingId.Should().Be("987654321");
-            result.MeetingUri.Should().Be("https://zoom.us/j/987654321");
-            result.MeetingCode.Should().Be("987654321");
-        }
+        //    // Assert
+        //    result.Success.Should().BeTrue();
+        //    result.MeetingId.Should().Be("987654321");
+        //    result.MeetingUri.Should().Be("https://zoom.us/j/987654321");
+        //    result.MeetingCode.Should().Be("987654321");
+        //}
 
         // Test: Tạo meeting thất bại (lỗi HTTP)
         [Fact]

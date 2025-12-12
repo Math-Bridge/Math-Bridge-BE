@@ -132,6 +132,10 @@ namespace MathBridgeSystem.Api.Controllers
                 var balance = await _transactionService.GetParentWalletBalanceAsync(parentId);
                 return Ok(new { parentId, balance });
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "An error occurred.", details = ex.Message });

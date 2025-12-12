@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Application.Services;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -15,6 +16,8 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<ISessionRepository> _sessionRepo;
         private readonly Mock<IUserRepository> _userRepo;
         private readonly Mock<IWalletTransactionRepository> _walletRepo;
+        private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly RescheduleService _service;
 
         public RescheduleServiceComprehensiveTests()
@@ -24,7 +27,9 @@ namespace MathBridgeSystem.Tests.Services
             _sessionRepo = new Mock<ISessionRepository>();
             _userRepo = new Mock<IUserRepository>();
             _walletRepo = new Mock<IWalletTransactionRepository>();
-            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object);
+            _emailServiceMock = new Mock<IEmailService>();
+            _notificationServiceMock = new Mock<INotificationService>();
+            _service = new RescheduleService(_resRepo.Object, _contractRepo.Object, _sessionRepo.Object, _userRepo.Object, _walletRepo.Object, _emailServiceMock.Object, _notificationServiceMock.Object);
         }
 
         private Session BuildSession(Guid contractId, Guid tutorId, DateOnly sessionDate)
@@ -137,9 +142,10 @@ namespace MathBridgeSystem.Tests.Services
                 StartTime = new TimeOnly(16, 0),
                 EndTime = new TimeOnly(17, 30)
             };
-            var session = BuildSession(Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+            var contractId = Guid.NewGuid();
+            var session = BuildSession(contractId, Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
             _sessionRepo.Setup(r => r.GetByIdAsync(dto.BookingId)).ReturnsAsync(session);
-            _resRepo.Setup(r => r.HasPendingRequestForBookingAsync(dto.BookingId)).ReturnsAsync(true);
+            _resRepo.Setup(r => r.HasPendingRequestInContractAsync(contractId)).ReturnsAsync(true);
 
             await FluentActions.Invoking(() => _service.CreateRequestAsync(_parentId, dto))
                 .Should().ThrowAsync<InvalidOperationException>();
@@ -158,14 +164,14 @@ namespace MathBridgeSystem.Tests.Services
             var contractId = Guid.NewGuid();
             var session = BuildSession(contractId, Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)));
             _sessionRepo.Setup(r => r.GetByIdAsync(dto.BookingId)).ReturnsAsync(session);
-            _resRepo.Setup(r => r.HasPendingRequestForBookingAsync(dto.BookingId)).ReturnsAsync(false);
+            _resRepo.Setup(r => r.HasPendingRequestInContractAsync(contractId)).ReturnsAsync(false);
             _contractRepo.Setup(r => r.GetByIdWithPackageAsync(contractId)).ReturnsAsync(new Contract
             {
                 ContractId = contractId,
                 Status = "active",
                 EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
                 Package = new PaymentPackage { MaxReschedule = 3 },
-                RescheduleCount = 0
+                RescheduleCount = 2
             });
 
             await FluentActions.Invoking(() => _service.CreateRequestAsync(_parentId, dto))
@@ -185,7 +191,7 @@ namespace MathBridgeSystem.Tests.Services
             var contractId = Guid.NewGuid();
             var session = BuildSession(contractId, Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)));
             _sessionRepo.Setup(r => r.GetByIdAsync(dto.BookingId)).ReturnsAsync(session);
-            _resRepo.Setup(r => r.HasPendingRequestForBookingAsync(dto.BookingId)).ReturnsAsync(false);
+            _resRepo.Setup(r => r.HasPendingRequestInContractAsync(contractId)).ReturnsAsync(false);
             _contractRepo.Setup(r => r.GetByIdWithPackageAsync(contractId)).ReturnsAsync(new Contract
             {
                 ContractId = contractId,
@@ -213,7 +219,7 @@ namespace MathBridgeSystem.Tests.Services
             var contractId = Guid.NewGuid();
             var session = BuildSession(contractId, Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)));
             _sessionRepo.Setup(r => r.GetByIdAsync(dto.BookingId)).ReturnsAsync(session);
-            _resRepo.Setup(r => r.HasPendingRequestForBookingAsync(dto.BookingId)).ReturnsAsync(false);
+            _resRepo.Setup(r => r.HasPendingRequestInContractAsync(contractId)).ReturnsAsync(false);
             _contractRepo.Setup(r => r.GetByIdWithPackageAsync(contractId)).ReturnsAsync(new Contract
             {
                 ContractId = contractId,
@@ -244,6 +250,7 @@ namespace MathBridgeSystem.Tests.Services
                 Booking = new Session { TutorId = bookingTutorId, IsOnline = true, SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) }
             };
             _resRepo.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepo.Setup(r => r.GetByIdAsync(bookingTutorId)).ReturnsAsync(new User { UserId = bookingTutorId, RoleId = 2 });
             _sessionRepo.Setup(r => r.IsTutorAvailableAsync(bookingTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(false);
 
@@ -258,7 +265,7 @@ namespace MathBridgeSystem.Tests.Services
             var requestId = Guid.NewGuid();
             var bookingTutorId = Guid.NewGuid();
             var contractId = Guid.NewGuid();
-            var contract = new Contract { ContractId = contractId, RescheduleCount = 0 };
+            var contract = new Contract { ContractId = contractId, RescheduleCount = 1 };
             var request = new RescheduleRequest
             {
                 RequestId = requestId,
@@ -270,6 +277,7 @@ namespace MathBridgeSystem.Tests.Services
                 Booking = new Session { TutorId = bookingTutorId, IsOnline = true, Contract = contract, SessionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) }
             };
             _resRepo.Setup(r => r.GetByIdWithDetailsAsync(requestId)).ReturnsAsync(request);
+            _userRepo.Setup(r => r.GetByIdAsync(bookingTutorId)).ReturnsAsync(new User { UserId = bookingTutorId, RoleId = 2 });
             _sessionRepo.Setup(r => r.IsTutorAvailableAsync(bookingTutorId, request.RequestedDate, It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(true);
             _sessionRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<Session>>())).Returns(Task.CompletedTask);
@@ -280,7 +288,7 @@ namespace MathBridgeSystem.Tests.Services
             var resp = await _service.ApproveRequestAsync(staffId, requestId, new ApproveRescheduleRequestDto());
             resp.Status.Should().Be("approved");
             request.Booking.Status.Should().Be("rescheduled");
-            contract.RescheduleCount.Should().Be(-1);
+            contract.RescheduleCount.Should().Be(0);
         }
 
         [Fact]
