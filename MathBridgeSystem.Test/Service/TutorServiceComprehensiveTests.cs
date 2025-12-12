@@ -12,7 +12,6 @@ namespace MathBridgeSystem.Tests.Services
     {
         private readonly Mock<IUserRepository> _userRepo;
         private readonly Mock<ITutorCenterRepository> _tutorCenterRepo;
-        private readonly Mock<ITutorScheduleRepository> _tutorScheduleRepo;
         private readonly Mock<IFinalFeedbackRepository> _feedbackRepo;
         private readonly TutorService _service;
 
@@ -20,9 +19,8 @@ namespace MathBridgeSystem.Tests.Services
         {
             _userRepo = new Mock<IUserRepository>();
             _tutorCenterRepo = new Mock<ITutorCenterRepository>();
-            _tutorScheduleRepo = new Mock<ITutorScheduleRepository>();
             _feedbackRepo = new Mock<IFinalFeedbackRepository>();
-            _service = new TutorService(_userRepo.Object, _tutorCenterRepo.Object, _tutorScheduleRepo.Object, _feedbackRepo.Object);
+            _service = new TutorService(_userRepo.Object, _tutorCenterRepo.Object, _feedbackRepo.Object);
         }
 
         [Fact]
@@ -68,10 +66,6 @@ namespace MathBridgeSystem.Tests.Services
             _tutorCenterRepo.Setup(r => r.GetByTutorIdAsync(id)).ReturnsAsync(new List<TutorCenter>
             {
                 new TutorCenter{ TutorCenterId = Guid.NewGuid(), CenterId = Guid.NewGuid(), Center = new Center{ CenterId = Guid.NewGuid(), Name = "C1" }, CreatedDate = DateTime.Today }
-            });
-            _tutorScheduleRepo.Setup(r => r.GetByTutorIdAsync(id)).ReturnsAsync(new List<TutorSchedule>
-            {
-                new TutorSchedule{ AvailabilityId = Guid.NewGuid(), DaysOfWeek = 1, AvailableFrom = new TimeOnly(8,0), AvailableUntil = new TimeOnly(12,0), EffectiveFrom = DateOnly.FromDateTime(DateTime.Today), CanTeachOnline = true, CanTeachOffline = false, IsBooked = false, Status = "Active", CreatedDate = DateTime.Today }
             });
             _feedbackRepo.Setup(r => r.GetByUserIdAsync(id)).ReturnsAsync(new List<FinalFeedback>
             {
@@ -152,7 +146,6 @@ namespace MathBridgeSystem.Tests.Services
                 new User{ UserId = parentId, Role = new Role{ RoleName = "parent" } },
             });
             _tutorCenterRepo.Setup(r => r.GetByTutorIdAsync(tutorId)).ReturnsAsync(new List<TutorCenter>());
-            _tutorScheduleRepo.Setup(r => r.GetByTutorIdAsync(tutorId)).ReturnsAsync(new List<TutorSchedule>());
             _feedbackRepo.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(new List<FinalFeedback>());
 
             var list = await _service.GetAllTutorsAsync();

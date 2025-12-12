@@ -12,18 +12,15 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ITutorCenterRepository _tutorCenterRepository;
-        private readonly ITutorScheduleRepository _tutorScheduleRepository;
         private readonly IFinalFeedbackRepository _finalFeedbackRepository;
 
         public TutorService(
             IUserRepository userRepository,
             ITutorCenterRepository tutorCenterRepository,
-            ITutorScheduleRepository tutorScheduleRepository,
             IFinalFeedbackRepository finalFeedbackRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _tutorCenterRepository = tutorCenterRepository ?? throw new ArgumentNullException(nameof(tutorCenterRepository));
-            _tutorScheduleRepository = tutorScheduleRepository ?? throw new ArgumentNullException(nameof(tutorScheduleRepository));
             _finalFeedbackRepository = finalFeedbackRepository ?? throw new ArgumentNullException(nameof(finalFeedbackRepository));
         }
 
@@ -39,8 +36,6 @@ namespace MathBridgeSystem.Application.Services
             // Get tutor centers
             var tutorCenters = await _tutorCenterRepository.GetByTutorIdAsync(id);
 
-            // Get tutor schedules
-            var tutorSchedules = await _tutorScheduleRepository.GetByTutorIdAsync(id);
 
             // Get final feedbacks for tutor
             var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(id);
@@ -101,21 +96,6 @@ namespace MathBridgeSystem.Application.Services
                 } : null
             }).ToList();
 
-            // Map TutorSchedules
-            tutorDto.TutorSchedules = tutorSchedules.Select(ts => new TutorScheduleDetailDto
-            {
-                AvailabilityId = ts.AvailabilityId,
-                DaysOfWeek = ts.DaysOfWeek,
-                AvailableFrom = ts.AvailableFrom.ToString(),
-                AvailableUntil = ts.AvailableUntil.ToString(),
-                EffectiveFrom = ts.EffectiveFrom.ToString(),
-                EffectiveUntil = ts.EffectiveUntil?.ToString(),
-                CanTeachOnline = ts.CanTeachOnline,
-                CanTeachOffline = ts.CanTeachOffline,
-                IsBooked = ts.IsBooked,
-                Status = ts.Status,
-                CreatedDate = ts.CreatedDate
-            }).ToList();
 
             // Map Final Feedbacks
             tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
@@ -216,8 +196,6 @@ namespace MathBridgeSystem.Application.Services
                 // Get tutor centers
                 var tutorCenters = await _tutorCenterRepository.GetByTutorIdAsync(user.UserId);
 
-                // Get tutor schedules
-                var tutorSchedules = await _tutorScheduleRepository.GetByTutorIdAsync(user.UserId);
 
                 // Get final feedbacks for tutor
                 var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(user.UserId);
@@ -278,21 +256,6 @@ namespace MathBridgeSystem.Application.Services
                     } : null
                 }).ToList();
 
-                // Map TutorSchedules
-                tutorDto.TutorSchedules = tutorSchedules.Select(ts => new TutorScheduleDetailDto
-                {
-                    AvailabilityId = ts.AvailabilityId,
-                    DaysOfWeek = ts.DaysOfWeek,
-                    AvailableFrom = ts.AvailableFrom.ToString(),
-                    AvailableUntil = ts.AvailableUntil.ToString(),
-                    EffectiveFrom = ts.EffectiveFrom.ToString(),
-                    EffectiveUntil = ts.EffectiveUntil?.ToString(),
-                    CanTeachOnline = ts.CanTeachOnline,
-                    CanTeachOffline = ts.CanTeachOffline,
-                    IsBooked = ts.IsBooked,
-                    Status = ts.Status,
-                    CreatedDate = ts.CreatedDate
-                }).ToList();
 
                 // Map Final Feedbacks
                 tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
