@@ -375,8 +375,8 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Contract is no longer active.");
 
             var mainTutor = await _userRepository.GetByIdAsync(contract.MainTutorId!.Value);
-            if (mainTutor == null || (mainTutor.Status != "banned" && mainTutor.Status != "inactive"))
-                throw new InvalidOperationException("Only banned/inactive main tutor can be replaced.");
+            //if (mainTutor == null || (mainTutor.Status != "banned" && mainTutor.Status != "inactive"))
+            //    throw new InvalidOperationException("Only banned/inactive main tutor can be replaced.");
 
             var today = DateOnly.FromDateTime(DateTime.Today);
             var upcoming = await _sessionRepository.GetUpcomingSessionsByContractIdAsync(contractId, today);
