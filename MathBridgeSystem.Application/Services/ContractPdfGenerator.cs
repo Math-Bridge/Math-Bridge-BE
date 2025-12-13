@@ -12,7 +12,8 @@ namespace MathBridgeSystem.Application.Services
     {
         public static byte[] GenerateContractPdf(
             Contract contract,
-            Child child,
+            Child child,                    
+            Child? secondChild,            
             User parent,
             PaymentPackage package,
             User? mainTutor,
@@ -38,15 +39,26 @@ namespace MathBridgeSystem.Application.Services
                         .PaddingVertical(20)
                         .Column(column =>
                         {
-                            // Thông tin học sinh & phụ huynh
+                            // THÔNG TIN HỌC SINH – HỖ TRỢ CẢ 1 VÀ 2 BÉ
                             column.Item().Row(row =>
                             {
                                 row.RelativeItem().Column(col =>
                                 {
                                     col.Item().Text("Student Information:").Bold().FontSize(14);
+
+                                    // Bé chính luôn có
                                     col.Item().Text($"Name: {child.FullName}");
                                     col.Item().Text($"Grade: {child.Grade}");
+
+                                    // Nếu có bé phụ → hiển thị thêm
+                                    if (secondChild != null)
+                                    {
+                                        col.Item().PaddingTop(8).Text("Second Student:").Bold().FontSize(13);
+                                        col.Item().Text($"Name: {secondChild.FullName}");
+                                        col.Item().Text($"Grade: {secondChild.Grade}");
+                                    }
                                 });
+
                                 row.RelativeItem().Column(col =>
                                 {
                                     col.Item().Text("Parent Information:").Bold().FontSize(14);
@@ -93,7 +105,7 @@ namespace MathBridgeSystem.Application.Services
                                 column.Item().Text(center.Name);
                             }
 
-                            // LỊCH HỌC LINH HOẠT – ĐẸP NHƯ HỢP ĐỒNG CAO CẤP
+                            // LỊCH HỌC LINH HOẠT
                             column.Item().PaddingTop(20).Text("Weekly Schedule:").Bold().FontSize(14);
                             column.Item().PaddingTop(8).Element(ComposeScheduleTable);
 
@@ -103,8 +115,8 @@ namespace MathBridgeSystem.Application.Services
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.ConstantColumn(100); // Day
-                                        columns.ConstantColumn(120); // Time
+                                        columns.ConstantColumn(100); 
+                                        columns.ConstantColumn(120); 
                                     });
 
                                     table.Header(header =>
@@ -119,7 +131,6 @@ namespace MathBridgeSystem.Application.Services
                                     {
                                         table.Cell().Border(1).Padding(5)
                                              .Text(GetDayName(schedule.DayOfWeek));
-
                                         table.Cell().Border(1).Padding(5)
                                              .Text($"{schedule.StartTime:HH:mm} - {schedule.EndTime:HH:mm}");
                                     }
