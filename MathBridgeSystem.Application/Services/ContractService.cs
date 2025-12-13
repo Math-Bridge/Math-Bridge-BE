@@ -1,5 +1,6 @@
 ﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Contract;
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -18,6 +19,8 @@ namespace MathBridgeSystem.Application.Services
         private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
         private readonly IChildRepository _childRepository;
+        private readonly IWalletTransactionRepository _walletTransactionRepository;
+        private readonly INotificationService _notificationService;
 
         public ContractService(
             IContractRepository contractRepository,
@@ -25,7 +28,9 @@ namespace MathBridgeSystem.Application.Services
             ISessionRepository sessionRepository,
             IEmailService emailService,
             IUserRepository userRepository,
-            IChildRepository childRepository)
+            IChildRepository childRepository,
+            IWalletTransactionRepository walletTransactionRepository,
+            INotificationService notificationService)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
@@ -33,6 +38,8 @@ namespace MathBridgeSystem.Application.Services
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
+            _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -310,6 +317,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.Status.ToLowerInvariant() == "cancelled")
             {
+                // Cancel all scheduled/rescheduled sessions
                 var sessions = await _sessionRepository.GetByContractIdAsync(contractId);
                 foreach (var s in sessions.Where(x => x.Status is "scheduled" or "rescheduled"))
                 {
@@ -317,9 +325,89 @@ namespace MathBridgeSystem.Application.Services
                     s.UpdatedAt = DateTime.UtcNow;
                     await _sessionRepository.UpdateAsync(s);
                 }
+
+                // Process refund only if changing from pending to cancelled
+                if (oldStatus == "pending")
+                {
+                    await ProcessCancellationRefundAsync(contract);
+                }
             }
 
             return true;
+        }
+
+        private async Task ProcessCancellationRefundAsync(Contract contract)
+        {
+            // Get full contract with package and parent details
+            var fullContract = await _contractRepository.GetByIdWithPackageAsync(contract.ContractId)
+                               ?? throw new InvalidOperationException("Contract not found for refund processing.");
+
+            if (fullContract.Package == null)
+                throw new InvalidOperationException("Package information is required for refund calculation.");
+
+            var parent = await _userRepository.GetByIdAsync(fullContract.ParentId)
+                         ?? throw new InvalidOperationException("Parent not found for refund processing.");
+
+            // Calculate 90% refund
+            var packagePrice = fullContract.Package.Price;
+            var refundAmount = packagePrice * 0.90m;
+
+            // Create wallet transaction for refund
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid(),
+                ParentId = fullContract.ParentId,
+                ContractId = fullContract.ContractId,
+                Amount = refundAmount,
+                TransactionType = "Refund",
+                Description = $"Refund (90%) for cancelled contract {fullContract.ContractId} - Package: {fullContract.Package.PackageName}",
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
+                Status = "Completed",
+                PaymentMethod = "Wallet"
+            };
+
+            await _walletTransactionRepository.AddAsync(transaction);
+
+            // Update parent's wallet balance
+            await _userRepository.UpdateWalletBalanceAsync(fullContract.ParentId, refundAmount);
+
+            var childName = fullContract.Child?.FullName ?? "your child";
+            var cancellationDate = DateTime.UtcNow.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+
+            // Create notification for parent
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = fullContract.ParentId,
+                ContractId = fullContract.ContractId,
+                Title = "Contract Cancelled - Refund Processed",
+                Message = $"Your contract for {childName} has been cancelled. A refund of {refundAmount:N0} VND (90% of package price) has been credited to your wallet.",
+                NotificationType = "Contract"
+            });
+
+            // Send emails to parent
+            if (!string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    // Send refund confirmation email
+                    await _emailService.SendRefundConfirmationAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        $"{refundAmount:N0} VND",
+                        cancellationDate);
+
+                    // Send contract cancelled email
+                    await _emailService.SendContractCancelledAsync(
+                        parent.Email,
+                        childName,
+                        "Contract cancelled from pending status. 90% of package price has been refunded to your wallet.",
+                        cancellationDate);
+                }
+                catch
+                {
+                    // Log but don't fail the refund process if email fails
+                }
+            }
         }
 
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)
