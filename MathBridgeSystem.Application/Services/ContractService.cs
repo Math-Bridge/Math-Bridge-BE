@@ -237,7 +237,6 @@ namespace MathBridgeSystem.Application.Services
 
                     // CHỈ TẠO BUỔI HỌC NẾU:
                     // Ngày đó là TƯƠNG LAI (ngày mai trở đi) HOẶC
-                    // Ngày đó là HÔM NAY NHƯNG giờ chưa tới (sessionStart > Now)
                     if (sessionDateTime > DateTime.Now ||
                         (currentDate > today)) 
                     {
