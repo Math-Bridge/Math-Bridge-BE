@@ -121,6 +121,50 @@ namespace MathBridgeSystem.Application.Services
 
             if (!contract.IsOnline && request.CenterId == null)
                 throw new ArgumentException("CenterId is required for offline contracts.");
+            // KIỂM TRA TRÙNG LỊCH CHO BÉ CHÍNH
+            var hasOverlapForMainChild = await _contractRepository.HasOverlappingContractForChildAsync(
+                childId: request.ChildId,
+                startDate: request.StartDate,
+                endDate: request.EndDate,
+                newSchedules: request.Schedules.Select(s => new ContractSchedule
+                {
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                }).ToList(),
+                excludeContractId: null 
+            );
+
+            if (hasOverlapForMainChild)
+            {
+                throw new InvalidOperationException(
+                    "This child either has a pending contract or is currently enrolled in school but the schedule conflicts with their studies." +
+                    "It is not possible to create a new contract for the same period.");
+            }
+
+            // KIỂM TRA TRÙNG LỊCH CHO BÉ PHỤ (nếu có)
+            if (request.SecondChildId.HasValue)
+            {
+                var hasOverlapForSecondChild = await _contractRepository.HasOverlappingContractForChildAsync(
+                    childId: request.SecondChildId.Value,
+                    startDate: request.StartDate,
+                    endDate: request.EndDate,
+                    newSchedules: request.Schedules.Select(s => new ContractSchedule
+                    {
+                        DayOfWeek = s.DayOfWeek,
+                        StartTime = s.StartTime,
+                        EndTime = s.EndTime
+                    }).ToList(),
+                    excludeContractId: null
+                );
+
+                if (hasOverlapForSecondChild)
+                {
+                    throw new InvalidOperationException(
+                        "This child either has a pending contract or is currently enrolled in school but the schedule conflicts with their studies." +
+                        "It is not possible to create a new contract for the same period.");
+                }
+            }
 
             await _contractRepository.AddAsync(contract);
 
