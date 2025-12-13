@@ -1,5 +1,6 @@
 ﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Contract;
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -18,6 +19,9 @@ namespace MathBridgeSystem.Application.Services
         private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
         private readonly IChildRepository _childRepository;
+        private readonly IWalletTransactionRepository _walletTransactionRepository;
+        private readonly INotificationService _notificationService;
+        private readonly ISePayRepository _sePayRepository;
 
         public ContractService(
             IContractRepository contractRepository,
@@ -25,7 +29,10 @@ namespace MathBridgeSystem.Application.Services
             ISessionRepository sessionRepository,
             IEmailService emailService,
             IUserRepository userRepository,
-            IChildRepository childRepository)
+            IChildRepository childRepository,
+            IWalletTransactionRepository walletTransactionRepository,
+            INotificationService notificationService,
+            ISePayRepository sePayRepository)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
@@ -33,6 +40,9 @@ namespace MathBridgeSystem.Application.Services
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
+            _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _sePayRepository = sePayRepository ?? throw new ArgumentNullException(nameof(sePayRepository));
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -310,6 +320,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (request.Status.ToLowerInvariant() == "cancelled")
             {
+                // Cancel all scheduled/rescheduled sessions
                 var sessions = await _sessionRepository.GetByContractIdAsync(contractId);
                 foreach (var s in sessions.Where(x => x.Status is "scheduled" or "rescheduled"))
                 {
@@ -317,9 +328,120 @@ namespace MathBridgeSystem.Application.Services
                     s.UpdatedAt = DateTime.UtcNow;
                     await _sessionRepository.UpdateAsync(s);
                 }
+
+                // Process refund only if changing from pending to cancelled
+                if (oldStatus == "pending")
+                {
+                    await ProcessCancellationRefundAsync(contract);
+                }
             }
 
             return true;
+        }
+
+        private async Task ProcessCancellationRefundAsync(Contract contract)
+        {
+            // Get full contract with package and parent details
+            var fullContract = await _contractRepository.GetByIdWithPackageAsync(contract.ContractId)
+                               ?? throw new InvalidOperationException("Contract not found for refund processing.");
+
+            if (fullContract.Package == null)
+                throw new InvalidOperationException("Package information is required for refund calculation.");
+
+            var parent = await _userRepository.GetByIdAsync(fullContract.ParentId)
+                         ?? throw new InvalidOperationException("Parent not found for refund processing.");
+
+            // Find the original payment amount from either SePay transaction or Wallet transaction
+            decimal refundAmount = 0m;
+            string paymentSource = "unknown";
+
+            // Check SePay transactions for this contract first (direct bank payment)
+            var sePayTransactions = await _sePayRepository.GetByContractIdAsync(fullContract.ContractId);
+            var completedSePayTransaction = sePayTransactions.FirstOrDefault(t => t.TransferType == "in");
+
+            if (completedSePayTransaction != null)
+            {
+                // Refund the exact amount paid via SePay
+                refundAmount = completedSePayTransaction.TransferAmount;
+                paymentSource = "SePay";
+            }
+            else
+            {
+                // Check wallet transactions for this contract (wallet payment)
+                var walletTransactions = await _walletTransactionRepository.GetByContractIdAsync(fullContract.ContractId);
+                var paymentTransaction = walletTransactions.FirstOrDefault(t => 
+                    t.TransactionType == "Payment" && t.Status == "Completed");
+
+                if (paymentTransaction != null)
+                {
+                    // Refund the exact amount paid via wallet
+                    refundAmount = paymentTransaction.Amount;
+                    paymentSource = "Wallet";
+                }
+                else
+                {
+                    // Fallback to full package price if no payment transaction found
+                    refundAmount = fullContract.Package.Price;
+                    paymentSource = "Package Price";
+                }
+            }
+
+            // Create wallet transaction for refund (full amount)
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid(),
+                ParentId = fullContract.ParentId,
+                ContractId = fullContract.ContractId,
+                Amount = refundAmount,
+                TransactionType = "Refund",
+                Description = $"Full refund for cancelled contract {fullContract.ContractId} - Package: {fullContract.Package.PackageName} (Original payment via {paymentSource})",
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
+                Status = "Completed",
+                PaymentMethod = "Wallet"
+            };
+
+            await _walletTransactionRepository.AddAsync(transaction);
+
+            // Update parent's wallet balance
+            await _userRepository.UpdateWalletBalanceAsync(fullContract.ParentId, refundAmount);
+
+            var childName = fullContract.Child?.FullName ?? "your child";
+            var cancellationDate = DateTime.UtcNow.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+
+            // Create notification for parent
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = fullContract.ParentId,
+                ContractId = fullContract.ContractId,
+                Title = "Contract Cancelled - Full Refund Processed",
+                Message = $"Your contract for {childName} has been cancelled. A full refund of {refundAmount:N0} VND has been credited to your wallet.",
+                NotificationType = "Contract"
+            });
+
+            // Send emails to parent
+            if (!string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    // Send refund confirmation email
+                    await _emailService.SendRefundConfirmationAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        $"{refundAmount:N0} VND",
+                        cancellationDate);
+
+                    // Send contract cancelled email
+                    await _emailService.SendContractCancelledAsync(
+                        parent.Email,
+                        childName,
+                        $"Contract cancelled from pending status. Full refund of {refundAmount:N0} VND has been credited to your wallet.",
+                        cancellationDate);
+                }
+                catch
+                {
+                    // Log but don't fail the refund process if email fails
+                }
+            }
         }
 
         public async Task<List<ContractDto>> GetContractsByParentAsync(Guid parentId)

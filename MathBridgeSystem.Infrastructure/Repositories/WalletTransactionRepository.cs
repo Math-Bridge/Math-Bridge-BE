@@ -22,6 +22,14 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<WalletTransaction>> GetByContractIdAsync(Guid contractId)
+        {
+            return await _context.WalletTransactions
+                .Where(wt => wt.ContractId == contractId)
+                .OrderByDescending(wt => wt.TransactionDate)
+                .ToListAsync();
+        }
+
         public async Task<WalletTransaction> AddAsync(WalletTransaction transaction)
         {
             _context.WalletTransactions.Add(transaction);
