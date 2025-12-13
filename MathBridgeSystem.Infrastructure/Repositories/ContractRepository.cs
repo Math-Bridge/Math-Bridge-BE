@@ -169,19 +169,40 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         private bool HasScheduleOverlap(ICollection<ContractSchedule> s1, ICollection<ContractSchedule> s2)
         {
             foreach (var a in s1)
-            foreach (var b in s2)
-                if (a.DayOfWeek == b.DayOfWeek &&
-                    a.StartTime < b.EndTime && b.StartTime < a.EndTime)
+                foreach (var b in s2)
                 {
-                    var gap = a.StartTime > b.EndTime
-                        ? a.StartTime - b.EndTime
-                        : b.StartTime - a.EndTime;
+                    if (a.DayOfWeek != b.DayOfWeek)
+                        continue;
+
+                    // Kiểm tra xem 2 buổi có overlap giờ không
+                    bool hasTimeOverlap = a.StartTime < b.EndTime && b.StartTime < a.EndTime;
+                    if (hasTimeOverlap)
+                        return true; // Có overlap → trùng → không cho phép
+
+                    // Nếu không overlap, tính khoảng cách giữa 2 buổi (gap)
+                    TimeSpan gap;
+                    if (a.EndTime <= b.StartTime)
+                    {
+                        // Buổi a kết thúc trước khi buổi b bắt đầu
+                        gap = b.StartTime - a.EndTime;
+                    }
+                    else if (b.EndTime <= a.StartTime)
+                    {
+                        // Buổi b kết thúc trước khi buổi a bắt đầu
+                        gap = a.StartTime - b.EndTime;
+                    }
+                    else
+                    {
+                        continue; // Không thể đến đây nếu không overlap, nhưng để an toàn
+                    }
+
+                    // Nếu khoảng nghỉ giữa 2 buổi < 90 phút → coi như trùng (không đủ thời gian nghỉ)
                     if (gap.TotalMinutes < 90)
                         return true;
                 }
+
             return false;
         }
-
         private bool HasDateOverlap(DateOnly s1, DateOnly e1, DateOnly s2, DateOnly e2)
             => s1 <= e2 && s2 <= e1;
 

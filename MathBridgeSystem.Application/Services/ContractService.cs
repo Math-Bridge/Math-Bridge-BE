@@ -121,7 +121,7 @@ namespace MathBridgeSystem.Application.Services
 
             if (!contract.IsOnline && request.CenterId == null)
                 throw new ArgumentException("CenterId is required for offline contracts.");
-            // KIỂM TRA TRÙNG LỊCH CHO BÉ CHÍNH
+            // Check main child
             var hasOverlapForMainChild = await _contractRepository.HasOverlappingContractForChildAsync(
                 childId: request.ChildId,
                 startDate: request.StartDate,
@@ -132,7 +132,7 @@ namespace MathBridgeSystem.Application.Services
                     StartTime = s.StartTime,
                     EndTime = s.EndTime
                 }).ToList(),
-                excludeContractId: null // vì contract chưa tạo nên không cần exclude
+                excludeContractId: null
             );
 
             if (hasOverlapForMainChild)
@@ -142,7 +142,7 @@ namespace MathBridgeSystem.Application.Services
                             "Cannot create a new contract for this time.");
             }
 
-            // KIỂM TRA TRÙNG LỊCH CHO BÉ PHỤ (nếu có)
+            // check sub child (if have)
             if (request.SecondChildId.HasValue)
             {
                 var hasOverlapForSecondChild = await _contractRepository.HasOverlappingContractForChildAsync(
@@ -234,9 +234,9 @@ namespace MathBridgeSystem.Application.Services
                 {
                     var sessionDateTime = currentDate.ToDateTime(schedule.StartTime);
 
-                    // CHỈ TẠO BUỔI HỌC NẾU:
-                    // Ngày đó là TƯƠNG LAI (ngày mai trở đi) HOẶC
-                    // Ngày đó là HÔM NAY NHƯNG giờ chưa tới (sessionStart > Now)
+                    // Chỉ tạo buổi học nếu:
+                    // Ngày đó là tương lai (ngày mai trở đi) hoặc
+                    // Ngày đó là hôm nay nhưng giờ chưa tới (sessionStart > Now)
                     if (sessionDateTime > DateTime.Now ||
                         (currentDate > today)) 
                     {
@@ -470,7 +470,7 @@ namespace MathBridgeSystem.Application.Services
                     throw new ArgumentException($"Start time must be before end time for {s.DayOfWeek}");
             }
 
-            // 2. LẤY THÔNG TIN CẢ 2 BÉ (nếu có)
+            // 2. Get all Childs Infor
             var firstChild = await _childRepository.GetByIdAsync(request.ChildId)
                              ?? throw new ArgumentException("First child not found.");
 
@@ -484,18 +484,18 @@ namespace MathBridgeSystem.Application.Services
 
                 secondCenterId = secondChild.CenterId;
 
-                // BẮT BUỘC: 2 bé phải cùng trung tâm nếu học offline
+                // REQUIRED: Both children must attend the same center if studying offline
                 if (!request.IsOnline && firstCenterId != secondCenterId)
                     throw new ArgumentException("Both children must be in the same center for offline twin contracts.");
             }
 
-            // 3. XÁC ĐỊNH TRUNG TÂM DÙNG ĐỂ LỌC TUTOR (OFFLINE)
+            // 3. IDENTIFY THE CENTER USED FOR TUTOR FILTERING (OFFLINE)
             var requiredCenterId = !request.IsOnline ? firstCenterId : null;
 
             if (!request.IsOnline && !requiredCenterId.HasValue)
                 throw new ArgumentException("Offline classes require child(ren) to be assigned to a center.");
 
-            // 4. Tạo hợp đồng tạm
+            // 4. Create a temporary contract
             var tempContract = new Contract
             {
                 ChildId = request.ChildId,
@@ -514,25 +514,25 @@ namespace MathBridgeSystem.Application.Services
                 }).ToList()
             };
 
-            // 5. Lấy tất cả tutor khả dụng (không trùng lịch)
+            // 5. Get all available tutors (no scheduling conflicts)
             var allAvailableTutors = await _contractRepository.GetAvailableTutorsForContractAsync(tempContract);
 
-            // 6. LỌC THEO TRUNG TÂM + KHOẢNG CÁCH (CHỈ CHO OFFLINE)
+            // 6. FILTER BY CENTER + DISTANCE (OFFLINE ONLY)
             var finalTutors = request.IsOnline
                 ? allAvailableTutors
                 : allAvailableTutors.Where(t =>
                 {
-                    // Phải thuộc trung tâm của bé 1 (và bé 2 nếu có)
+                    // Must be centered around child 1 (and child 2 if applicable)
                     bool inCorrectCenter = t.TutorCenters.Any(tc => tc.CenterId == requiredCenterId.Value);
 
-                    // Phải trong khoảng cách MaxDistanceKm
+                    // Must be within MaxDistanceKm
                     var distance = CalculateDistance(tempContract, t);
                     bool withinDistance = distance <= tempContract.MaxDistanceKm;
 
                     return inCorrectCenter && withinDistance;
                 }).ToList();
 
-            // 7. Trả về kết quả
+            // 7. Return the result
             return finalTutors.Select(t => new AvailableTutorResponse
             {
                 UserId = t.UserId,
