@@ -20,24 +20,30 @@ namespace MathBridgeSystem.Application.DTOs.DailyReport
     public class CreateDailyReportRequest
     {
         [Required]
-        public Guid ChildId { get; set; }
-
-        [Required]
         public Guid BookingId { get; set; }
-
-        [MaxLength(1000)]
-        public string? Notes { get; set; }
-
         [Required]
-        public bool OnTrack { get; set; }
+        public ChildReportData MainChild { get; set; } = null!;
+        public ChildReportData? SecondChild { get; set; }
 
-        [Required]
-        public bool HaveHomework { get; set; }
+        public class ChildReportData
+        {
+            [Required]
+            public Guid ChildId { get; set; }
 
-        [Required]
-        public Guid UnitId { get; set; }
-        public string? Url { get; set; }
-        
+            [MaxLength(1000)]
+            public string? Notes { get; set; }
+
+            [Required]
+            public bool OnTrack { get; set; }
+
+            [Required]
+            public bool HaveHomework { get; set; }
+
+            [Required]
+            public Guid UnitId { get; set; }
+
+            public string? Url { get; set; }
+        }
     }
 
     public class UpdateDailyReportRequest

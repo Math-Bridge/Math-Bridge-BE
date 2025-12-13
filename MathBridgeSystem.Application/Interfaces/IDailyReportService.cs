@@ -22,7 +22,7 @@ namespace MathBridgeSystem.Application.Interfaces
         /// Gets the unit progress for a contract's child based on session completion.
         /// </summary>
         Task<ChildUnitProgressDto> GetChildUnitProgressAsync(Guid contractId);
-        Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId);
+        Task<object> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId);
         Task UpdateDailyReportAsync(Guid reportId, UpdateDailyReportRequest request);
         Task<bool> DeleteDailyReportAsync(Guid reportId);
         /// <summary>
