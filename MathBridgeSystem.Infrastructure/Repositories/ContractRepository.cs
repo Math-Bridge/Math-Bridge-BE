@@ -120,7 +120,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             var maxContractsSetting = await _context.SystemSettings
                 .FirstOrDefaultAsync(s => s.Key == "MaxContractsPerTutor");
 
-            int maxContracts = maxContractsSetting != null && int.TryParse(maxContractsSetting.Value, out int val) ? val : 5;
+            int maxContracts = maxContractsSetting != null && int.TryParse(maxContractsSetting.Value, out int val) ? val : 4;
 
             var tutors = await _context.Users
                 .Include(u => u.FinalFeedbacks)

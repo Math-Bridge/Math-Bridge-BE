@@ -7,21 +7,41 @@ using MathBridgeSystem.Application.DTOs.Withdrawal;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Infrastructure.Data;
+using MathBridgeSystem.Domain.Interfaces;
 
 namespace MathBridgeSystem.Application.Services
 {
     public class WithdrawalService : IWithdrawalService
     {
         private readonly MathBridgeDbContext _context;
+        private readonly IUserRepository _userRepository;
 
-        public WithdrawalService(MathBridgeDbContext context)
+        public WithdrawalService(MathBridgeDbContext context, IUserRepository userRepository)
         {
             _context = context;
+            _userRepository = userRepository;
         }
 
-        public async Task<WithdrawalRequest> RequestWithdrawalAsync(Guid userId, WithdrawalRequestCreateDto requestDto)
+        private static WithdrawalResponseDTO MapToDto(WithdrawalRequest request)
         {
-            var user = await _context.Users.FindAsync(userId);
+            return new WithdrawalResponseDTO
+            {
+                Id = request.Id,
+                ParentId = request.ParentId,
+                Amount = request.Amount,
+                BankName = request.BankName,
+                BankAccountNumber = request.BankAccountNumber,
+                BankHolderName = request.BankHolderName,
+                Status = request.Status,
+                CreatedDate = request.CreatedDate,
+                ProcessedDate = request.ProcessedDate,
+                StaffId = request.StaffId
+            };
+        }
+
+        public async Task<WithdrawalResponseDTO> RequestWithdrawalAsync(Guid userId, WithdrawalRequestCreateDto requestDto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) throw new Exception("User not found");
 
             // Check available balance (considering pending withdrawals if necessary, but per request just wallet check)
@@ -45,10 +65,10 @@ namespace MathBridgeSystem.Application.Services
             _context.WithdrawalRequests.Add(request);
             await _context.SaveChangesAsync();
 
-            return request;
+            return MapToDto(request);
         }
 
-        public async Task<WithdrawalRequest> ProcessWithdrawalAsync(Guid withdrawalId, Guid staffId)
+        public async Task<WithdrawalResponseDTO> ProcessWithdrawalAsync(Guid withdrawalId, Guid staffId)
         {
             var request = await _context.WithdrawalRequests
                 .Include(r => r.Parent)
@@ -72,7 +92,7 @@ namespace MathBridgeSystem.Application.Services
                 TransactionType = "Withdrawal",
                 Description = $"Withdrawal to {request.BankName} - {request.BankAccountNumber}",
                 TransactionDate = DateTime.UtcNow,
-                Status = "Success",
+                Status = "completed",
                 PaymentMethod = "Bank Transfer"
             };
 
@@ -86,24 +106,26 @@ namespace MathBridgeSystem.Application.Services
             _context.WithdrawalRequests.Update(request);
 
             await _context.SaveChangesAsync();
-            return request;
+            return MapToDto(request);
         }
 
-        public async Task<IEnumerable<WithdrawalRequest>> GetPendingRequestsAsync()
+        public async Task<IEnumerable<WithdrawalResponseDTO>> GetPendingRequestsAsync()
         {
-            return await _context.WithdrawalRequests
+            var requests = await _context.WithdrawalRequests
                 .Where(r => r.Status == "Pending")
                 .OrderByDescending(r => r.CreatedDate)
                 .Include(r => r.Parent)
                 .ToListAsync();
+            return requests.Select(MapToDto);
         }
 
-        public async Task<IEnumerable<WithdrawalRequest>> GetMyRequestsAsync(Guid userId)
+        public async Task<IEnumerable<WithdrawalResponseDTO>> GetMyRequestsAsync(Guid userId)
         {
-             return await _context.WithdrawalRequests
+            var requests = await _context.WithdrawalRequests
                 .Where(r => r.ParentId == userId)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
+            return requests.Select(MapToDto);
         }
     }
 }
