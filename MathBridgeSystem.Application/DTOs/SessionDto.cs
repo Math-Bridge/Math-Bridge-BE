@@ -14,7 +14,7 @@ namespace MathBridgeSystem.Application.DTOs
         public string? VideoCallPlatform { get; set; }
         public string? OfflineAddress { get; set; }
         public string Status { get; set; } = null!;
-        public string ChildName { get; set; } = null!;
+        public string StudentNames { get; set; } = null!;
         public string PackageName { get; set; } = null!;
     }
 }
