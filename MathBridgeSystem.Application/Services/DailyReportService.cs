@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.DailyReport;
+﻿using MathBridgeSystem.Application.DTOs.DailyReport;
 using MathBridgeSystem.Application.DTOs.Progress;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -395,47 +395,113 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        public async Task<Guid> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId)
+        public async Task<object> CreateDailyReportAsync(CreateDailyReportRequest request, Guid tutorId)
         {
-            var dailyReport = new DailyReport
+            // 1. Lấy session để kiểm tra
+            var session = await _sessionRepository.GetByIdAsync(request.BookingId)
+                ?? throw new KeyNotFoundException("The sesson did not exist.");
+
+            if (session.TutorId != tutorId)
+                throw new UnauthorizedAccessException("You are not the tutor for this sesson.");
+
+            var contract = session.Contract;
+
+            // 2. Kiểm tra loại contract (twin hay không)
+            bool isTwin = contract.SecondChildId.HasValue;
+
+            // 3. Validate dữ liệu đầu vào
+            if (contract.ChildId != request.MainChild.ChildId)
+                throw new ArgumentException("The primary child's ChildId does not match the contract.");
+
+            if (isTwin)
+            {
+                if (request.SecondChild == null)
+                    throw new ArgumentException("This is a pair sesson; please provide feedback for both children.");
+
+                if (contract.SecondChildId != request.SecondChild.ChildId)
+                    throw new ArgumentException("The secondary child's ChildId does not match the contract.");
+            }
+            else
+            {
+                if (request.SecondChild != null)
+                    throw new ArgumentException("This sesson only has one child; there's no need to send feedback for the other child.");
+            }
+
+            var createdReports = new List<object>();
+
+            // 4. Tạo report cho bé chính
+            var mainReport = await CreateSingleReportAsync(request.MainChild, request.BookingId, tutorId);
+            createdReports.Add(new
+            {
+                childId = request.MainChild.ChildId,
+                childName = contract.Child?.FullName ?? "Main Child",
+                reportId = mainReport.ReportId
+            });
+
+            // 5. Tạo report cho bé phụ (nếu có)
+            if (request.SecondChild != null)
+            {
+                var secondReport = await CreateSingleReportAsync(request.SecondChild, request.BookingId, tutorId);
+                createdReports.Add(new
+                {
+                    childId = request.SecondChild.ChildId,
+                    childName = contract.SecondChild?.FullName ?? "Secondary child",
+                    reportId = secondReport.ReportId
+                });
+            }
+
+            // 6. Cập nhật contract status khi hết buối
+            // Lấy tất cả session của contract này
+            var allSessions = await _sessionRepository.GetByContractIdAsync(session.ContractId);
+
+            // Kiểm tra xem có buổi học nào sau ngày của buổi hiện tại không
+            var hasRemainingSessions = allSessions.Any(s => s.SessionDate > session.SessionDate);
+
+            // Nếu không còn buổi nào sau → đây là buổi cuối → đánh dấu contract Completed
+            if (!hasRemainingSessions)
+            {
+                contract.Status = "completed";
+                contract.UpdatedDate = DateTime.UtcNow;
+                await _contractRepository.UpdateAsync(contract);
+            }
+
+            // 7. Trả về kết quả
+            return new
+            {
+                bookingId = request.BookingId,
+                sessionDate = session.SessionDate,
+                isTwinSession = isTwin,
+                reportsCreated = createdReports.Count,
+                reports = createdReports,
+                contractStatusUpdated = !hasRemainingSessions 
+            };
+        }
+
+        private async Task<DailyReport> CreateSingleReportAsync(
+            CreateDailyReportRequest.ChildReportData data,
+            Guid bookingId,
+            Guid tutorId)
+        {
+            // Kiểm tra trùng report cho bé này trong buổi này
+            var existing = await _dailyReportRepository.GetByBookingAndChildAsync(bookingId, data.ChildId);
+            if (existing != null)
+                throw new InvalidOperationException($"Comments for this child already exist during this sesson.");
+
+            var report = new DailyReport
             {
                 ReportId = Guid.NewGuid(),
-                ChildId = request.ChildId,
+                ChildId = data.ChildId,
                 TutorId = tutorId,
-                BookingId = request.BookingId,
-                Notes = request.Notes,
-                OnTrack = request.OnTrack,
-                HaveHomework = request.HaveHomework,
-                CreatedDate = DateOnly.FromDateTime(DateTime.Now),
-                UnitId = request.UnitId,
-                Url = request.Url
+                BookingId = bookingId,
+                Notes = data.Notes,
+                OnTrack = data.OnTrack,
+                HaveHomework = data.HaveHomework,
+                CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                UnitId = data.UnitId,
+                Url = data.Url
             };
 
-            var createdReport = await _dailyReportRepository.AddAsync(dailyReport);
-            
-            // Check if this is the last session and update contract status if needed
-            var session = await _sessionRepository.GetByIdAsync(request.BookingId);
-            if (session != null)
-            {
-                var contract = await _contractRepository.GetByIdAsync(session.ContractId);
-                if (contract != null)
-                {
-                    // Get all sessions for this contract
-                    var allSessions = await _sessionRepository.GetByContractIdAsync(session.ContractId);
-                    
-                    // Check if there are any sessions after the current session date
-                    var hasRemainingsessions = allSessions.Any(s => s.SessionDate > session.SessionDate);
-                    
-                    // If no remaining sessions, mark contract as completed
-                    if (!hasRemainingsessions)
-                    {
-                        contract.Status = "Completed";
-                        await _contractRepository.UpdateAsync(contract);
-                    }
-                }
-            }
-            
-            return createdReport.ReportId;
+            return await _dailyReportRepository.AddAsync(report);
         }
 
         public async Task UpdateDailyReportAsync(Guid reportId, UpdateDailyReportRequest request)

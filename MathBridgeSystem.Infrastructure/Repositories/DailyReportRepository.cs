@@ -129,6 +129,11 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
         }
+        public async Task<DailyReport?> GetByBookingAndChildAsync(Guid bookingId, Guid childId)
+        {
+            return await _context.DailyReports
+                .FirstOrDefaultAsync(d => d.BookingId == bookingId && d.ChildId == childId);
+        }
     }
 }
 

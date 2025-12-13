@@ -306,9 +306,11 @@ namespace MathBridgeSystem.Application.Services
                     fullContract.Package == null || fullContract.MainTutor == null)
                     throw new InvalidOperationException("Missing data to send confirmation email.");
 
-                var pdfBytes = ContractPdfGenerator.GenerateContractPdf(
-                    fullContract, fullContract.Child, fullContract.Parent,
-                    fullContract.Package, fullContract.MainTutor, fullContract.Center);
+              var pdfBytes = ContractPdfGenerator.GenerateContractPdf(
+                                                contract: fullContract, child: fullContract.Child, 
+                                                secondChild: fullContract.SecondChild,parent: fullContract.Parent,
+                                                package: fullContract.Package,mainTutor: fullContract.MainTutor,
+                                                center: fullContract.Center);
 
                 await _emailService.SendContractConfirmationAsync(
                     email: fullContract.Parent.Email,
