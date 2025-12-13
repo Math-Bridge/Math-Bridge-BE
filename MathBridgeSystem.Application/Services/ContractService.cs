@@ -21,6 +21,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly IChildRepository _childRepository;
         private readonly IWalletTransactionRepository _walletTransactionRepository;
         private readonly INotificationService _notificationService;
+        private readonly ISePayRepository _sePayRepository;
 
         public ContractService(
             IContractRepository contractRepository,
@@ -30,7 +31,8 @@ namespace MathBridgeSystem.Application.Services
             IUserRepository userRepository,
             IChildRepository childRepository,
             IWalletTransactionRepository walletTransactionRepository,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ISePayRepository sePayRepository)
         {
             _contractRepository = contractRepository;
             _packageRepository = packageRepository;
@@ -40,6 +42,7 @@ namespace MathBridgeSystem.Application.Services
             _childRepository = childRepository ?? throw new ArgumentNullException(nameof(childRepository));
             _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _sePayRepository = sePayRepository ?? throw new ArgumentNullException(nameof(sePayRepository));
         }
 
         public async Task<Guid> CreateContractAsync(CreateContractRequest request)
@@ -348,11 +351,42 @@ namespace MathBridgeSystem.Application.Services
             var parent = await _userRepository.GetByIdAsync(fullContract.ParentId)
                          ?? throw new InvalidOperationException("Parent not found for refund processing.");
 
-            // Calculate 90% refund
-            var packagePrice = fullContract.Package.Price;
-            var refundAmount = packagePrice * 0.90m;
+            // Find the original payment amount from either SePay transaction or Wallet transaction
+            decimal refundAmount = 0m;
+            string paymentSource = "unknown";
 
-            // Create wallet transaction for refund
+            // Check SePay transactions for this contract first (direct bank payment)
+            var sePayTransactions = await _sePayRepository.GetByContractIdAsync(fullContract.ContractId);
+            var completedSePayTransaction = sePayTransactions.FirstOrDefault(t => t.TransferType == "in");
+
+            if (completedSePayTransaction != null)
+            {
+                // Refund the exact amount paid via SePay
+                refundAmount = completedSePayTransaction.TransferAmount;
+                paymentSource = "SePay";
+            }
+            else
+            {
+                // Check wallet transactions for this contract (wallet payment)
+                var walletTransactions = await _walletTransactionRepository.GetByContractIdAsync(fullContract.ContractId);
+                var paymentTransaction = walletTransactions.FirstOrDefault(t => 
+                    t.TransactionType == "Payment" && t.Status == "Completed");
+
+                if (paymentTransaction != null)
+                {
+                    // Refund the exact amount paid via wallet
+                    refundAmount = paymentTransaction.Amount;
+                    paymentSource = "Wallet";
+                }
+                else
+                {
+                    // Fallback to full package price if no payment transaction found
+                    refundAmount = fullContract.Package.Price;
+                    paymentSource = "Package Price";
+                }
+            }
+
+            // Create wallet transaction for refund (full amount)
             var transaction = new WalletTransaction
             {
                 TransactionId = Guid.NewGuid(),
@@ -360,7 +394,7 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = fullContract.ContractId,
                 Amount = refundAmount,
                 TransactionType = "Refund",
-                Description = $"Refund (90%) for cancelled contract {fullContract.ContractId} - Package: {fullContract.Package.PackageName}",
+                Description = $"Full refund for cancelled contract {fullContract.ContractId} - Package: {fullContract.Package.PackageName} (Original payment via {paymentSource})",
                 TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "Completed",
                 PaymentMethod = "Wallet"
@@ -379,8 +413,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 UserId = fullContract.ParentId,
                 ContractId = fullContract.ContractId,
-                Title = "Contract Cancelled - Refund Processed",
-                Message = $"Your contract for {childName} has been cancelled. A refund of {refundAmount:N0} VND (90% of package price) has been credited to your wallet.",
+                Title = "Contract Cancelled - Full Refund Processed",
+                Message = $"Your contract for {childName} has been cancelled. A full refund of {refundAmount:N0} VND has been credited to your wallet.",
                 NotificationType = "Contract"
             });
 
@@ -400,7 +434,7 @@ namespace MathBridgeSystem.Application.Services
                     await _emailService.SendContractCancelledAsync(
                         parent.Email,
                         childName,
-                        "Contract cancelled from pending status. 90% of package price has been refunded to your wallet.",
+                        $"Contract cancelled from pending status. Full refund of {refundAmount:N0} VND has been credited to your wallet.",
                         cancellationDate);
                 }
                 catch

@@ -21,6 +21,9 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IChildRepository> _childRepositoryMock;
+        private readonly Mock<IWalletTransactionRepository> _walletTransactionRepositoryMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly Mock<ISePayRepository> _sePayRepositoryMock;
         private readonly ContractService _contractService;
 
         public ContractServiceTests()
@@ -31,6 +34,9 @@ namespace MathBridgeSystem.Tests.Services
             _emailServiceMock = new Mock<IEmailService>();
             _userRepositoryMock = new Mock<IUserRepository>();
             _childRepositoryMock = new Mock<IChildRepository>();
+            _walletTransactionRepositoryMock = new Mock<IWalletTransactionRepository>();
+            _notificationServiceMock = new Mock<INotificationService>();
+            _sePayRepositoryMock = new Mock<ISePayRepository>();
 
             _contractService = new ContractService(
                 _contractRepositoryMock.Object,
@@ -38,7 +44,10 @@ namespace MathBridgeSystem.Tests.Services
                 _sessionRepositoryMock.Object,
                 _emailServiceMock.Object,
                 _userRepositoryMock.Object,
-                _childRepositoryMock.Object
+                _childRepositoryMock.Object,
+                _walletTransactionRepositoryMock.Object,
+                _notificationServiceMock.Object,
+                _sePayRepositoryMock.Object
             );
         }
 

@@ -79,5 +79,12 @@ namespace MathBridgeSystem.Application.Interfaces
         /// <returns>List of transactions</returns>
         Task<IEnumerable<SepayTransaction>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
         Task<IEnumerable<SepayTransaction>> GetAllAsync();
+
+        /// <summary>
+        /// Get SePay transactions by contract ID
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        /// <returns>List of SePay transactions for the contract</returns>
+        Task<List<SepayTransaction>> GetByContractIdAsync(Guid contractId);
     }
 }
