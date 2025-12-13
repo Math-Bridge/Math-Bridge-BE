@@ -844,5 +844,117 @@ namespace MathBridgeSystem.Application.Services
                 throw;
             }
         }
+
+        public async Task SendWithdrawalRequestCreatedAsync(string email, string parentName, decimal amount, string bankName, string bankAccountNumber, DateTime requestDate)
+        {
+            try
+            {
+                var subject = "Withdrawal Request Submitted - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #17a2b8; padding: 20px; text-align: center; color: white; border-radius: 5px 5px 0 0; }}
+        .content {{ padding: 20px; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid #17a2b8; margin: 15px 0; }}
+        .amount {{ font-size: 24px; color: #17a2b8; font-weight: bold; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Withdrawal Request Submitted</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>Your withdrawal request has been submitted successfully and is pending review.</p>
+            <div class='info-box'>
+                <p><strong>Amount:</strong> <span class='amount'>{amount:N0} VND</span></p>
+                <p><strong>Bank Name:</strong> {bankName}</p>
+                <p><strong>Account Number:</strong> {bankAccountNumber}</p>
+                <p><strong>Request Date:</strong> {requestDate:dd/MM/yyyy HH:mm}</p>
+                <p><strong>Status:</strong> Pending</p>
+            </div>
+            <p>Our staff will process your request shortly. You will receive another email once the withdrawal has been processed.</p>
+            <p>Thank you for using MathBridge!</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Withdrawal request created email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send withdrawal request created email to {email}");
+                throw;
+            }
+        }
+
+        public async Task SendWithdrawalProcessedAsync(string email, string parentName, decimal amount, string bankName, string bankAccountNumber, DateTime processedDate)
+        {
+            try
+            {
+                var subject = "Withdrawal Processed Successfully - MathBridge";
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }}
+        .header {{ background-color: #28a745; padding: 20px; text-align: center; color: white; border-radius: 5px 5px 0 0; }}
+        .content {{ padding: 20px; }}
+        .info-box {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }}
+        .amount {{ font-size: 24px; color: #28a745; font-weight: bold; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2>Withdrawal Processed</h2>
+        </div>
+        <div class='content'>
+            <p>Dear {parentName},</p>
+            <p>Great news! Your withdrawal request has been processed successfully.</p>
+            <div class='info-box'>
+                <p><strong>Amount:</strong> <span class='amount'>{amount:N0} VND</span></p>
+                <p><strong>Bank Name:</strong> {bankName}</p>
+                <p><strong>Account Number:</strong> {bankAccountNumber}</p>
+                <p><strong>Processed Date:</strong> {processedDate:dd/MM/yyyy HH:mm}</p>
+                <p><strong>Status:</strong> Completed</p>
+            </div>
+            <p>The funds have been transferred to your bank account. Please allow 1-3 business days for the transfer to appear in your account.</p>
+            <p>Thank you for using MathBridge!</p>
+        </div>
+        <div class='footer'>
+            <p>&copy; {DateTime.Now.Year} MathBridgeSystem. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+                await SendEmailAsync(email, subject, htmlBody);
+                _logger.LogInformation($"Withdrawal processed email sent to {email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send withdrawal processed email to {email}");
+                throw;
+            }
+        }
     }
 }

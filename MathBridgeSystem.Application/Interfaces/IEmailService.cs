@@ -29,5 +29,9 @@ namespace MathBridgeSystem.Application.Interfaces
         Task SendRescheduleRequestCreatedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string requestedDate, string requestedTime, string reason);
         Task SendRescheduleApprovedAsync(string email, string parentName, string childName, string newDate, string newTime, string tutorName);
         Task SendRescheduleRejectedAsync(string email, string parentName, string childName, string originalDate, string originalTime, string reason);
+
+        // Withdrawal Emails
+        Task SendWithdrawalRequestCreatedAsync(string email, string parentName, decimal amount, string bankName, string bankAccountNumber, DateTime requestDate);
+        Task SendWithdrawalProcessedAsync(string email, string parentName, decimal amount, string bankName, string bankAccountNumber, DateTime processedDate);
     }
 }
