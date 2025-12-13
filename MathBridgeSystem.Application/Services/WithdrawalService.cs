@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MathBridgeSystem.Application.DTOs.Withdrawal;
+using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Infrastructure.Data;
@@ -15,11 +16,19 @@ namespace MathBridgeSystem.Application.Services
     {
         private readonly MathBridgeDbContext _context;
         private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
+        private readonly INotificationService _notificationService;
 
-        public WithdrawalService(MathBridgeDbContext context, IUserRepository userRepository)
+        public WithdrawalService(
+            MathBridgeDbContext context, 
+            IUserRepository userRepository,
+            IEmailService emailService,
+            INotificationService notificationService)
         {
             _context = context;
             _userRepository = userRepository;
+            _emailService = emailService;
+            _notificationService = notificationService;
         }
 
         private static WithdrawalResponseDTO MapToDto(WithdrawalRequest request)
@@ -65,6 +74,38 @@ namespace MathBridgeSystem.Application.Services
             _context.WithdrawalRequests.Add(request);
             await _context.SaveChangesAsync();
 
+            // Send email notification to parent
+            try
+            {
+                await _emailService.SendWithdrawalRequestCreatedAsync(
+                    user.Email,
+                    user.FullName,
+                    request.Amount,
+                    request.BankName,
+                    request.BankAccountNumber,
+                    request.CreatedDate);
+            }
+            catch
+            {
+                // Log but don't fail the withdrawal request if email fails
+            }
+
+            // Create in-app notification
+            try
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = userId,
+                    Title = "Withdrawal Request Submitted",
+                    Message = $"Your withdrawal request for {request.Amount:N0} VND has been submitted and is pending review.",
+                    NotificationType = "Withdrawal"
+                });
+            }
+            catch
+            {
+                // Log but don't fail the withdrawal request if notification fails
+            }
+
             return MapToDto(request);
         }
 
@@ -106,13 +147,45 @@ namespace MathBridgeSystem.Application.Services
             _context.WithdrawalRequests.Update(request);
 
             await _context.SaveChangesAsync();
+
+            // Send email notification to parent
+            try
+            {
+                await _emailService.SendWithdrawalProcessedAsync(
+                    request.Parent.Email,
+                    request.Parent.FullName,
+                    request.Amount,
+                    request.BankName,
+                    request.BankAccountNumber,
+                    request.ProcessedDate ?? DateTime.UtcNow);
+            }
+            catch
+            {
+                // Log but don't fail the withdrawal process if email fails
+            }
+
+            // Create in-app notification
+            try
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = request.ParentId,
+                    Title = "Withdrawal Processed",
+                    Message = $"Your withdrawal request for {request.Amount:N0} VND has been processed successfully. The funds will be transferred to your bank account.",
+                    NotificationType = "Withdrawal"
+                });
+            }
+            catch
+            {
+                // Log but don't fail the withdrawal process if notification fails
+            }
+
             return MapToDto(request);
         }
 
         public async Task<IEnumerable<WithdrawalResponseDTO>> GetPendingRequestsAsync()
         {
             var requests = await _context.WithdrawalRequests
-                .Where(r => r.Status == "Pending")
                 .OrderByDescending(r => r.CreatedDate)
                 .Include(r => r.Parent)
                 .ToListAsync();
