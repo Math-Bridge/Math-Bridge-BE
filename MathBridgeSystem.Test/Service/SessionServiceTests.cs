@@ -94,7 +94,7 @@ namespace MathBridgeSystem.Tests.Services
             var dto = result.First();
             dto.BookingId.Should().Be(bookingId);
             dto.TutorName.Should().Be("Test Tutor");
-            dto.ChildName.Should().Be("Test Child");
+            dto.StudentNames.Should().Be("Test Child");
             dto.PackageName.Should().Be("Gói 1");
         }
 
@@ -385,7 +385,7 @@ namespace MathBridgeSystem.Tests.Services
             result.Should().NotBeNull();
             result.Status.Should().Be("processing");
             result.TutorName.Should().Be("Test Tutor");
-            result.ChildName.Should().BeNull();
+            result.StudentNames.Should().BeNull();
         }
 
         // Test: Ném lỗi khi Tutor không đúng
@@ -598,7 +598,7 @@ namespace MathBridgeSystem.Tests.Services
 
             result.Should().NotBeNull();
             result.BookingId.Should().Be(bookingId);
-            result.ChildName.Should().Be("Test Child");
+            result.StudentNames.Should().Be("Test Child");
         }
 
         // ==================== Tests for GetSessionsByTutorIdAsync ====================
