@@ -170,10 +170,6 @@ namespace MathBridgeSystem.Api.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
