@@ -60,6 +60,13 @@ namespace MathBridgeSystem.Application.Services
 
         private SessionDto MapSessionToDto(Session s)
         {
+            var mainChildName = s.Contract.Child?.FullName ?? "N/A";
+            var secondChildName = s.Contract.SecondChild?.FullName;
+
+            var studentNames = secondChildName != null
+                ? $"{mainChildName} & {secondChildName}"
+                : mainChildName;
+
             return new SessionDto
             {
                 BookingId = s.BookingId,
@@ -67,12 +74,12 @@ namespace MathBridgeSystem.Application.Services
                 SessionDate = s.SessionDate,
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
-                TutorName = s.Tutor.FullName,
+                TutorName = s.Tutor?.FullName ?? "Teachers have not yet been assigned.",
                 IsOnline = s.IsOnline,
                 VideoCallPlatform = s.VideoCallPlatform,
                 OfflineAddress = s.OfflineAddress,
                 Status = s.Status,
-                ChildName = s.Contract.Child.FullName,
+                StudentNames = studentNames, 
                 PackageName = s.Contract.Package.PackageName
             };
         }

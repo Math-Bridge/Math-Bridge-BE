@@ -26,6 +26,8 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .Include(s => s.Contract)
                     .ThenInclude(c => c.Child)
                 .Include(s => s.Contract)
+                    .ThenInclude(c => c.SecondChild) 
+                .Include(s => s.Contract)
                     .ThenInclude(c => c.Package)
                 .Include(s => s.Tutor);
         }
@@ -96,7 +98,8 @@ namespace MathBridgeSystem.Infrastructure.Repositories
         public async Task<List<Session>> GetByChildIdAsync(Guid childId, Guid parentId)
         {
             return await WithFullIncludes()
-                .Where(s => s.Contract.ChildId == childId && s.Contract.ParentId == parentId)
+                .Where(s => (s.Contract.ChildId == childId || s.Contract.SecondChildId == childId)
+                            && s.Contract.ParentId == parentId)
                 .OrderBy(s => s.SessionDate)
                 .ThenBy(s => s.StartTime)
                 .ToListAsync();
