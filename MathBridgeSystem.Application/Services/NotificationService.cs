@@ -15,14 +15,20 @@ namespace MathBridgeSystem.Application.Services
         private readonly INotificationRepository _notificationRepository;
         private readonly NotificationConnectionManager _connectionManager;
         private readonly IPubSubNotificationProvider _pubSubProvider;
+        private readonly IContractRepository _contractRepository;
+        private readonly ISessionRepository _sessionRepository;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             NotificationConnectionManager connectionManager,
+            IContractRepository contractRepository,
+            ISessionRepository sessionRepository,
             IPubSubNotificationProvider pubSubProvider = null)
         {
             _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+            _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
+            _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
             _pubSubProvider = pubSubProvider; // Can be null for SSE-only mode
         }
 
@@ -54,6 +60,62 @@ namespace MathBridgeSystem.Application.Services
                 await _pubSubProvider.PublishNotificationAsync(dto, "notifications");
             }
             
+            // Mark as sent
+            notification.Status = "Sent";
+            notification.SentDate = DateTime.UtcNow.ToLocalTime();
+            await _notificationRepository.UpdateAsync(notification);
+
+            return dto;
+        }
+
+        public async Task<NotificationResponseDto> CreateRescheduleOrRefundNotificationAsync(CreateRescheduleOrRefundNotificationRequest request)
+        {
+            // Validate Contract
+            var contract = await _contractRepository.GetByIdAsync(request.ContractId);
+            if (contract == null)
+            {
+                throw new KeyNotFoundException($"Contract with ID {request.ContractId} not found.");
+            }
+
+            // Validate Session (Booking)
+            var session = await _sessionRepository.GetByIdAsync(request.BookingId);
+            if (session == null)
+            {
+                throw new KeyNotFoundException($"Session (Booking) with ID {request.BookingId} not found.");
+            }
+
+            // Verify session belongs to contract
+            if (session.ContractId != request.ContractId)
+            {
+                throw new ArgumentException("The specified session does not belong to the provided contract.");
+            }
+
+            var notification = new Notification
+            {
+                NotificationId = Guid.NewGuid(),
+                UserId = contract.ParentId, // Send to Parent
+                ContractId = request.ContractId,
+                BookingId = request.BookingId,
+                Title = "Session Action Required",
+                Message = $"Please choose to either reschedule or request a refund for the session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}.",
+                NotificationType = "RescheduleOrRefund",
+                Status = "Pending",
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
+            };
+
+            await _notificationRepository.AddAsync(notification);
+
+            var dto = MapToDto(notification);
+
+            // Send immediately via SSE to connected users
+            // await _connectionManager.SendNotificationAsync(notification.UserId, dto);
+
+            // Also publish to Pub/Sub if available
+            if (_pubSubProvider != null)
+            {
+                await _pubSubProvider.PublishNotificationAsync(dto, "notifications");
+            }
+
             // Mark as sent
             notification.Status = "Sent";
             notification.SentDate = DateTime.UtcNow.ToLocalTime();

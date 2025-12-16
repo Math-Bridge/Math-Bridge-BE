@@ -8,6 +8,8 @@ namespace MathBridgeSystem.Application.Interfaces;
 public interface INotificationService
 {
     Task<NotificationResponseDto> CreateNotificationAsync(CreateNotificationRequest request);
+
+    Task<NotificationResponseDto> CreateRescheduleOrRefundNotificationAsync(CreateRescheduleOrRefundNotificationRequest request);
     Task<NotificationResponseDto?> GetNotificationByIdAsync(Guid notificationId);
     Task<List<NotificationResponseDto>> GetNotificationsByUserIdAsync(Guid userId, int pageNumber = 1, int pageSize = 10);
     Task<List<NotificationResponseDto>> GetUnreadNotificationsByUserIdAsync(Guid userId);
