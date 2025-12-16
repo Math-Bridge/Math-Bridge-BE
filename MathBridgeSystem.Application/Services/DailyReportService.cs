@@ -1,4 +1,5 @@
-﻿using MathBridgeSystem.Application.DTOs.DailyReport;
+﻿using MathBridgeSystem.Application.DTOs;
+using MathBridgeSystem.Application.DTOs.DailyReport;
 using MathBridgeSystem.Application.DTOs.Progress;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -565,6 +566,43 @@ namespace MathBridgeSystem.Application.Services
                 throw new KeyNotFoundException($"No daily reports found for contract {contractId}.");
 
             return reports.Select(MapToDto).OrderByDescending(r => r.CreatedDate);
+        }
+
+        public async Task<DailyReportsByContractResponse> GetDailyReportsGroupedByContractIdAsync(Guid contractId)
+        {
+            // Lấy tất cả session của contract (cần BookingId + SessionDate + thời gian nếu có)
+            var sessions = await _sessionRepository.GetByContractIdAsync(contractId);
+            if (!sessions.Any())
+                throw new KeyNotFoundException($"No sessions found for contract {contractId}.");
+
+            var bookingIds = sessions.Select(s => s.BookingId).ToList();
+
+            // Lấy tất cả daily reports cho các booking này
+            var reports = await _dailyReportRepository.GetByBookingIdsAsync(bookingIds);
+
+            // Nhóm theo BookingId
+            var grouped = reports
+                .GroupBy(r => r.BookingId)
+                .OrderByDescending(g => g.Max(r => r.CreatedDate)) 
+                .Select(g =>
+                {
+                    var session = sessions.First(s => s.BookingId == g.Key);
+                    return new SessionReportGroupDto
+                    {
+                        BookingId = g.Key,
+                        SessionDate = session.SessionDate, 
+                        StartTime = session.StartTime,     
+                        EndTime = session.EndTime,
+                        Reports = g.Select(MapToDto).ToList()
+                    };
+                })
+                .ToList();
+
+            return new DailyReportsByContractResponse
+            {
+                ContractId = contractId,
+                Sessions = grouped
+            };
         }
     }
 }
