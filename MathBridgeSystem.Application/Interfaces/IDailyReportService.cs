@@ -1,3 +1,4 @@
+using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.DailyReport;
 using MathBridgeSystem.Application.DTOs.Progress;
 using System;
@@ -29,5 +30,6 @@ namespace MathBridgeSystem.Application.Interfaces
         /// Gets all daily reports belonging to sessions of a specific contract
         /// </summary>
         Task<IEnumerable<DailyReportDto>> GetDailyReportsByContractIdAsync(Guid contractId);
+        Task<DailyReportsByContractResponse> GetDailyReportsGroupedByContractIdAsync(Guid contractId);
     }
 }

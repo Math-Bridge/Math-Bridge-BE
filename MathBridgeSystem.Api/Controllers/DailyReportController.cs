@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs.DailyReport;
+﻿using MathBridgeSystem.Application.DTOs.DailyReport;
 using MathBridgeSystem.Application.DTOs.Progress;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -265,7 +265,8 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
         /// <summary>
-        /// Get all daily reports for a specific contract (very useful for parent/staff to track progress per package)
+        /// Get all daily reports for a specific contract, grouped by session (booking)
+        /// Very useful for parent/staff to view feedback by lesson date, especially for twin sessions (1 session → up to 2 reports)
         /// </summary>
         [HttpGet("contract/{contractId}")]
         [Authorize(Roles = "tutor,parent,staff,admin")]
@@ -273,8 +274,8 @@ namespace MathBridgeSystem.Api.Controllers
         {
             try
             {
-                var reports = await _dailyReportService.GetDailyReportsByContractIdAsync(contractId);
-                return Ok(reports);
+                var result = await _dailyReportService.GetDailyReportsGroupedByContractIdAsync(contractId);
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
