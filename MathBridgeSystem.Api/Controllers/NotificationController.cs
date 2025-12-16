@@ -45,6 +45,34 @@ namespace MathBridgeSystem.Api.Controllers
             return Ok(count);
         }
 
+        [HttpPost("reschedule-refund-request")]
+        public async Task<ActionResult<NotificationResponseDto>> CreateRescheduleOrRefundNotification([FromBody] CreateRescheduleOrRefundNotificationRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var notification = await _notificationService.CreateRescheduleOrRefundNotificationAsync(request);
+                return CreatedAtAction(nameof(GetNotification), new { id = notification.NotificationId }, notification);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, new { message = "An error occurred while creating the notification.", details = ex.Message });
+            }
+        }
+
         [HttpGet]
         public async Task<ActionResult<List<NotificationResponseDto>>> GetNotifications(
             [FromQuery] int pageNumber = 1,

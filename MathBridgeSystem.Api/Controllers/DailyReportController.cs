@@ -174,10 +174,6 @@ namespace MathBridgeSystem.Api.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "An error occurred while retrieving the child unit progress.", details = ex.Message });
-            }
         }
 
         /// <summary>

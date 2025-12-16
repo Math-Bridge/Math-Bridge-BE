@@ -19,26 +19,32 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<INotificationRepository> _notificationRepositoryMock;
         private readonly Mock<NotificationConnectionManager> _connectionManagerMock;
         private readonly Mock<IPubSubNotificationProvider> _pubSubProviderMock;
+        private readonly Mock<IContractRepository> _contractRepositoryMock;
+        private readonly Mock<ISessionRepository> _sessionRepositoryMock;
         private readonly NotificationService _notificationService;
         private readonly NotificationService _notificationServiceNoPubSub; // Dùng để test trường hợp PubSub là null
 
         public NotificationServiceTests()
         {
             _notificationRepositoryMock = new Mock<INotificationRepository>();
-
             _connectionManagerMock = new Mock<NotificationConnectionManager>();
-
             _pubSubProviderMock = new Mock<IPubSubNotificationProvider>();
+            _contractRepositoryMock = new Mock<IContractRepository>();
+            _sessionRepositoryMock = new Mock<ISessionRepository>();
 
             _notificationService = new NotificationService(
                 _notificationRepositoryMock.Object,
                 _connectionManagerMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object,
                 _pubSubProviderMock.Object
             );
 
             _notificationServiceNoPubSub = new NotificationService(
                 _notificationRepositoryMock.Object,
                 _connectionManagerMock.Object,
+                _contractRepositoryMock.Object,
+                _sessionRepositoryMock.Object,
                 null 
             );
         }
@@ -298,6 +304,36 @@ namespace MathBridgeSystem.Tests.Services
 
             // Assert
             _pubSubProviderMock.Verify(p => p.PublishNotificationAsync(dto, topic), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateRescheduleOrRefundNotificationAsync_ValidRequest_CreatesAndPublishes()
+        {
+            // Arrange
+            var contractId = Guid.NewGuid();
+            var bookingId = Guid.NewGuid();
+            var parentId = Guid.NewGuid();
+            var request = new CreateRescheduleOrRefundNotificationRequest { ContractId = contractId, BookingId = bookingId };
+
+            var contract = new Contract { ContractId = contractId, ParentId = parentId };
+            var session = new Session { BookingId = bookingId, ContractId = contractId, SessionDate = DateOnly.FromDateTime(DateTime.Now), StartTime = DateTime.Now };
+
+            _contractRepositoryMock.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync(contract);
+            _sessionRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).ReturnsAsync(session);
+            _notificationRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            _notificationRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Notification>())).Returns(Task.CompletedTask);
+            _pubSubProviderMock.Setup(p => p.PublishNotificationAsync(It.IsAny<NotificationResponseDto>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _notificationService.CreateRescheduleOrRefundNotificationAsync(request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.UserId.Should().Be(parentId);
+            result.NotificationType.Should().Be("RescheduleOrRefund");
+            
+            _notificationRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Notification>()), Times.Once);
+            _pubSubProviderMock.Verify(p => p.PublishNotificationAsync(It.IsAny<NotificationResponseDto>(), "notifications"), Times.Once);
         }
     }
 }
