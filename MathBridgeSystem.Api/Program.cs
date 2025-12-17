@@ -191,7 +191,7 @@
     {
         options.AddDefaultPolicy(policy =>
         {
-            policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech", "http://localhost:5173")
+            policy.WithOrigins("https://web.vibe88.tech", "https://api.vibe88.tech", "http://localhost:5173","https://api.math-bridge.com","https://math-bridge.com")
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });

@@ -376,7 +376,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Generate verification link with existing oobCode
-            var verificationLink = $"https://api.vibe88.tech/api/auth/verify-email?oobCode={oobCode}";
+            var verificationLink = $"https://api.math-bridge.com/api/auth/verify-email?oobCode={oobCode}";
 
             try
             {
