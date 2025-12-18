@@ -480,8 +480,8 @@ namespace MathBridgeSystem.Application.Services
             if (rescheduleRequest.BookingId != sessionId)
                 throw new InvalidOperationException("Reschedule request does not belong to this session.");
 
-            if (rescheduleRequest.Status != "pending")
-                throw new InvalidOperationException($"Request is not pending (current: {rescheduleRequest.Status}).");
+            if (rescheduleRequest.Status != "approved" || rescheduleRequest.Status != "pending")
+                throw new InvalidOperationException($"Request is not pending or approve (current: {rescheduleRequest.Status}).");
 
             var session = await _sessionRepo.GetByIdAsync(sessionId)
                 ?? throw new KeyNotFoundException("Session not found.");
