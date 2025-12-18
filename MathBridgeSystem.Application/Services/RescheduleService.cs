@@ -595,12 +595,29 @@ namespace MathBridgeSystem.Application.Services
             if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
                 throw new InvalidOperationException("Cannot request make-up for past sessions.");
 
-            // 3. ANTI-SPAM: Only one pending make-up request per session
-            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
-            if (hasPending)
+            // 3. KIỂM TRA ĐÃ CÓ YÊU CẦU "THAY TUTOR" TỪ TUTOR CHƯA
+            // PHẢI AWAIT TRƯỚC KHI DÙNG LINQ
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+
+            var existingTutorReplacement = allRequests
+                .Where(r => r.BookingId == dto.BookingId &&
+                            r.Status == "approved" &&
+                            r.Reason != null &&
+                            r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
+
+            if (existingTutorReplacement != null)
+            {
+                throw new InvalidOperationException(
+                    "Tutor đã gửi yêu cầu thay thế cho buổi học này. Vui lòng chờ Staff xử lý trước khi yêu cầu dạy bù.");
+            }
+
+            // 4. ANTI-SPAM: Không cho tạo nhiều make-up request cùng lúc
+            var hasPendingMakeUp = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
+            if (hasPendingMakeUp)
                 throw new InvalidOperationException("There is already a pending make-up request for this session.");
 
-            // 4. Load contract
+            // 5. Load contract
             var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId)
                 ?? throw new KeyNotFoundException("Contract not found.");
 
@@ -610,9 +627,7 @@ namespace MathBridgeSystem.Application.Services
             if (contract.EndDate < dto.RequestedDate)
                 throw new InvalidOperationException("Requested make-up date exceeds contract end date.");
 
-            //Không trừ RescheduleCount – vì đây là phần xử lý do hệ thống
-
-            // DEFAULT REASON – FIXED TEXT
+            // Tạo request dạy bù
             string defaultReason = "Reschedule due to Tutor unavailability";
 
             var request = new RescheduleRequest
@@ -624,7 +639,7 @@ namespace MathBridgeSystem.Application.Services
                 RequestedDate = dto.RequestedDate,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
-                Reason = defaultReason, 
+                Reason = defaultReason,
                 Status = "pending",
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
