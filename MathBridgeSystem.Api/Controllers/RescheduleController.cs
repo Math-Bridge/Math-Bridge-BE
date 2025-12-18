@@ -149,7 +149,7 @@ namespace MathBridgeSystem.Api.Controllers
         /// Cancel a session and refund money to parent wallet. Optionally approve a reschedule request.
         /// </summary>
         [HttpPost("cancel-session/{sessionId}")]
-        [Authorize(Roles = "staff,admin")]
+        [Authorize(Roles = "staff,admin,parent")]
         public async Task<IActionResult> CancelSessionAndRefund(Guid sessionId, [FromQuery] Guid rescheduleRequestId )
         {
             try
