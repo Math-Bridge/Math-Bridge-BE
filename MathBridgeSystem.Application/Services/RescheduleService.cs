@@ -165,31 +165,49 @@ namespace MathBridgeSystem.Application.Services
             if (request.Status != "pending")
                 throw new InvalidOperationException("Only pending requests can be approved.");
 
-            // Determine final tutor
-            Guid finalTutorId = dto.NewTutorId != Guid.Empty
-                ? dto.NewTutorId
-                : request.RequestedTutorId ?? request.Booking.TutorId;
+            // PHÁT HIỆN LOẠI YÊU CẦU
+            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
 
+            Guid finalTutorId;
+
+            // Nếu Staff truyền newTutorId → dùng luôn
+            if (dto.NewTutorId.HasValue && dto.NewTutorId != Guid.Empty)
+            {
+                finalTutorId = dto.NewTutorId.Value;
+            }
+            // Các trường hợp khác → giữ nguyên tutor cũ
+            else
+            {
+                finalTutorId = request.Booking.TutorId;
+            }
+
+            // Kiểm tra tutor hợp lệ
             var tutor = await _userRepo.GetByIdAsync(finalTutorId)
                 ?? throw new KeyNotFoundException("Tutor not found.");
+
             if (tutor.RoleId != 2)
                 throw new InvalidOperationException("Selected user is not a tutor.");
 
-            var startDt = request.RequestedDate.ToDateTime(request.StartTime);
-            var endDt = request.RequestedDate.ToDateTime(request.EndTime);
-            var isAvailable = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDt, endDt);
-            if (!isAvailable)
-                throw new InvalidOperationException("Selected tutor is not available at the requested time.");
+            // BỎ KIỂM TRA RẢNH CHO YÊU CẦU THAY TUTOR (vì tutor bận nên mới gửi request)
+            if (!isTutorReplacement)
+            {
+                var startDt = request.RequestedDate.ToDateTime(request.StartTime);
+                var endDt = request.RequestedDate.ToDateTime(request.EndTime);
 
-            // Create new session
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDt, endDt);
+                if (!isAvailable)
+                    throw new InvalidOperationException("Selected tutor is not available at the requested time.");
+            }
+
+            // Tạo buổi học mới (nếu cần – ở đây vẫn tạo để giữ logic cũ, hoặc bạn có thể bỏ nếu không muốn tạo buổi mới)
             var newSession = new Session
             {
                 BookingId = Guid.NewGuid(),
                 ContractId = request.ContractId,
                 TutorId = finalTutorId,
                 SessionDate = request.RequestedDate,
-                StartTime = startDt,
-                EndTime = endDt,
+                StartTime = request.RequestedDate.ToDateTime(request.StartTime),
+                EndTime = request.RequestedDate.ToDateTime(request.EndTime),
                 IsOnline = request.Booking.IsOnline,
                 VideoCallPlatform = request.Booking.VideoCallPlatform,
                 OfflineAddress = request.Booking.OfflineAddress,
@@ -201,64 +219,49 @@ namespace MathBridgeSystem.Application.Services
 
             await _sessionRepo.AddRangeAsync(new[] { newSession });
 
-            // Mark old session as rescheduled
-            request.Booking.Status = "rescheduled";
+            // NẾU LÀ YÊU CẦU THAY TUTOR → BUỔI CŨ CHUYỂN THÀNH "cancelled"
+            if (isTutorReplacement)
+            {
+                request.Booking.Status = "cancelled"; // cancelled thay vì rescheduled
+            }
+            else
+            {
+                request.Booking.Status = "rescheduled"; // Các loại khác giữ nguyên
+            }
+
             request.Booking.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(request.Booking);
 
-            // Deduct one reschedule attempt (never go negative)
-            var contract = request.Booking.Contract;
-            contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
-            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
-            await _contractRepo.UpdateAsync(contract);
+            // CHỈ TRỪ RescheduleCount CHO DỜI LỊCH BÌNH THƯỜNG
+            bool isNormalReschedule = !isTutorReplacement &&
+                                      request.Reason?.Contains("Reschedule due to Tutor unavailability") != true;
 
-            // Finalize request
+            if (isNormalReschedule)
+            {
+                var contract = request.Booking.Contract;
+                contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
+                contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
+                await _contractRepo.UpdateAsync(contract);
+            }
+
+            // Lưu note
+            if (!string.IsNullOrEmpty(dto.Note))
+            {
+                request.Reason += $" | Staff note: {dto.Note}";
+            }
+
+            // Hoàn tất request
             request.Status = "approved";
             request.StaffId = staffId;
             request.RequestedTutorId = finalTutorId;
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
-            // Send notification and email to parent
-            var parent = await _userRepo.GetByIdAsync(request.ParentId);
-            var childName = contract.Child?.FullName ?? "your child";
-
-            // Create notification
-            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
-            {
-                UserId = request.ParentId,
-                ContractId = request.ContractId,
-                BookingId = newSession.BookingId,
-                Title = "Reschedule Request Approved",
-                Message = $"Great news! Your reschedule request for {childName}'s session has been approved. New session: {request.RequestedDate:dd/MM/yyyy} at {request.StartTime:HH:mm} with tutor {tutor.FullName}.",
-                NotificationType = "Reschedule"
-            });
-
-            // Send email
-            if (parent != null && !string.IsNullOrEmpty(parent.Email))
-            {
-                try
-                {
-                    await _emailService.SendRescheduleApprovedAsync(
-                        parent.Email,
-                        parent.FullName ?? "Parent",
-                        childName,
-                        request.RequestedDate.ToString("dd/MM/yyyy"),
-                        $"{request.StartTime:HH:mm} - {request.EndTime:HH:mm}",
-                        tutor.FullName ?? "Assigned Tutor"
-                    );
-                }
-                catch
-                {
-                    // Log but don't fail the request if email fails
-                }
-            }
-
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Reschedule request approved successfully.",
+                Message = "Request approved successfully.",
                 ProcessedDate = request.ProcessedDate
             };
         }
