@@ -574,7 +574,7 @@ namespace MathBridgeSystem.Application.Services
         }
         public async Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
         {
-            // 1. Validate time (giữ nguyên quy tắc giờ học)
+            // 1. Validate time
             if (!IsValidStartTime(dto.StartTime))
                 throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
 
@@ -592,7 +592,7 @@ namespace MathBridgeSystem.Application.Services
             if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
                 throw new InvalidOperationException("Cannot request make-up for past sessions.");
 
-            // 3. ANTI-SPAM: Only one pending make-up request per original session
+            // 3. ANTI-SPAM: Only one pending make-up request per session
             var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
             if (hasPending)
                 throw new InvalidOperationException("There is already a pending make-up request for this session.");
@@ -607,9 +607,11 @@ namespace MathBridgeSystem.Application.Services
             if (contract.EndDate < dto.RequestedDate)
                 throw new InvalidOperationException("Requested make-up date exceeds contract end date.");
 
-            // KHÔNG KIỂM TRA RescheduleCount → vì đây là dạy bù, không tính vào số lần dời lịch
+            //Không trừ RescheduleCount – vì đây là phần xử lý do hệ thống
 
-            // Create make-up request – marked specially in Reason
+            // DEFAULT REASON – FIXED TEXT
+            string defaultReason = "Reschedule due to Tutor unavailability";
+
             var request = new RescheduleRequest
             {
                 RequestId = Guid.NewGuid(),
@@ -619,7 +621,7 @@ namespace MathBridgeSystem.Application.Services
                 RequestedDate = dto.RequestedDate,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
-                Reason = $"[MAKE-UP SESSION] {dto.Reason ?? "Tutor was unavailable – requesting compensatory lesson"}",
+                Reason = defaultReason, 
                 Status = "pending",
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
@@ -630,7 +632,7 @@ namespace MathBridgeSystem.Application.Services
             {
                 RequestId = request.RequestId,
                 Status = "pending",
-                Message = "Make-up session request submitted successfully. Waiting for staff approval. This does not count against your reschedule attempts."
+                Message = "Make-up session request submitted successfully. Staff will arrange the new session soon. (This does not count against your reschedule attempts.)"
             };
         }
     }
