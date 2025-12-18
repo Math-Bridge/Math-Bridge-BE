@@ -609,7 +609,7 @@ namespace MathBridgeSystem.Application.Services
             if (existingTutorReplacement != null)
             {
                 throw new InvalidOperationException(
-                    "Tutor đã gửi yêu cầu thay thế cho buổi học này. Vui lòng chờ Staff xử lý trước khi yêu cầu dạy bù.");
+                    "The tutor has submitted a replacement request for this lesson. Please wait for staff to process it before requesting a make-up lesson.");
             }
 
             // 4. ANTI-SPAM: Không cho tạo nhiều make-up request cùng lúc
