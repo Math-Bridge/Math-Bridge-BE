@@ -23,6 +23,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly INotificationService _notificationService;
         private readonly ISePayRepository _sePayRepository;
 
+
         public ContractService(
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
@@ -567,6 +568,78 @@ namespace MathBridgeSystem.Application.Services
 
             return (decimal)Math.Round(distance, 2);
         }
+        public async Task<List<AvailableTutorSlotDto>> GetAvailableTutorSlotsAsync(Guid contractId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (!contract.MainTutorId.HasValue)
+                throw new InvalidOperationException("Main tutor must be assigned to check availability.");
+
+            // Lấy 3 tutor
+            var mainTutor = await _userRepository.GetByIdAsync(contract.MainTutorId.Value);
+            var sub1 = contract.SubstituteTutor1Id.HasValue
+                ? await _userRepository.GetByIdAsync(contract.SubstituteTutor1Id.Value)
+                : null;
+            var sub2 = contract.SubstituteTutor2Id.HasValue
+                ? await _userRepository.GetByIdAsync(contract.SubstituteTutor2Id.Value)
+                : null;
+
+            var tutors = new List<(Guid Id, string Name)>
+    {
+        (contract.MainTutorId.Value, mainTutor?.FullName ?? "Main Tutor")
+    };
+            if (sub1 != null) tutors.Add((sub1.UserId, sub1.FullName ?? "Sub Tutor 1"));
+            if (sub2 != null) tutors.Add((sub2.UserId, sub2.FullName ?? "Sub Tutor 2"));
+
+            // Các khung giờ cố định
+            var fixedSlots = new List<(TimeOnly Start, TimeOnly End, string Display)>
+    {
+        (new TimeOnly(16, 0), new TimeOnly(17, 30), "16:00 - 17:30"),
+        (new TimeOnly(17, 30), new TimeOnly(19, 0), "17:30 - 19:00"),
+        (new TimeOnly(19, 0), new TimeOnly(20, 30), "19:00 - 20:30"),
+        (new TimeOnly(20, 30), new TimeOnly(22, 0), "20:30 - 22:00")
+    };
+
+            var availableSlots = new List<AvailableTutorSlotDto>();
+
+            var currentDate = contract.StartDate;
+            var endDate = contract.EndDate;
+
+            while (currentDate <= endDate)
+            {
+                foreach (var slot in fixedSlots)
+                {
+                    var startDt = currentDate.ToDateTime(slot.Start);
+                    var endDt = currentDate.ToDateTime(slot.End);
+
+                    // Kiểm tra từng tutor có rảnh không
+                    var freeTutors = new List<string>();
+
+                    foreach (var tutor in tutors)
+                    {
+                        var isAvailable = await _sessionRepository.IsTutorAvailableAsync(tutor.Id, currentDate, startDt, endDt);
+                        if (isAvailable)
+                            freeTutors.Add(tutor.Name);
+                    }
+
+                    // Nếu có ít nhất 1 tutor rảnh → thêm slot này
+                    if (freeTutors.Any())
+                    {
+                        availableSlots.Add(new AvailableTutorSlotDto
+                        {
+                            Date = currentDate,
+                            Slot = slot.Display,
+                            AvailableTutors = freeTutors
+                        });
+                    }
+                }
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            return availableSlots;
+        }
         public async Task<List<AvailableTutorResponse>> CheckTutorsAvailabilityBeforeCreateAsync(CheckTutorAvailabilityRequest request)
         {
             // 1. Validate lịch học
@@ -662,5 +735,6 @@ namespace MathBridgeSystem.Application.Services
             .ThenByDescending(t => t.AverageRating)
             .ToList();
         }
+
     }
 }
