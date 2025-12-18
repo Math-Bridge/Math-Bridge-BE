@@ -211,6 +211,27 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "System error", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Parent creates a make-up session request when tutor is unavailable
+        /// This is for compensatory lessons (dạy bù) – does NOT deduct RescheduleCount
+        /// Works exactly like normal reschedule but without counting against reschedule attempts
+        /// </summary>
+        [HttpPost("make-up")]
+        [Authorize(Roles = "parent")]
+        public async Task<IActionResult> CreateMakeUpSession([FromBody] CreateRescheduleRequestDto dto)
+        {
+            var parentId = GetUserId();
+
+            try
+            {
+                var result = await _rescheduleService.CreateMakeUpSessionRequestAsync(parentId, dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 
     public class RejectRequestDto
