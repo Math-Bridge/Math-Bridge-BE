@@ -350,7 +350,7 @@ namespace MathBridgeSystem.Application.Services
                     endDateTime
                 );
 
-                if (isAvailable && contract.SubstituteTutor1 != null)
+                if (isAvailable && contract.SubstituteTutor1 != null && contract.SubstituteTutor1.Status != "banned" )
                 {
                     var averageRating = contract.SubstituteTutor1.FinalFeedbacks.Any()
                         ? contract.SubstituteTutor1.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
@@ -369,7 +369,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Check SubstituteTutor2
-            if (contract.SubstituteTutor2Id.HasValue)
+            if (contract.SubstituteTutor2Id.HasValue )
             {
                 var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
                     contract.SubstituteTutor2Id.Value,
@@ -378,7 +378,7 @@ namespace MathBridgeSystem.Application.Services
                     endDateTime
                 );
 
-                if (isAvailable && contract.SubstituteTutor2 != null)
+                if (isAvailable && contract.SubstituteTutor2 != null && contract.SubstituteTutor2.Status != "banned")
                 {
                     var averageRating = contract.SubstituteTutor2.FinalFeedbacks.Any()
                         ? contract.SubstituteTutor2.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
@@ -480,7 +480,7 @@ namespace MathBridgeSystem.Application.Services
             if (rescheduleRequest.BookingId != sessionId)
                 throw new InvalidOperationException("Reschedule request does not belong to this session.");
 
-            if (rescheduleRequest.Status != "approved" || rescheduleRequest.Status != "pending")
+            if (rescheduleRequest.Status != "approved" && rescheduleRequest.Status != "pending")
                 throw new InvalidOperationException($"Request is not pending or approve (current: {rescheduleRequest.Status}).");
 
             var session = await _sessionRepo.GetByIdAsync(sessionId)
