@@ -18,6 +18,11 @@ namespace MathBridgeSystem.Application.Services
         private readonly IContractRepository _contractRepository;
         private readonly ISessionRepository _sessionRepository;
         private readonly IRescheduleRequestRepository _rescheduleRequestRepository;
+        private INotificationRepository object1;
+        private NotificationConnectionManager object2;
+        private IContractRepository object3;
+        private ISessionRepository object4;
+        private IPubSubNotificationProvider object5;
 
         public NotificationService(
             INotificationRepository notificationRepository,
@@ -33,6 +38,15 @@ namespace MathBridgeSystem.Application.Services
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
             _rescheduleRequestRepository = rescheduleRequestRepository ?? throw new ArgumentNullException(nameof(rescheduleRequestRepository));
             _pubSubProvider = pubSubProvider; // Can be null for SSE-only mode
+        }
+
+        public NotificationService(INotificationRepository object1, NotificationConnectionManager object2, IContractRepository object3, ISessionRepository object4, IPubSubNotificationProvider object5)
+        {
+            this.object1 = object1;
+            this.object2 = object2;
+            this.object3 = object3;
+            this.object4 = object4;
+            this.object5 = object5;
         }
 
         public async Task<NotificationResponseDto> CreateNotificationAsync(CreateNotificationRequest request)
