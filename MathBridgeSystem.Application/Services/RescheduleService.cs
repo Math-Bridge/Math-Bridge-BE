@@ -572,5 +572,66 @@ namespace MathBridgeSystem.Application.Services
                 message = "The request to replace the tutor has been successfully submitted. Please wait for staff to process it."
             };
         }
+        public async Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
+        {
+            // 1. Validate time (giữ nguyên quy tắc giờ học)
+            if (!IsValidStartTime(dto.StartTime))
+                throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
+
+            var expectedEndTime = dto.StartTime.AddMinutes(90);
+            if (dto.EndTime != expectedEndTime)
+                throw new ArgumentException($"End time must be {expectedEndTime:HH:mm} (90 minutes after start time).");
+
+            // 2. Validate session
+            var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId)
+                ?? throw new KeyNotFoundException("Session not found.");
+
+            if (oldSession.Contract.ParentId != parentId)
+                throw new UnauthorizedAccessException("You can only request make-up for your child's sessions.");
+
+            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
+                throw new InvalidOperationException("Cannot request make-up for past sessions.");
+
+            // 3. ANTI-SPAM: Only one pending make-up request per original session
+            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
+            if (hasPending)
+                throw new InvalidOperationException("There is already a pending make-up request for this session.");
+
+            // 4. Load contract
+            var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (contract.Status != "active")
+                throw new InvalidOperationException("Contract is no longer active.");
+
+            if (contract.EndDate < dto.RequestedDate)
+                throw new InvalidOperationException("Requested make-up date exceeds contract end date.");
+
+            // KHÔNG KIỂM TRA RescheduleCount → vì đây là dạy bù, không tính vào số lần dời lịch
+
+            // Create make-up request – marked specially in Reason
+            var request = new RescheduleRequest
+            {
+                RequestId = Guid.NewGuid(),
+                BookingId = dto.BookingId,
+                ContractId = oldSession.ContractId,
+                ParentId = parentId,
+                RequestedDate = dto.RequestedDate,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Reason = $"[MAKE-UP SESSION] {dto.Reason ?? "Tutor was unavailable – requesting compensatory lesson"}",
+                Status = "pending",
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
+            };
+
+            await _rescheduleRepo.AddAsync(request);
+
+            return new RescheduleResponseDto
+            {
+                RequestId = request.RequestId,
+                Status = "pending",
+                Message = "Make-up session request submitted successfully. Waiting for staff approval. This does not count against your reschedule attempts."
+            };
+        }
     }
 }
