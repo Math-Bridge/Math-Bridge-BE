@@ -595,21 +595,30 @@ namespace MathBridgeSystem.Application.Services
             if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
                 throw new InvalidOperationException("Cannot request make-up for past sessions.");
 
-            // 3. KIỂM TRA ĐÃ CÓ YÊU CẦU "THAY TUTOR" TỪ TUTOR CHƯA
-            // PHẢI AWAIT TRƯỚC KHI DÙNG LINQ
+            // 3. KIỂM TRA CÓ REQUEST THAY TUTOR ĐÃ APPROVED CHƯA
             var allRequests = await _rescheduleRepo.GetAllAsync();
 
-            var existingTutorReplacement = allRequests
-                .Where(r => r.BookingId == dto.BookingId &&
-                            r.Status == "approved" &&
-                            r.Reason != null &&
-                            r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefault();
+            var tutorReplacementRequest = allRequests
+                .FirstOrDefault(r => r.BookingId == dto.BookingId &&
+                                     r.Reason != null &&
+                                     r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase));
 
-            if (existingTutorReplacement != null)
+            if (tutorReplacementRequest != null)
             {
-                throw new InvalidOperationException(
-                    "The tutor has submitted a replacement request for this lesson. Please wait for staff to process it before requesting a make-up lesson.");
+                if (tutorReplacementRequest.Status != "approved")
+                {
+                    throw new InvalidOperationException(
+                                        "Tutor has submitted a replacement request for this lesson and is awaiting staff processing." +
+                                            "Please wait for staff approval before requesting a make-up lesson.");
+                }
+
+                // ĐÃ APPROVED → CHO PHÉP TẠO MAKE-UP NHƯNG KHÔNG ĐƯỢC CHỌN NGÀY TRÙNG VỚI NGÀY TUTOR BẬN
+                if (dto.RequestedDate == oldSession.SessionDate)
+                {
+                    throw new InvalidOperationException(
+                    "Cannot select a make-up date that coincides with the tutor's busy date(" + oldSession.SessionDate.ToString("dd/MM/yyyy") + "). " +
+                    "Please select a different make-up date.");
+                }
             }
 
             // 4. ANTI-SPAM: Không cho tạo nhiều make-up request cùng lúc
