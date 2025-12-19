@@ -671,5 +671,25 @@ namespace MathBridgeSystem.Application.Services
                 Message = "Make-up session request submitted successfully. Staff will arrange the new session soon. (This does not count against your reschedule attempts.)"
             };
         }
+        // Lấy tất cả yêu cầu thay tutor liên quan đến tutorId (là tutor gốc hoặc tutor được yêu cầu thay thế)
+ 
+        public async Task<IEnumerable<RescheduleRequestDto>> GetByTutorIdAsync(Guid tutorId)
+        {
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+
+            var changeTutorRequests = allRequests
+                .Where(r =>
+                    r.Reason != null &&
+                    r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) && 
+                    (
+                        // Tutor là tutor gốc (gửi request báo bận)
+                        r.Booking.TutorId == tutorId //||
+                        // Hoặc tutor được yêu cầu thay thế
+                       // r.RequestedTutorId == tutorId
+                    ))
+                .OrderByDescending(r => r.CreatedDate);
+
+            return changeTutorRequests.Select(MapToDto);
+        }
     }
 }

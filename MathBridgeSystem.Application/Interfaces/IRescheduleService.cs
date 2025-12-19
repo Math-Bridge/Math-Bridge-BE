@@ -16,5 +16,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<RescheduleResponseDto> CancelSessionAndRefundAsync(Guid sessionId, Guid rescheduleRequestId );
         Task<object> CreateTutorReplacementRequestAsync(Guid bookingId, Guid tutorId, string reason);
         Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto);
+        Task<IEnumerable<RescheduleRequestDto>> GetByTutorIdAsync(Guid tutorId);
     }
 }
