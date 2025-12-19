@@ -542,23 +542,45 @@ namespace MathBridgeSystem.Application.Services
         }
         public async Task<object> CreateTutorReplacementRequestAsync(Guid bookingId, Guid tutorId, string reason)
         {
+            // Retrieve the session (lesson) by its booking ID
             var session = await _sessionRepo.GetByIdAsync(bookingId)
                 ?? throw new KeyNotFoundException("No lesson found.");
 
+            // Only the tutor assigned to this session can submit a replacement request
             if (session.TutorId != tutorId)
                 throw new UnauthorizedAccessException("You can only submit requests for your own lessons.");
 
+            // Replacement requests are only allowed for future sessions (starting tomorrow or later)
             if (session.SessionDate <= DateOnly.FromDateTime(DateTime.Today))
                 throw new InvalidOperationException("Replacements are only permitted for appointments starting tomorrow.");
 
+            // The session must still be in "scheduled" status
             if (session.Status != "scheduled")
                 throw new InvalidOperationException("The lesson has been canceled or completed.");
 
-            // Không gửi trùng
-            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(bookingId);
-            if (hasPending)
-                throw new InvalidOperationException("There are pending requests for this lesson.");
+            // ANTI-SPAM: Check if there is already a [CHANGE TUTOR] request for this session
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+            var existingRequest = allRequests
+                .Where(r => r.BookingId == bookingId &&
+                            r.Reason != null &&
+                            r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
 
+            // Block submission if there is an existing request that is pending or approved
+            // Allow resubmission only if the previous request was rejected
+            if (existingRequest != null &&
+                (existingRequest.Status == "pending" || existingRequest.Status == "approved"))
+            {
+                string statusDescription = existingRequest.Status == "pending"
+                    ? "is pending staff review"
+                    : "has already been approved";
+
+                throw new InvalidOperationException(
+                    $"This lesson already has a tutor replacement request that {statusDescription}. " +
+                    $"Please wait for staff to process it.");
+            }
+
+            // Create the new replacement request
             var rescheduleRequest = new RescheduleRequest
             {
                 RequestId = Guid.NewGuid(),
@@ -568,20 +590,23 @@ namespace MathBridgeSystem.Application.Services
                 RequestedDate = session.SessionDate,
                 StartTime = TimeOnly.FromDateTime(session.StartTime),
                 EndTime = TimeOnly.FromDateTime(session.EndTime),
-                Reason = $"[CHANGE TUTOR] {reason}",
+                Reason = $"[CHANGE TUTOR] {reason ?? "Tutor is unavailable for this session"}",
                 Status = "pending",
                 RequestedTutorId = session.TutorId,
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
+            // Save the request to database
             await _rescheduleRepo.AddAsync(rescheduleRequest);
+
+            // Return success response
             return new
             {
                 requestId = rescheduleRequest.RequestId,
                 bookingId,
                 sessionDate = session.SessionDate,
-                originalTutor = session.Tutor.FullName,
-                message = "The request to replace the tutor has been successfully submitted. Please wait for staff to process it."
+                originalTutor = session.Tutor?.FullName ?? "Unknown Tutor",
+                message = "Tutor replacement request submitted successfully. Staff will process it as soon as possible."
             };
         }
         public async Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
@@ -688,7 +713,6 @@ namespace MathBridgeSystem.Application.Services
                        // r.RequestedTutorId == tutorId
                     ))
                 .OrderByDescending(r => r.CreatedDate);
-
             return changeTutorRequests.Select(MapToDto);
         }
     }
