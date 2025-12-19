@@ -165,31 +165,49 @@ namespace MathBridgeSystem.Application.Services
             if (request.Status != "pending")
                 throw new InvalidOperationException("Only pending requests can be approved.");
 
-            // Determine final tutor
-            Guid finalTutorId = dto.NewTutorId != Guid.Empty
-                ? dto.NewTutorId
-                : request.RequestedTutorId ?? request.Booking.TutorId;
+            // PHÁT HIỆN LOẠI YÊU CẦU
+            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
 
+            Guid finalTutorId;
+
+            // Nếu Staff truyền newTutorId → dùng luôn
+            if (dto.NewTutorId.HasValue && dto.NewTutorId != Guid.Empty)
+            {
+                finalTutorId = dto.NewTutorId.Value;
+            }
+            // Các trường hợp khác → giữ nguyên tutor cũ
+            else
+            {
+                finalTutorId = request.Booking.TutorId;
+            }
+
+            // Kiểm tra tutor hợp lệ
             var tutor = await _userRepo.GetByIdAsync(finalTutorId)
                 ?? throw new KeyNotFoundException("Tutor not found.");
+
             if (tutor.RoleId != 2)
                 throw new InvalidOperationException("Selected user is not a tutor.");
 
-            var startDt = request.RequestedDate.ToDateTime(request.StartTime);
-            var endDt = request.RequestedDate.ToDateTime(request.EndTime);
-            var isAvailable = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDt, endDt);
-            if (!isAvailable)
-                throw new InvalidOperationException("Selected tutor is not available at the requested time.");
+            // BỎ KIỂM TRA RẢNH CHO YÊU CẦU THAY TUTOR (vì tutor bận nên mới gửi request)
+            if (!isTutorReplacement)
+            {
+                var startDt = request.RequestedDate.ToDateTime(request.StartTime);
+                var endDt = request.RequestedDate.ToDateTime(request.EndTime);
 
-            // Create new session
+                var isAvailable = await _sessionRepo.IsTutorAvailableAsync(finalTutorId, request.RequestedDate, startDt, endDt);
+                if (!isAvailable)
+                    throw new InvalidOperationException("Selected tutor is not available at the requested time.");
+            }
+
+            // Tạo buổi học mới (nếu cần – ở đây vẫn tạo để giữ logic cũ, hoặc bạn có thể bỏ nếu không muốn tạo buổi mới)
             var newSession = new Session
             {
                 BookingId = Guid.NewGuid(),
                 ContractId = request.ContractId,
                 TutorId = finalTutorId,
                 SessionDate = request.RequestedDate,
-                StartTime = startDt,
-                EndTime = endDt,
+                StartTime = request.RequestedDate.ToDateTime(request.StartTime),
+                EndTime = request.RequestedDate.ToDateTime(request.EndTime),
                 IsOnline = request.Booking.IsOnline,
                 VideoCallPlatform = request.Booking.VideoCallPlatform,
                 OfflineAddress = request.Booking.OfflineAddress,
@@ -201,64 +219,49 @@ namespace MathBridgeSystem.Application.Services
 
             await _sessionRepo.AddRangeAsync(new[] { newSession });
 
-            // Mark old session as rescheduled
-            request.Booking.Status = "rescheduled";
+            // NẾU LÀ YÊU CẦU THAY TUTOR → BUỔI CŨ CHUYỂN THÀNH "cancelled"
+            if (isTutorReplacement)
+            {
+                request.Booking.Status = "cancelled"; // cancelled thay vì rescheduled
+            }
+            else
+            {
+                request.Booking.Status = "rescheduled"; // Các loại khác giữ nguyên
+            }
+
             request.Booking.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(request.Booking);
 
-            // Deduct one reschedule attempt (never go negative)
-            var contract = request.Booking.Contract;
-            contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
-            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
-            await _contractRepo.UpdateAsync(contract);
+            // CHỈ TRỪ RescheduleCount CHO DỜI LỊCH BÌNH THƯỜNG
+            bool isNormalReschedule = !isTutorReplacement &&
+                                      request.Reason?.Contains("Reschedule due to Tutor unavailability") != true;
 
-            // Finalize request
+            if (isNormalReschedule)
+            {
+                var contract = request.Booking.Contract;
+                contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
+                contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
+                await _contractRepo.UpdateAsync(contract);
+            }
+
+            // Lưu note
+            if (!string.IsNullOrEmpty(dto.Note))
+            {
+                request.Reason += $" | Staff note: {dto.Note}";
+            }
+
+            // Hoàn tất request
             request.Status = "approved";
             request.StaffId = staffId;
             request.RequestedTutorId = finalTutorId;
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
-            // Send notification and email to parent
-            var parent = await _userRepo.GetByIdAsync(request.ParentId);
-            var childName = contract.Child?.FullName ?? "your child";
-
-            // Create notification
-            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
-            {
-                UserId = request.ParentId,
-                ContractId = request.ContractId,
-                BookingId = newSession.BookingId,
-                Title = "Reschedule Request Approved",
-                Message = $"Great news! Your reschedule request for {childName}'s session has been approved. New session: {request.RequestedDate:dd/MM/yyyy} at {request.StartTime:HH:mm} with tutor {tutor.FullName}.",
-                NotificationType = "Reschedule"
-            });
-
-            // Send email
-            if (parent != null && !string.IsNullOrEmpty(parent.Email))
-            {
-                try
-                {
-                    await _emailService.SendRescheduleApprovedAsync(
-                        parent.Email,
-                        parent.FullName ?? "Parent",
-                        childName,
-                        request.RequestedDate.ToString("dd/MM/yyyy"),
-                        $"{request.StartTime:HH:mm} - {request.EndTime:HH:mm}",
-                        tutor.FullName ?? "Assigned Tutor"
-                    );
-                }
-                catch
-                {
-                    // Log but don't fail the request if email fails
-                }
-            }
-
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
                 Status = "approved",
-                Message = "Reschedule request approved successfully.",
+                Message = "Request approved successfully.",
                 ProcessedDate = request.ProcessedDate
             };
         }
@@ -347,7 +350,7 @@ namespace MathBridgeSystem.Application.Services
                     endDateTime
                 );
 
-                if (isAvailable && contract.SubstituteTutor1 != null)
+                if (isAvailable && contract.SubstituteTutor1 != null && contract.SubstituteTutor1.Status != "banned" )
                 {
                     var averageRating = contract.SubstituteTutor1.FinalFeedbacks.Any()
                         ? contract.SubstituteTutor1.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
@@ -366,7 +369,7 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Check SubstituteTutor2
-            if (contract.SubstituteTutor2Id.HasValue)
+            if (contract.SubstituteTutor2Id.HasValue )
             {
                 var isAvailable = await _sessionRepo.IsTutorAvailableAsync(
                     contract.SubstituteTutor2Id.Value,
@@ -375,7 +378,7 @@ namespace MathBridgeSystem.Application.Services
                     endDateTime
                 );
 
-                if (isAvailable && contract.SubstituteTutor2 != null)
+                if (isAvailable && contract.SubstituteTutor2 != null && contract.SubstituteTutor2.Status != "banned")
                 {
                     var averageRating = contract.SubstituteTutor2.FinalFeedbacks.Any()
                         ? contract.SubstituteTutor2.FinalFeedbacks.Average(f => f.OverallSatisfactionRating)
@@ -477,8 +480,8 @@ namespace MathBridgeSystem.Application.Services
             if (rescheduleRequest.BookingId != sessionId)
                 throw new InvalidOperationException("Reschedule request does not belong to this session.");
 
-            if (rescheduleRequest.Status != "pending")
-                throw new InvalidOperationException($"Request is not pending (current: {rescheduleRequest.Status}).");
+            if (rescheduleRequest.Status != "approved" && rescheduleRequest.Status != "pending")
+                throw new InvalidOperationException($"Request is not pending or approved (current: {rescheduleRequest.Status}).");
 
             var session = await _sessionRepo.GetByIdAsync(sessionId)
                 ?? throw new KeyNotFoundException("Session not found.");
@@ -489,7 +492,15 @@ namespace MathBridgeSystem.Application.Services
             var contract = await _contractRepo.GetByIdWithPackageAsync(session.ContractId)
                 ?? throw new KeyNotFoundException("Contract not found.");
 
-            var refundAmount = contract.Package.Price / contract.Package.SessionCount;
+            // SỬA CHÍNH TẠI ĐÂY: TÍNH GIÁ HOÀN TIỀN ĐÚNG CHO CẢ CONTRACT THƯỜNG VÀ TWIN
+            decimal basePrice = contract.Package.Price;
+            int sessionCount = contract.Package.SessionCount;
+
+            // Nếu là contract twin → giá thực thu = basePrice * 1.6 nghĩa là 160%
+            bool isTwinContract = contract.SecondChildId.HasValue;
+            decimal actualContractPrice = isTwinContract ? basePrice * 1.6m : basePrice;
+
+            decimal refundAmount = actualContractPrice / sessionCount;
 
             var transaction = new WalletTransaction
             {
@@ -498,7 +509,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = contract.ContractId,
                 Amount = refundAmount,
                 TransactionType = "Refund",
-                Description = $"Refund for cancelled session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}",
+                Description = $"Refund for cancelled session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}" +
+                              (isTwinContract ? " (Twin contract)" : ""),
                 TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "Completed",
                 PaymentMethod = "Wallet"
@@ -511,7 +523,7 @@ namespace MathBridgeSystem.Application.Services
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(session);
 
-            // Deduct attempt safely
+            // Trừ lượt reschedule nếu là dời lịch từ phụ huynh
             contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
@@ -570,6 +582,93 @@ namespace MathBridgeSystem.Application.Services
                 sessionDate = session.SessionDate,
                 originalTutor = session.Tutor.FullName,
                 message = "The request to replace the tutor has been successfully submitted. Please wait for staff to process it."
+            };
+        }
+        public async Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
+        {
+            // 1. Validate time
+            if (!IsValidStartTime(dto.StartTime))
+                throw new ArgumentException("Start time must be 16:00, 17:30, 19:00, or 20:30.");
+
+            var expectedEndTime = dto.StartTime.AddMinutes(90);
+            if (dto.EndTime != expectedEndTime)
+                throw new ArgumentException($"End time must be {expectedEndTime:HH:mm} (90 minutes after start time).");
+
+            // 2. Validate session
+            var oldSession = await _sessionRepo.GetByIdAsync(dto.BookingId)
+                ?? throw new KeyNotFoundException("Session not found.");
+
+            if (oldSession.Contract.ParentId != parentId)
+                throw new UnauthorizedAccessException("You can only request make-up for your child's sessions.");
+
+            if (oldSession.SessionDate < DateOnly.FromDateTime(DateTime.Today))
+                throw new InvalidOperationException("Cannot request make-up for past sessions.");
+
+            // 3. KIỂM TRA CÓ REQUEST THAY TUTOR ĐÃ APPROVED CHƯA
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+
+            var tutorReplacementRequest = allRequests
+                .FirstOrDefault(r => r.BookingId == dto.BookingId &&
+                                     r.Reason != null &&
+                                     r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase));
+
+            if (tutorReplacementRequest != null)
+            {
+                if (tutorReplacementRequest.Status != "approved")
+                {
+                    throw new InvalidOperationException(
+                                        "Tutor has submitted a replacement request for this lesson and is awaiting staff processing." +
+                                            "Please wait for staff approval before requesting a make-up lesson.");
+                }
+
+                // ĐÃ APPROVED → CHO PHÉP TẠO MAKE-UP NHƯNG KHÔNG ĐƯỢC CHỌN NGÀY TRÙNG VỚI NGÀY TUTOR BẬN
+                if (dto.RequestedDate == oldSession.SessionDate)
+                {
+                    throw new InvalidOperationException(
+                    "Cannot select a make-up date that coincides with the tutor's busy date(" + oldSession.SessionDate.ToString("dd/MM/yyyy") + "). " +
+                    "Please select a different make-up date.");
+                }
+            }
+
+            // 4. ANTI-SPAM: Không cho tạo nhiều make-up request cùng lúc
+            var hasPendingMakeUp = await _rescheduleRepo.HasPendingRequestForBookingAsync(dto.BookingId);
+            if (hasPendingMakeUp)
+                throw new InvalidOperationException("There is already a pending make-up request for this session.");
+
+            // 5. Load contract
+            var contract = await _contractRepo.GetByIdWithPackageAsync(oldSession.ContractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (contract.Status != "active")
+                throw new InvalidOperationException("Contract is no longer active.");
+
+            if (contract.EndDate < dto.RequestedDate)
+                throw new InvalidOperationException("Requested make-up date exceeds contract end date.");
+
+            // Tạo request dạy bù
+            string defaultReason = "Reschedule due to Tutor unavailability";
+
+            var request = new RescheduleRequest
+            {
+                RequestId = Guid.NewGuid(),
+                BookingId = dto.BookingId,
+                ContractId = oldSession.ContractId,
+                ParentId = parentId,
+                RequestedDate = dto.RequestedDate,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Reason = defaultReason,
+                Status = "pending",
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
+            };
+
+            await _rescheduleRepo.AddAsync(request);
+
+            return new RescheduleResponseDto
+            {
+                RequestId = request.RequestId,
+                Status = "pending",
+                Message = "Make-up session request submitted successfully. Staff will arrange the new session soon. (This does not count against your reschedule attempts.)"
             };
         }
     }

@@ -277,5 +277,35 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { success = false, message = "System error", details = ex.Message });
             }
         }
+        /// <summary>
+        /// Get all available time slots for the contract's tutors (Main + Sub1 + Sub2)
+        /// Fixed slots: 16:00-17:30, 17:30-19:00, 19:00-20:30, 20:30-22:00
+        /// A slot is available if AT LEAST ONE tutor is free
+        /// </summary>
+        [HttpGet("{contractId}/available-slots")]
+        [Authorize(Roles = "staff,admin,parent")]
+        public async Task<IActionResult> GetAvailableTutorSlots(Guid contractId)
+        {
+            try
+            {
+                var slots = await _contractService.GetAvailableTutorSlotsAsync(contractId);
+                return Ok(new
+                {
+                    totalAvailableSlots = slots.Count,
+                    message = slots.Count > 0
+                        ? $"Found {slots.Count} available time slots from {slots.Min(s => s.Date):dd/MM/yyyy} to {slots.Max(s => s.Date):dd/MM/yyyy}."
+                        : "No available time slots found for the assigned tutors.",
+                    data = slots
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to retrieve available slots.", details = ex.Message });
+            }
+        }
     }
 }

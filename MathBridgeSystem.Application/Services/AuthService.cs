@@ -341,8 +341,8 @@ namespace MathBridgeSystem.Application.Services
             }
 
             // Validate new password format (already handled by DataAnnotations, but explicit check for consistency)
-            if (!System.Text.RegularExpressions.Regex.IsMatch(request.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"))
-                throw new ArgumentException("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^_+\-=/\\|~])[A-Za-z\d@$!%*?&.#^_+\-=/\\|~]{6,}$"))
+                throw new ArgumentException("Passwords must contain at least one uppercase letter, one lowercase letter, one number, and one special character."); ;
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             user.LastActive = DateTime.UtcNow.ToLocalTime();

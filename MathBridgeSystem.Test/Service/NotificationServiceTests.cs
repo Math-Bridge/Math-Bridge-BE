@@ -23,6 +23,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<ISessionRepository> _sessionRepositoryMock;
         private readonly NotificationService _notificationService;
         private readonly NotificationService _notificationServiceNoPubSub; // Dùng để test trường hợp PubSub là null
+        private readonly Mock<IRescheduleRequestRepository> _rescheduleRequestRepositoryMock;
 
         public NotificationServiceTests()
         {
@@ -31,12 +32,14 @@ namespace MathBridgeSystem.Tests.Services
             _pubSubProviderMock = new Mock<IPubSubNotificationProvider>();
             _contractRepositoryMock = new Mock<IContractRepository>();
             _sessionRepositoryMock = new Mock<ISessionRepository>();
+            _rescheduleRequestRepositoryMock = new Mock<IRescheduleRequestRepository>();
 
             _notificationService = new NotificationService(
                 _notificationRepositoryMock.Object,
                 _connectionManagerMock.Object,
                 _contractRepositoryMock.Object,
                 _sessionRepositoryMock.Object,
+                _rescheduleRequestRepositoryMock.Object,
                 _pubSubProviderMock.Object
             );
 

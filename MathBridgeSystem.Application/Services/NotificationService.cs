@@ -17,20 +17,24 @@ namespace MathBridgeSystem.Application.Services
         private readonly IPubSubNotificationProvider _pubSubProvider;
         private readonly IContractRepository _contractRepository;
         private readonly ISessionRepository _sessionRepository;
+        private readonly IRescheduleRequestRepository _rescheduleRequestRepository;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             NotificationConnectionManager connectionManager,
             IContractRepository contractRepository,
             ISessionRepository sessionRepository,
+            IRescheduleRequestRepository rescheduleRequestRepository,
             IPubSubNotificationProvider pubSubProvider = null)
         {
             _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
+            _rescheduleRequestRepository = rescheduleRequestRepository ?? throw new ArgumentNullException(nameof(rescheduleRequestRepository));
             _pubSubProvider = pubSubProvider; // Can be null for SSE-only mode
         }
+        
 
         public async Task<NotificationResponseDto> CreateNotificationAsync(CreateNotificationRequest request)
         {
@@ -70,6 +74,18 @@ namespace MathBridgeSystem.Application.Services
 
         public async Task<NotificationResponseDto> CreateRescheduleOrRefundNotificationAsync(CreateRescheduleOrRefundNotificationRequest request)
         {
+            // Validate Reschedule Request
+            var rescheduleRequest = await _rescheduleRequestRepository.GetByIdWithDetailsAsync(request.RequestId);
+            if (rescheduleRequest == null)
+            {
+                throw new KeyNotFoundException($"Reschedule request with ID {request.RequestId} not found.");
+            }
+
+            // Update status to approved
+            rescheduleRequest.Status = "approved";
+            rescheduleRequest.ProcessedDate = DateTime.UtcNow.ToLocalTime();
+            await _rescheduleRequestRepository.UpdateAsync(rescheduleRequest);
+
             // Validate Contract
             var contract = await _contractRepository.GetByIdAsync(request.ContractId);
             if (contract == null)

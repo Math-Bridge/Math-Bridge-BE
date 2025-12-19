@@ -23,6 +23,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly INotificationService _notificationService;
         private readonly ISePayRepository _sePayRepository;
 
+
         public ContractService(
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
@@ -224,59 +225,48 @@ namespace MathBridgeSystem.Application.Services
 
             var sessions = new List<Session>();
 
-            // BƯỚC 1: Tìm ngày bắt đầu hợp lệ đầu tiên (phải >= StartDate và chưa qua)
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var currentDate = contract.StartDate;
+            var today = DateOnly.FromDateTime(DateTime.Today);    
+            var tomorrow = today.AddDays(1);                      
 
-            // Nếu StartDate là quá khứ hoặc hôm nay → tìm ngày hợp lệ tiếp theo
-            if (currentDate < today)
-            {
-                currentDate = today;
-            }
+            // BẮT ĐẦU TỪ NGÀY MAI HOẶC STARTDATE NẾU STARTDATE SAU NGÀY MAI
+            var currentDate = contract.StartDate > tomorrow ? contract.StartDate : tomorrow;
 
-            // BƯỚC 2: Từ ngày currentDate, tìm buổi học hợp lệ đầu tiên trong lịch
-            // → Tức là: nếu hôm nay là Thứ 3, mà StartDate là Thứ 3 → bỏ qua hôm nay → tìm ngày tiếp theo trong lịch
             while (currentDate <= contract.EndDate && sessions.Count < totalSessionsNeeded)
             {
                 var schedule = contract.ContractSchedules.FirstOrDefault(s => s.DayOfWeek == currentDate.DayOfWeek);
-
                 if (schedule != null)
                 {
-                    var sessionDateTime = currentDate.ToDateTime(schedule.StartTime);
+                    // Tạo buổi học vì ngày này >= ngày mai
+                    var sessionStartTime = currentDate.ToDateTime(schedule.StartTime);
 
-                    // Chỉ tạo buổi học nếu:
-                    // Ngày đó là tương lai (ngày mai trở đi) hoặc
-                    // Ngày đó là hôm nay nhưng giờ chưa tới (sessionStart > Now)
-                    if (sessionDateTime > DateTime.Now ||
-                        (currentDate > today)) 
+                    sessions.Add(new Session
                     {
-                        sessions.Add(new Session
-                        {
-                            BookingId = Guid.NewGuid(),
-                            ContractId = contract.ContractId,
-                            TutorId = contract.MainTutorId.Value,
-                            SessionDate = currentDate,
-                            StartTime = sessionDateTime,
-                            EndTime = currentDate.ToDateTime(schedule.EndTime),
-                            IsOnline = contract.IsOnline,
-                            VideoCallPlatform = contract.VideoCallPlatform,
-                            OfflineAddress = contract.OfflineAddress,
-                            OfflineLatitude = contract.OfflineLatitude,
-                            OfflineLongitude = contract.OfflineLongitude,
-                            Status = "scheduled",
-                            CreatedAt = DateTime.UtcNow
-                        });
-                    }
+                        BookingId = Guid.NewGuid(),
+                        ContractId = contract.ContractId,
+                        TutorId = contract.MainTutorId.Value,
+                        SessionDate = currentDate,
+                        StartTime = sessionStartTime,
+                        EndTime = currentDate.ToDateTime(schedule.EndTime),
+                        IsOnline = contract.IsOnline,
+                        VideoCallPlatform = contract.VideoCallPlatform,
+                        OfflineAddress = contract.OfflineAddress,
+                        OfflineLatitude = contract.OfflineLatitude,
+                        OfflineLongitude = contract.OfflineLongitude,
+                        Status = "scheduled",
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
 
                 currentDate = currentDate.AddDays(1);
             }
 
+            // KIỂM TRA ĐỦ BUỔI HỌC CHƯA
             if (sessions.Count < totalSessionsNeeded)
             {
                 throw new InvalidOperationException(
-                    $"Only {sessions.Count} session(s) can be scheduled from the next available date to {contract.EndDate:dd/MM/yyyy}. " +
-                    $"Need {totalSessionsNeeded}. Please extend the contract duration or adjust the schedule.");
+                     $"Cannot create enough {totalSessionsNeeded} sessions because the sessions only start tomorrow ({tomorrow:dd/MM/yyyy}). " +
+                     $"Only {sessions.Count} sessions can be created from tomorrow until the contract end date ({contract.EndDate:dd/MM/yyyy}). " +
+                     $"Please extend the contract duration or adjust the schedule to have enough sessions.");
             }
 
             return sessions;
@@ -578,6 +568,78 @@ namespace MathBridgeSystem.Application.Services
 
             return (decimal)Math.Round(distance, 2);
         }
+        public async Task<List<AvailableTutorSlotDto>> GetAvailableTutorSlotsAsync(Guid contractId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId)
+                ?? throw new KeyNotFoundException("Contract not found.");
+
+            if (!contract.MainTutorId.HasValue)
+                throw new InvalidOperationException("Main tutor must be assigned to check availability.");
+
+            // Lấy 3 tutor
+            var mainTutor = await _userRepository.GetByIdAsync(contract.MainTutorId.Value);
+            var sub1 = contract.SubstituteTutor1Id.HasValue
+                ? await _userRepository.GetByIdAsync(contract.SubstituteTutor1Id.Value)
+                : null;
+            var sub2 = contract.SubstituteTutor2Id.HasValue
+                ? await _userRepository.GetByIdAsync(contract.SubstituteTutor2Id.Value)
+                : null;
+
+            var tutors = new List<(Guid Id, string Name)>
+    {
+        (contract.MainTutorId.Value, mainTutor?.FullName ?? "Main Tutor")
+    };
+            if (sub1 != null) tutors.Add((sub1.UserId, sub1.FullName ?? "Sub Tutor 1"));
+            if (sub2 != null) tutors.Add((sub2.UserId, sub2.FullName ?? "Sub Tutor 2"));
+
+            // Các khung giờ cố định
+            var fixedSlots = new List<(TimeOnly Start, TimeOnly End, string Display)>
+    {
+        (new TimeOnly(16, 0), new TimeOnly(17, 30), "16:00 - 17:30"),
+        (new TimeOnly(17, 30), new TimeOnly(19, 0), "17:30 - 19:00"),
+        (new TimeOnly(19, 0), new TimeOnly(20, 30), "19:00 - 20:30"),
+        (new TimeOnly(20, 30), new TimeOnly(22, 0), "20:30 - 22:00")
+    };
+
+            var availableSlots = new List<AvailableTutorSlotDto>();
+
+            var currentDate = contract.StartDate;
+            var endDate = contract.EndDate;
+
+            while (currentDate <= endDate)
+            {
+                foreach (var slot in fixedSlots)
+                {
+                    var startDt = currentDate.ToDateTime(slot.Start);
+                    var endDt = currentDate.ToDateTime(slot.End);
+
+                    // Kiểm tra từng tutor có rảnh không
+                    var freeTutors = new List<string>();
+
+                    foreach (var tutor in tutors)
+                    {
+                        var isAvailable = await _sessionRepository.IsTutorAvailableAsync(tutor.Id, currentDate, startDt, endDt);
+                        if (isAvailable)
+                            freeTutors.Add(tutor.Name);
+                    }
+
+                    // Nếu có ít nhất 1 tutor rảnh → thêm slot này
+                    if (freeTutors.Any())
+                    {
+                        availableSlots.Add(new AvailableTutorSlotDto
+                        {
+                            Date = currentDate,
+                            Slot = slot.Display,
+                            AvailableTutors = freeTutors
+                        });
+                    }
+                }
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            return availableSlots;
+        }
         public async Task<List<AvailableTutorResponse>> CheckTutorsAvailabilityBeforeCreateAsync(CheckTutorAvailabilityRequest request)
         {
             // 1. Validate lịch học
@@ -673,5 +735,6 @@ namespace MathBridgeSystem.Application.Services
             .ThenByDescending(t => t.AverageRating)
             .ToList();
         }
+
     }
 }

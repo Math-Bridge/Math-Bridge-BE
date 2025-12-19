@@ -18,5 +18,6 @@ namespace MathBridgeSystem.Application.Interfaces
         Task<List<ContractDto>> GetContractsByParentPhoneAsync(string phoneNumber);
         Task<List<AvailableTutorResponse>> GetAvailableTutorsAsync(Guid contractId, bool sortByRating = false, bool sortByDistance = false);
         Task<List<AvailableTutorResponse>> CheckTutorsAvailabilityBeforeCreateAsync(CheckTutorAvailabilityRequest request);
+        Task<List<AvailableTutorSlotDto>> GetAvailableTutorSlotsAsync(Guid contractId);
     }
 }
