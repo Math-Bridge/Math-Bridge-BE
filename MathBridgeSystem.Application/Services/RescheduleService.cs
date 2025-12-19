@@ -481,7 +481,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Reschedule request does not belong to this session.");
 
             if (rescheduleRequest.Status != "approved" && rescheduleRequest.Status != "pending")
-                throw new InvalidOperationException($"Request is not pending or approve (current: {rescheduleRequest.Status}).");
+                throw new InvalidOperationException($"Request is not pending or approved (current: {rescheduleRequest.Status}).");
 
             var session = await _sessionRepo.GetByIdAsync(sessionId)
                 ?? throw new KeyNotFoundException("Session not found.");
@@ -492,7 +492,15 @@ namespace MathBridgeSystem.Application.Services
             var contract = await _contractRepo.GetByIdWithPackageAsync(session.ContractId)
                 ?? throw new KeyNotFoundException("Contract not found.");
 
-            var refundAmount = contract.Package.Price / contract.Package.SessionCount;
+            // SỬA CHÍNH TẠI ĐÂY: TÍNH GIÁ HOÀN TIỀN ĐÚNG CHO CẢ CONTRACT THƯỜNG VÀ TWIN
+            decimal basePrice = contract.Package.Price;
+            int sessionCount = contract.Package.SessionCount;
+
+            // Nếu là contract twin → giá thực thu = basePrice * 1.6 nghĩa là 160%
+            bool isTwinContract = contract.SecondChildId.HasValue;
+            decimal actualContractPrice = isTwinContract ? basePrice * 1.6m : basePrice;
+
+            decimal refundAmount = actualContractPrice / sessionCount;
 
             var transaction = new WalletTransaction
             {
@@ -501,7 +509,8 @@ namespace MathBridgeSystem.Application.Services
                 ContractId = contract.ContractId,
                 Amount = refundAmount,
                 TransactionType = "Refund",
-                Description = $"Refund for cancelled session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}",
+                Description = $"Refund for cancelled session on {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH:mm}" +
+                              (isTwinContract ? " (Twin contract)" : ""),
                 TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "Completed",
                 PaymentMethod = "Wallet"
@@ -514,7 +523,7 @@ namespace MathBridgeSystem.Application.Services
             session.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             await _sessionRepo.UpdateAsync(session);
 
-            // Deduct attempt safely
+            // Trừ lượt reschedule nếu là dời lịch từ phụ huynh
             contract.RescheduleCount = (byte)Math.Max(0, (contract.RescheduleCount ?? 0) - 1);
             contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepo.UpdateAsync(contract);
