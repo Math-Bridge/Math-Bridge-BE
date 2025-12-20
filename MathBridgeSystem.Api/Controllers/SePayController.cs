@@ -77,11 +77,11 @@ public class SePayController : ControllerBase
     /// Create direct contract payment request with QR code
     /// </summary>
     /// <param name="contractId">Contract ID</param>
-    /// <param name="packageId">Payment package ID</param>
+    /// <param name="amount">Payment amount</param>
     /// <returns>Payment response with QR code information</returns>
     [HttpPost("create-contract-payment")]
     [Authorize]
-    public async Task<ActionResult<SePayPaymentResponseDto>> CreateContractPayment([FromQuery] Guid contractId)
+    public async Task<ActionResult<SePayPaymentResponseDto>> CreateContractPayment([FromQuery] Guid contractId, [FromQuery] decimal amount)
     {
         try
         {
@@ -93,26 +93,31 @@ public class SePayController : ControllerBase
             }
 
             // Validate request parameters
-            if (contractId == Guid.Empty )
+            if (contractId == Guid.Empty)
             {
                 return BadRequest(new { message = "Contract ID is required" });
             }
 
-            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId);
+            if (amount <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+
+            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId, amount);
 
             if (!result.Success)
             {
                 return BadRequest(new { message = result.Message });
             }
 
-            _logger.LogInformation("Direct contract payment created successfully for contract {ContractId}, user {UserId}", 
-                contractId, userId);
+            _logger.LogInformation("Direct contract payment created successfully for contract {ContractId}, user {UserId}, amount {Amount}", 
+                contractId, userId, amount);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}", contractId);
+            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}, amount {Amount}", contractId, amount);
             return StatusCode(500, new { message = "An error occurred while creating contract payment request" });
         }
     }
