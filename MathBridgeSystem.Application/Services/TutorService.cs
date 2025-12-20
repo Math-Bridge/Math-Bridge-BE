@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
 using MathBridgeSystem.Domain.Interfaces;
@@ -292,6 +292,109 @@ namespace MathBridgeSystem.Application.Services
                 VerificationStatus = u.TutorVerification?.VerificationStatus ?? "Pending",
                 CreatedDate = u.CreatedDate
             }).ToList();
+        }
+        public async Task<List<TutorDto>> GetAllTutorsSortedByRatingAsync()
+        {
+            var tutors = await _userRepository.GetAllAsync();
+
+            var tutorDtos = new List<TutorDto>();
+
+            foreach (var user in tutors)
+            {
+                if (user.Role?.RoleName != "tutor") continue;
+
+                // Get tutor centers and feedbacks
+                var tutorCenters = await _tutorCenterRepository.GetByTutorIdAsync(user.UserId);
+                var finalFeedbacks = await _finalFeedbackRepository.GetByUserIdAsync(user.UserId);
+
+                // Calculate average rating
+                decimal averageRating = finalFeedbacks.Any()
+                    ? Math.Round((decimal)finalFeedbacks.Average(f => f.OverallSatisfactionRating), 1)
+                    : 0m;
+
+                int feedbackCount = finalFeedbacks.Count;
+
+                // Build DTO
+                var tutorDto = new TutorDto
+                {
+                    UserId = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Gender = user.Gender,
+                    WalletBalance = user.WalletBalance,
+                    Status = user.Status,
+                    CreatedDate = user.CreatedDate,
+                    LastActive = user.LastActive,
+                    FormattedAddress = user.FormattedAddress,
+                    City = user.City,
+                    District = user.District,
+                    Latitude = user.Latitude.HasValue ? (decimal)user.Latitude.Value : null,
+                    Longitude = user.Longitude.HasValue ? (decimal)user.Longitude.Value : null,
+                    // Add average rating info
+                    AverageRating = averageRating,
+                    FeedbackCount = feedbackCount
+                };
+
+                // Map TutorVerification
+                if (user.TutorVerification != null)
+                {
+                    tutorDto.TutorVerification = new TutorVerificationDto
+                    {
+                        VerificationId = user.TutorVerification.VerificationId,
+                        University = user.TutorVerification.University,
+                        Major = user.TutorVerification.Major,
+                        HourlyRate = user.TutorVerification.HourlyRate,
+                        Bio = user.TutorVerification.Bio,
+                        VerificationStatus = user.TutorVerification.VerificationStatus,
+                        VerificationDate = user.TutorVerification.VerificationDate,
+                        CreatedDate = user.TutorVerification.CreatedDate
+                    };
+                }
+
+                // Map centers and feedbacks (giữ nguyên như cũ)
+                tutorDto.TutorCenters = tutorCenters.Select(tc => new TutorCenterDetailDto
+                {
+                    TutorCenterId = tc.TutorCenterId,
+                    CenterId = tc.CenterId,
+                    CreatedDate = tc.CreatedDate,
+                    Center = tc.Center != null ? new CenterDetailDto
+                    {
+                        CenterId = tc.Center.CenterId,
+                        Name = tc.Center.Name,
+                        Latitude = tc.Center.Latitude.HasValue ? (decimal)tc.Center.Latitude.Value : null,
+                        Longitude = tc.Center.Longitude.HasValue ? (decimal)tc.Center.Longitude.Value : null,
+                        FormattedAddress = tc.Center.FormattedAddress,
+                        City = tc.Center.City,
+                        District = tc.Center.District,
+                        GooglePlaceId = tc.Center.GooglePlaceId,
+                        TutorCount = tc.Center.TutorCount,
+                        CreatedDate = tc.Center.CreatedDate
+                    } : null
+                }).ToList();
+
+                tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
+                {
+                    FeedbackId = f.FeedbackId,
+                    UserId = f.UserId,
+                    ContractId = f.ContractId,
+                    FeedbackProviderType = f.FeedbackProviderType,
+                    FeedbackText = f.FeedbackText,
+                    OverallSatisfactionRating = f.OverallSatisfactionRating,
+                    WouldRecommend = f.WouldRecommend,
+                    FeedbackStatus = f.FeedbackStatus,
+                    CreatedDate = f.CreatedDate,
+                    ProviderName = f.User?.FullName ?? "Anonymous"
+                }).ToList();
+
+                tutorDtos.Add(tutorDto);
+            }
+
+            // Sort by average rating descending, then by feedback count if tie
+            return tutorDtos
+                .OrderByDescending(t => t.AverageRating)
+                .ThenByDescending(t => t.FeedbackCount)
+                .ToList();
         }
     }
 }
