@@ -276,7 +276,7 @@ namespace MathBridgeSystem.Presentation.Controllers
                     return BadRequest(new { error = "Invalid token format" });
 
                 var expiration = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
-                var timeUntilExpiry = expiration - DateTime.UtcNow;
+                var timeUntilExpiry = expiration - DateTime.UtcNow.ToLocalTime();
 
                 if (timeUntilExpiry <= TimeSpan.Zero)
                     return Ok(new { message = "Token has expired" });
@@ -299,15 +299,45 @@ namespace MathBridgeSystem.Presentation.Controllers
         }
 
         /// <summary>
-        /// Get the Bearer token from the Authorization header
-        /// </summary>
-        private string? ExtractTokenFromHeader()
-        {
-            var authHeader = Request.Headers["Authorization"].ToString();
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                return null;
+                /// Get the Bearer token from the Authorization header
+                /// </summary>
+                private string? ExtractTokenFromHeader()
+                {
+                    var authHeader = Request.Headers["Authorization"].ToString();
+                    if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        return null;
 
-            return authHeader["Bearer ".Length..].Trim();
+                    return authHeader["Bearer ".Length..].Trim();
+                }
+
+                /// <summary>
+                /// Refresh the JWT token for the currently logged in user
+                /// </summary>
+                /// <response code="200">New token generated successfully</response>
+                /// <response code="401">Invalid or expired token</response>
+                /// <response code="500">System error</response>
+                [HttpPost("refresh-token")]
+                [Authorize]
+                public async Task<IActionResult> RefreshToken()
+                {
+                    try
+                    {
+                        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                        {
+                            Console.WriteLine("RefreshToken: Invalid token - missing or invalid user ID claim");
+                            return Unauthorized(new { error = "Invalid token" });
+                        }
+
+                        var result = await _authService.RefreshTokenAsync(userId);
+                        return Ok(new { token = result.Token, userId = result.UserId, role = result.Role, roleId = result.RoleId });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error in RefreshToken: {ex.ToString()}");
+                        var errorMessage = string.IsNullOrEmpty(ex.Message) ? "Unknown error during token refresh" : ex.Message;
+                        return StatusCode(500, new { error = errorMessage });
+                    }
+                }
+            }
         }
-    }
-}

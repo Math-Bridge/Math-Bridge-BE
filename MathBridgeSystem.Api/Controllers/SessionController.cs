@@ -341,7 +341,7 @@ namespace MathBridgeSystem.Api.Controllers
                         contractId,
                         newMainTutorId = request.NewMainTutorId,
                         newSubstituteTutorId = request.NewSubstituteTutorId,
-                        replacedAt = DateTime.UtcNow
+                        replacedAt = DateTime.UtcNow.ToLocalTime()
                     }
                 });
             }
