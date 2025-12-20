@@ -462,7 +462,7 @@ namespace MathBridgeSystem.Application.Services
             if (!hasRemainingSessions)
             {
                 contract.Status = "completed";
-                contract.UpdatedDate = DateTime.UtcNow;
+                contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
                 await _contractRepository.UpdateAsync(contract);
             }
 
@@ -497,7 +497,7 @@ namespace MathBridgeSystem.Application.Services
                 Notes = data.Notes,
                 OnTrack = data.OnTrack,
                 HaveHomework = data.HaveHomework,
-                CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow.ToLocalTime()),
                 UnitId = data.UnitId,
                 Url = data.Url
             };

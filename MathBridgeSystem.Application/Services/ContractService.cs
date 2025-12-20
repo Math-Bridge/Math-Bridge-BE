@@ -116,7 +116,7 @@ namespace MathBridgeSystem.Application.Services
                 MaxDistanceKm = maxDistanceKm,
                 RescheduleCount = package.MaxReschedule,
                 Status = request.Status.ToLowerInvariant(),
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             // Add flexible schedules
@@ -207,7 +207,7 @@ namespace MathBridgeSystem.Application.Services
             contract.MainTutorId = request.MainTutorId;
             contract.SubstituteTutor1Id = request.SubstituteTutor1Id;
             contract.SubstituteTutor2Id = request.SubstituteTutor2Id;
-            contract.UpdatedDate = DateTime.UtcNow;
+            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
 
             await _contractRepository.UpdateAsync(contract);
 
@@ -253,7 +253,7 @@ namespace MathBridgeSystem.Application.Services
                         OfflineLatitude = contract.OfflineLatitude,
                         OfflineLongitude = contract.OfflineLongitude,
                         Status = "scheduled",
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow.ToLocalTime()
                     });
                 }
 
@@ -286,7 +286,7 @@ namespace MathBridgeSystem.Application.Services
 
             var oldStatus = contract.Status;
             contract.Status = request.Status.ToLowerInvariant();
-            contract.UpdatedDate = DateTime.UtcNow;
+            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepository.UpdateAsync(contract);
 
             if (request.Status.ToLowerInvariant() == "active" && oldStatus != "active")
@@ -317,7 +317,7 @@ namespace MathBridgeSystem.Application.Services
                 foreach (var s in sessions.Where(x => x.Status is "scheduled" or "rescheduled"))
                 {
                     s.Status = "cancelled";
-                    s.UpdatedAt = DateTime.UtcNow;
+                    s.UpdatedAt = DateTime.UtcNow.ToLocalTime();
                     await _sessionRepository.UpdateAsync(s);
                 }
 
@@ -505,7 +505,7 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("All sessions must be completed first.");
 
             contract.Status = "completed";
-            contract.UpdatedDate = DateTime.UtcNow;
+            contract.UpdatedDate = DateTime.UtcNow.ToLocalTime();
             await _contractRepository.UpdateAsync(contract);
 
             return true;
