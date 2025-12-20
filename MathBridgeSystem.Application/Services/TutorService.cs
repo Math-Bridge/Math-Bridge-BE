@@ -296,7 +296,6 @@ namespace MathBridgeSystem.Application.Services
         public async Task<List<TutorDto>> GetAllTutorsSortedByRatingAsync()
         {
             var tutors = await _userRepository.GetAllAsync();
-
             var tutorDtos = new List<TutorDto>();
 
             foreach (var user in tutors)
@@ -331,9 +330,14 @@ namespace MathBridgeSystem.Application.Services
                     District = user.District,
                     Latitude = user.Latitude.HasValue ? (decimal)user.Latitude.Value : null,
                     Longitude = user.Longitude.HasValue ? (decimal)user.Longitude.Value : null,
-                    // Add average rating info
+
+                    // Rating info
                     AverageRating = averageRating,
-                    FeedbackCount = feedbackCount
+                    FeedbackCount = feedbackCount,
+
+                    // === ĐÃ THÊM ĐÚNG CHUẨN: Avatar ===
+                    AvatarUrl = user.AvatarUrl,
+                    AvatarVersion = user.AvatarVersion
                 };
 
                 // Map TutorVerification
@@ -352,7 +356,7 @@ namespace MathBridgeSystem.Application.Services
                     };
                 }
 
-                // Map centers and feedbacks (giữ nguyên như cũ)
+                // Map TutorCenters with Centers
                 tutorDto.TutorCenters = tutorCenters.Select(tc => new TutorCenterDetailDto
                 {
                     TutorCenterId = tc.TutorCenterId,
@@ -373,6 +377,7 @@ namespace MathBridgeSystem.Application.Services
                     } : null
                 }).ToList();
 
+                // Map Final Feedbacks
                 tutorDto.FinalFeedbacks = finalFeedbacks.Select(f => new FinalFeedbackDetailDto
                 {
                     FeedbackId = f.FeedbackId,
