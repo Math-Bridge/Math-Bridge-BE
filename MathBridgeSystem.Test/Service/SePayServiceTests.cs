@@ -201,7 +201,7 @@ namespace MathBridgeSystem.Tests.Services
         public async Task CreateContractDirectPaymentAsync_ContractNotFound_ReturnsFailure()
         {
             _contractRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Contract)null);
-            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), Guid.NewGuid());
+            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), Guid.NewGuid(), 150000);
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Contract not found");
         }
@@ -213,25 +213,24 @@ namespace MathBridgeSystem.Tests.Services
             var contract = new Contract { ParentId = Guid.NewGuid() };
             _contractRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
 
-            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), Guid.NewGuid()); 
+            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), Guid.NewGuid(), 150000); 
 
             result.Success.Should().BeFalse();
             result.Message.Should().Be("User is not authorized for this contract");
         }
 
-        // Test: Ném lỗi khi Package không tìm thấy
+        // Test: Ném lỗi khi Amount không hợp lệ
         [Fact]
-        public async Task CreateContractDirectPaymentAsync_PackageNotFound_ReturnsFailure()
+        public async Task CreateContractDirectPaymentAsync_InvalidAmount_ReturnsFailure()
         {
             var userId = Guid.NewGuid();
             var contract = new Contract { ParentId = userId, PackageId = Guid.NewGuid() };
             _contractRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(contract);
-            _packageRepositoryMock.Setup(r => r.GetByIdAsync(contract.PackageId)).ReturnsAsync((PaymentPackage)null);
 
-            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), userId);
+            var result = await _sePayService.CreateContractDirectPaymentAsync(Guid.NewGuid(), userId, 0);
 
             result.Success.Should().BeFalse();
-            result.Message.Should().Be("Payment package not found");
+            result.Message.Should().Be("Amount must be greater than 0");
         }
 
         // Test: Tạo thanh toán Hợp đồng thành công
@@ -242,21 +241,20 @@ namespace MathBridgeSystem.Tests.Services
             var userId = Guid.NewGuid();
             var contractId = Guid.NewGuid();
             var contract = new Contract { ContractId = contractId, ParentId = userId, PackageId = Guid.NewGuid(), Status = "Pending" };
-            var package = new PaymentPackage { Price = 150000 };
+            decimal amount = 150000;
 
             _contractRepositoryMock.Setup(r => r.GetByIdAsync(contractId)).ReturnsAsync(contract);
-            _packageRepositoryMock.Setup(r => r.GetByIdAsync(contract.PackageId)).ReturnsAsync(package);
 
             // Act
-            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId);
+            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId, amount);
 
             // Assert
             result.Success.Should().BeTrue();
-            result.Amount.Should().Be(150000);
+            result.Amount.Should().Be(amount);
             result.WalletTransactionId.Should().Be(Guid.Empty); 
 
             _contractRepositoryMock.Verify(r => r.UpdateAsync(It.Is<Contract>(c => c.Status == "unpaid")), Times.Once);
-            _sePayRepositoryMock.Verify(r => r.AddAsync(It.Is<SepayTransaction>(s => s.ContractId == contractId && s.TransferAmount == 150000)), Times.Once);
+            _sePayRepositoryMock.Verify(r => r.AddAsync(It.Is<SepayTransaction>(s => s.ContractId == contractId && s.TransferAmount == amount)), Times.Once);
             _walletTransactionRepositoryMock.Verify(r => r.AddAsync(It.IsAny<WalletTransaction>()), Times.Never);
         }
 

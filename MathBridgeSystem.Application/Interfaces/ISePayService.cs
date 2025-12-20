@@ -9,7 +9,14 @@ namespace MathBridgeSystem.Application.Interfaces
     /// </summary>
     public interface ISePayService
     {
-        public Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userId);
+        /// <summary>
+        /// Create direct contract payment request with QR code
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        /// <param name="userId">User ID</param>
+        /// <param name="amount">Payment amount</param>
+        /// <returns>Payment response with QR code information</returns>
+        Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userId, decimal amount);
         /// <summary>
         /// Create a payment request and generate QR code for bank transfer
         /// </summary>
