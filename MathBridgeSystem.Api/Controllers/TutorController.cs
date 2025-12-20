@@ -1,4 +1,4 @@
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -88,6 +88,31 @@ namespace MathBridgeSystem.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error when getting list of tutors without center", details = ex.Message });
+            }
+        }
+        /// <summary>
+        /// Get all tutors sorted by average rating (highest first)
+        /// Useful for "Top Rated Tutors" feature
+        /// </summary>
+        [HttpGet("by-rating")]
+        [AllowAnonymous] // hoặc [Authorize(Roles = "staff,admin")] tùy nhu cầu
+        public async Task<ActionResult<List<TutorDto>>> GetTutorsByRating()
+        {
+            try
+            {
+                var tutors = await _tutorService.GetAllTutorsSortedByRatingAsync();
+                return Ok(new
+                {
+                    total = tutors.Count,
+                    message = tutors.Any()
+                        ? "Top rated tutors retrieved successfully"
+                        : "No tutors found",
+                    data = tutors
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving tutors by rating", details = ex.Message });
             }
         }
     }

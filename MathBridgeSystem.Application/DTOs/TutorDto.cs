@@ -18,6 +18,9 @@ namespace MathBridgeSystem.Application.DTOs
         public string District { get; set; }
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
+        //add new fields for average rating and feedback count
+        public decimal AverageRating { get; set; } = 0m;
+        public int FeedbackCount { get; set; } = 0;
 
         // TutorVerification
         public TutorVerificationDto TutorVerification { get; set; }
