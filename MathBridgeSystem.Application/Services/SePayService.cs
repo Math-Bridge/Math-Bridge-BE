@@ -650,4 +650,51 @@ public class SePayService : ISePayService
         _logger.LogWarning("Webhook signature validation not implemented - accepting all webhooks");
         return true;
     }
+
+
+    /// <inheritdoc />
+    public async Task<SepayTransactionsByUserResponseDto> GetTransactionsByUserContractsAsync(Guid userId)
+    {
+        try
+        {
+            var transactions = await _sePayRepository.GetByParentIdThroughContractsAsync(userId);
+
+            var transactionDtos = transactions.Select(t => new SepayTransactionItemDto
+            {
+                SepayTransactionId = t.SepayTransactionId,
+                ContractId = t.ContractId,
+                Gateway = t.Gateway,
+                TransactionDate = t.TransactionDate,
+                AccountNumber = t.AccountNumber,
+                TransferType = t.TransferType,
+                TransferAmount = t.TransferAmount,
+                Code = t.Code,
+                Content = t.Content,
+                ReferenceNumber = t.ReferenceNumber,
+                Description = t.Description,
+                OrderReference = t.OrderReference,
+                CreatedAt = t.CreatedAt,
+                ChildName = t.Contract?.Child?.FullName,
+                PackageName = t.Contract?.Package?.PackageName,
+                ContractStatus = t.Contract?.Status
+            }).ToList();
+
+            return new SepayTransactionsByUserResponseDto
+            {
+                Success = true,
+                Message = $"Found {transactionDtos.Count} transaction(s)",
+                Transactions = transactionDtos
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting SePay transactions for user {UserId}", userId);
+            return new SepayTransactionsByUserResponseDto
+            {
+                Success = false,
+                Message = "An error occurred while retrieving transactions",
+                Transactions = new List<SepayTransactionItemDto>()
+            };
+        }
+    }
 }
