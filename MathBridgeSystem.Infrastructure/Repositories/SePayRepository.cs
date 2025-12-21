@@ -117,4 +117,18 @@ public class SePayRepository : ISePayRepository
             .OrderByDescending(s => s.CreatedAt)
             .ToListAsync();
     }
+
+
+    public async Task<List<SepayTransaction>> GetByParentIdThroughContractsAsync(Guid parentId)
+    {
+        return await _context.SepayTransactions
+            .Include(s => s.Contract)
+                .ThenInclude(c => c.Child)
+            .Include(s => s.Contract)
+                .ThenInclude(c => c.Package)
+            .Include(s => s.WalletTransaction)
+            .Where(s => s.Contract != null && s.Contract.ParentId == parentId)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+    }
 }

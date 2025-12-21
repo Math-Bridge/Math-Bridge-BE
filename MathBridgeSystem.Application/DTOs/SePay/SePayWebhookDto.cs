@@ -117,3 +117,39 @@ public class SePayWebhookResultDto
     public Guid? WalletTransactionId { get; set; }
     public string? OrderReference { get; set; }
 }
+
+
+/// <summary>
+/// DTO for individual SePay transaction item in list
+/// </summary>
+public class SepayTransactionItemDto
+{
+    public Guid SepayTransactionId { get; set; }
+    public Guid? ContractId { get; set; }
+    public string? Gateway { get; set; }
+    public DateTime TransactionDate { get; set; }
+    public string? AccountNumber { get; set; }
+    public string TransferType { get; set; } = string.Empty;
+    public decimal TransferAmount { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string? ReferenceNumber { get; set; }
+    public string? Description { get; set; }
+    public string? OrderReference { get; set; }
+    public DateTime CreatedAt { get; set; }
+    
+    // Contract info
+    public string? ChildName { get; set; }
+    public string? PackageName { get; set; }
+    public string? ContractStatus { get; set; }
+}
+
+/// <summary>
+/// Response DTO for getting SePay transactions by user (through contracts)
+/// </summary>
+public class SepayTransactionsByUserResponseDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public List<SepayTransactionItemDto> Transactions { get; set; } = new();
+}

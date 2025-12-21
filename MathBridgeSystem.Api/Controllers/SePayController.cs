@@ -268,4 +268,46 @@ public class SePayController : ControllerBase
             version = "1.0.0"
         });
     }
+
+
+    /// <summary>
+    /// Get all SePay transactions for the current user through their contracts
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <returns>Paginated list of SePay transactions</returns>
+    /// <summary>
+    /// Get all SePay transactions for the current user through their contracts
+    /// </summary>
+    /// <returns>List of SePay transactions</returns>
+    [HttpGet("transactions/my-contracts")]
+    [Authorize]
+    public async Task<ActionResult<SepayTransactionsByUserResponseDto>> GetMyContractTransactions()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid user authentication" });
+            }
+
+            var result = await _sePayService.GetTransactionsByUserContractsAsync(userId);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            _logger.LogInformation("Retrieved {Count} SePay transactions for user {UserId}", 
+                result.Transactions.Count, userId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting SePay transactions for user");
+            return StatusCode(500, new { message = "An error occurred while retrieving transactions" });
+        }
+    }
 }

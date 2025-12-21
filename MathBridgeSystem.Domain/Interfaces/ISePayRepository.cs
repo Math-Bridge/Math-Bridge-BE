@@ -86,5 +86,15 @@ namespace MathBridgeSystem.Application.Interfaces
         /// <param name="contractId">Contract ID</param>
         /// <returns>List of SePay transactions for the contract</returns>
         Task<List<SepayTransaction>> GetByContractIdAsync(Guid contractId);
+
+
+        /// <summary>
+        /// Get SePay transactions by parent user ID through contracts
+        /// </summary>
+        /// <param name="parentId">Parent user ID</param>
+        /// <param name="pageNumber">Page number for pagination</param>
+        /// <param name="pageSize">Page size for pagination</param>
+        /// <returns>List of SePay transactions for contracts owned by the parent</returns>
+        Task<List<SepayTransaction>> GetByParentIdThroughContractsAsync(Guid parentId);
     }
 }
