@@ -257,6 +257,42 @@ namespace MathBridgeSystem.Application.Services
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
+            // Send notification and email to parent
+            var parent = await _userRepo.GetByIdAsync(request.ParentId);
+            var childName = request.Contract?.Child?.FullName ?? "your child";
+            var tutorName = tutor.FullName ?? "the assigned tutor";
+
+            // Create notification
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = request.ParentId,
+                ContractId = request.ContractId,
+                BookingId = request.BookingId,
+                Title = "Reschedule Request Approved",
+                Message = $"Your reschedule request for {childName}'s session has been approved. New session: {request.RequestedDate:dd/MM/yyyy} at {request.StartTime:HH:mm} with {tutorName}.",
+                NotificationType = "Reschedule"
+            });
+
+            // Send email
+            if (parent != null && !string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    await _emailService.SendRescheduleApprovedAsync(
+                        parent.Email,
+                        parent.FullName ?? "Parent",
+                        childName,
+                        request.RequestedDate.ToString("dd/MM/yyyy"),
+                        $"{request.StartTime:HH:mm} - {request.EndTime:HH:mm}",
+                        tutorName
+                    );
+                }
+                catch
+                {
+                    // Log but don't fail the request if email fails
+                }
+            }
+
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
