@@ -166,10 +166,6 @@ namespace MathBridgeSystem.Api.Controllers
                 var progress = await _dailyReportService.GetChildUnitProgressAsync(contractId);
                 return Ok(progress);
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
