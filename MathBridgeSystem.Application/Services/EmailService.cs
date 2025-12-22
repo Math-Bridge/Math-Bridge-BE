@@ -239,6 +239,17 @@ namespace MathBridgeSystem.Application.Services
         {
             try
             {
+                // Format amount as VND currency
+                var formattedAmount = amount;
+                if (decimal.TryParse(amount.Replace(",", "").Replace(".", ""), out var amountValue))
+                {
+                    formattedAmount = string.Format(new System.Globalization.CultureInfo("vi-VN"), "{0:N0} VND", amountValue);
+                }
+                else if (!amount.Contains("VND"))
+                {
+                    formattedAmount = $"{amount} VND";
+                }
+
                 var subject = $"Invoice {invoiceNumber} - MathBridge";
                 var htmlBody = $@"
 <!DOCTYPE html>
@@ -252,7 +263,6 @@ namespace MathBridgeSystem.Application.Services
         .header {{ background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 2px solid #007bff; }}
         .invoice-info {{ background-color: #f8f9fa; padding: 20px; margin: 20px 0; }}
         .amount {{ font-size: 24px; color: #007bff; font-weight: bold; }}
-        .button {{ display: inline-block; padding: 12px 24px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; }}
         .footer {{ margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; }}
     </style>
 </head>
@@ -266,11 +276,10 @@ namespace MathBridgeSystem.Application.Services
             <p>Your invoice is ready. Please find the details below:</p>
             <div class='invoice-info'>
                 <p><strong>Invoice Number:</strong> {invoiceNumber}</p>
-                <p><strong>Amount Due:</strong> <span class='amount'>{amount}</span></p>
+                <p><strong>Amount Due:</strong> <span class='amount'>{formattedAmount}</span></p>
                 <p><strong>Due Date:</strong> {dueDate}</p>
             </div>
-            <p>Click the button below to view or download your invoice:</p>
-            <a href='{invoiceUrl}' class='button'>View Invoice</a>
+            <p>Thank you for choosing MathBridge!</p>
         </div>
         <div class='footer'>
             <p>&copy; 2025 MathBridgeSystem. All rights reserved.</p>
