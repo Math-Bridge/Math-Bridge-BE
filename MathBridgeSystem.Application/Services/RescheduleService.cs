@@ -312,14 +312,16 @@ namespace MathBridgeSystem.Application.Services
             if (request.Status != "pending")
                 throw new InvalidOperationException("Only pending requests can be rejected.");
 
+            // Check if this is a tutor replacement request
+            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
+            
             request.Status = "rejected";
             request.StaffId = staffId;
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.Reason = reason;
             await _rescheduleRepo.UpdateAsync(request);
 
-            // Check if this is a tutor replacement request
-            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
+        
 
             // Send notification and email to parent (only for normal reschedule, not for tutor replacement)
             if (!isTutorReplacement)
