@@ -15,5 +15,6 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<bool> HasPendingRequestForBookingAsync(Guid bookingId);
         Task<RescheduleRequest?> GetPendingRequestForBookingAsync(Guid bookingId);
         Task<bool> HasPendingRequestInContractAsync(Guid contractId);
+        Task<bool> HasPendingNormalRescheduleInContractAsync(Guid contractId);
     }
 }
