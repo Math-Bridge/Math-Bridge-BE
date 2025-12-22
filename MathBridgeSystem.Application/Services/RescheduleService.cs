@@ -318,38 +318,44 @@ namespace MathBridgeSystem.Application.Services
             request.Reason = reason;
             await _rescheduleRepo.UpdateAsync(request);
 
-            // Send notification and email to parent
-            var parent = await _userRepo.GetByIdAsync(request.ParentId);
-            var childName = request.Contract?.Child?.FullName ?? "your child";
+            // Check if this is a tutor replacement request
+            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
 
-            // Create notification
-            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            // Send notification and email to parent (only for normal reschedule, not for tutor replacement)
+            if (!isTutorReplacement)
             {
-                UserId = request.ParentId,
-                ContractId = request.ContractId,
-                BookingId = request.BookingId,
-                Title = "Reschedule Request Rejected",
-                Message = $"Your reschedule request for {childName}'s session has been rejected. Reason: {reason}. The original session remains unchanged.",
-                NotificationType = "Reschedule"
-            });
+                var parent = await _userRepo.GetByIdAsync(request.ParentId);
+                var childName = request.Contract?.Child?.FullName ?? "your child";
 
-            // Send email
-            if (parent != null && !string.IsNullOrEmpty(parent.Email))
-            {
-                try
+                // Create notification
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
                 {
-                    await _emailService.SendRescheduleRejectedAsync(
-                        parent.Email,
-                        parent.FullName ?? "Parent",
-                        childName,
-                        request.Booking.SessionDate.ToString("dd/MM/yyyy"),
-                        $"{TimeOnly.FromDateTime(request.Booking.StartTime):HH:mm} - {TimeOnly.FromDateTime(request.Booking.EndTime):HH:mm}",
-                        reason
-                    );
-                }
-                catch
+                    UserId = request.ParentId,
+                    ContractId = request.ContractId,
+                    BookingId = request.BookingId,
+                    Title = "Reschedule Request Rejected",
+                    Message = $"Your reschedule request for {childName}'s session has been rejected. Reason: {reason}. The original session remains unchanged.",
+                    NotificationType = "Reschedule"
+                });
+
+                // Send email
+                if (parent != null && !string.IsNullOrEmpty(parent.Email))
                 {
-                    // Log but don't fail the request if email fails
+                    try
+                    {
+                        await _emailService.SendRescheduleRejectedAsync(
+                            parent.Email,
+                            parent.FullName ?? "Parent",
+                            childName,
+                            request.Booking.SessionDate.ToString("dd/MM/yyyy"),
+                            $"{TimeOnly.FromDateTime(request.Booking.StartTime):HH:mm} - {TimeOnly.FromDateTime(request.Booking.EndTime):HH:mm}",
+                            reason
+                        );
+                    }
+                    catch
+                    {
+                        // Log but don't fail the request if email fails
+                    }
                 }
             }
 
