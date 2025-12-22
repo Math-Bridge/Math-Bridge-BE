@@ -120,7 +120,7 @@ namespace MathBridgeSystem.Infrastructure.Repositories
                 .AnyAsync(r => r.ContractId == contractId &&
                                r.Status == "pending" &&
                                (r.Reason == null ||
-                                !r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase)));
+                                !EF.Functions.Like(r.Reason.ToUpper(), "%[CHANGE TUTOR]%")));
         }
     }
 }
