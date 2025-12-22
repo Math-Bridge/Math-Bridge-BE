@@ -339,7 +339,18 @@ namespace MathBridgeSystem.Application.Services
                 .ToList();
             
             if (!contractDailyReports.Any())
-                throw new KeyNotFoundException($"No daily reports found for contract {contractId}.");
+            {
+                return new ChildUnitProgressDto
+                {
+                    ChildId = child.ChildId,
+                    ChildName = child.FullName,
+                    TotalUnitsLearned = 0,
+                    UniqueLessonsCompleted = 0,
+                    UnitsProgress = new List<UnitProgressDetail>(),
+                    PercentageOfCurriculumCompleted = 0,
+                    Message = $"{child.FullName} has completed 0 out of {allSessions.Count} sessions (0%) for contract {contractId}."
+                };
+            }
 
             // 4. Group by Unit (skip reports where Unit is null)
             var unitGroups = contractDailyReports
