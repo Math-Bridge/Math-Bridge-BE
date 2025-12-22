@@ -1,5 +1,4 @@
-﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -70,11 +69,11 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Cannot reschedule past sessions.");
 
             // 3. ANTI-SPAM: Only one pending request per session
-            var hasPendingInContract = await _rescheduleRepo.HasPendingRequestInContractAsync(oldSession.ContractId);
-            if (hasPendingInContract)
+            var hasPendingNormalReschedule = await _rescheduleRepo.HasPendingNormalRescheduleInContractAsync(oldSession.ContractId);
+            if (hasPendingNormalReschedule)
             {
                 throw new InvalidOperationException(
-                    "This package already has one pending reschedule request. " +
+                    "This package already has one pending reschedule request from parent. " +
                     "Only one reschedule request is allowed at a time per package. " +
                     "Please wait for the current request to be approved or rejected before submitting another.");
             }

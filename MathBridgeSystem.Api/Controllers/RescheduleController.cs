@@ -1,5 +1,4 @@
-﻿﻿// MathBridgeSystem.Api.Controllers/RescheduleController.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

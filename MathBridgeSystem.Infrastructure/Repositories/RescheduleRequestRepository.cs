@@ -114,5 +114,13 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.RescheduleRequests
                 .AnyAsync(r => r.ContractId == contractId && r.Status == "pending");
         }
+        public async Task<bool> HasPendingNormalRescheduleInContractAsync(Guid contractId)
+        {
+            return await _context.RescheduleRequests
+                .AnyAsync(r => r.ContractId == contractId &&
+                               r.Status == "pending" &&
+                               (r.Reason == null ||
+                                !r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase)));
+        }
     }
 }
