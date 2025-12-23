@@ -28,6 +28,8 @@ namespace MathBridgeSystem.Application.Interfaces
         // Financial Statistics
         Task<RevenueStatisticsDto> GetRevenueStatisticsAsync();
         Task<RevenueTrendStatisticsDto> GetRevenueTrendsAsync(DateTime startDate, DateTime endDate);
+
+        Task<WithdrawalStatisticsDto> GetWithdrawalStatisticsAsync();
     }
 }
 

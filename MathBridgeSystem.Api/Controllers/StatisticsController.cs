@@ -306,6 +306,25 @@ namespace MathBridgeSystem.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Get withdrawal statistics
+        /// </summary>
+        /// <returns>Withdrawal statistics including total amount, counts by status, and list of transactions</returns>
+        [HttpGet("financial/withdrawals")]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetWithdrawalStatistics()
+        {
+            try
+            {
+                var stats = await _statisticsService.GetWithdrawalStatisticsAsync();
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving withdrawal statistics." });
+            }
+        }
+
         #endregion
     }
 }

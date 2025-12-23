@@ -129,8 +129,8 @@ namespace MathBridgeSystem.Application.Services
             {
                 TransactionId = Guid.NewGuid(),
                 ParentId = request.ParentId,
-                Amount = -request.Amount,
-                TransactionType = "Withdrawal",
+                Amount = request.Amount,
+                TransactionType = "withdrawal",
                 Description = $"Withdrawal to {request.BankName} - {request.BankAccountNumber}",
                 TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "completed",
