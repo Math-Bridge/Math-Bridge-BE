@@ -1,5 +1,4 @@
-﻿// MathBridgeSystem.Application.Services/RescheduleService.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.DTOs.Notification;
 using MathBridgeSystem.Application.Interfaces;
 using MathBridgeSystem.Domain.Entities;
@@ -70,11 +69,11 @@ namespace MathBridgeSystem.Application.Services
                 throw new InvalidOperationException("Cannot reschedule past sessions.");
 
             // 3. ANTI-SPAM: Only one pending request per session
-            var hasPendingInContract = await _rescheduleRepo.HasPendingRequestInContractAsync(oldSession.ContractId);
-            if (hasPendingInContract)
+            var hasPendingNormalReschedule = await _rescheduleRepo.HasPendingNormalRescheduleInContractAsync(oldSession.ContractId);
+            if (hasPendingNormalReschedule)
             {
                 throw new InvalidOperationException(
-                    "This package already has one pending reschedule request. " +
+                    "This package already has one pending reschedule request from parent. " +
                     "Only one reschedule request is allowed at a time per package. " +
                     "Please wait for the current request to be approved or rejected before submitting another.");
             }
@@ -257,6 +256,45 @@ namespace MathBridgeSystem.Application.Services
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(request);
 
+            // Send notification and email to parent (only for normal reschedule, not for tutor replacement)
+            if (!isTutorReplacement)
+            {
+                var parent = await _userRepo.GetByIdAsync(request.ParentId);
+                var childName = request.Contract?.Child?.FullName ?? "your child";
+                var tutorName = tutor.FullName ?? "the assigned tutor";
+
+                // Create notification
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = request.ParentId,
+                    ContractId = request.ContractId,
+                    BookingId = request.BookingId,
+                    Title = "Reschedule Request Approved",
+                    Message = $"Your reschedule request for {childName}'s session has been approved. New session: {request.RequestedDate:dd/MM/yyyy} at {request.StartTime:HH:mm} with {tutorName}.",
+                    NotificationType = "Reschedule"
+                });
+
+                // Send email
+                if (parent != null && !string.IsNullOrEmpty(parent.Email))
+                {
+                    try
+                    {
+                        await _emailService.SendRescheduleApprovedAsync(
+                            parent.Email,
+                            parent.FullName ?? "Parent",
+                            childName,
+                            request.RequestedDate.ToString("dd/MM/yyyy"),
+                            $"{request.StartTime:HH:mm} - {request.EndTime:HH:mm}",
+                            tutorName
+                        );
+                    }
+                    catch
+                    {
+                        // Log but don't fail the request if email fails
+                    }
+                }
+            }
+
             return new RescheduleResponseDto
             {
                 RequestId = request.RequestId,
@@ -274,44 +312,52 @@ namespace MathBridgeSystem.Application.Services
             if (request.Status != "pending")
                 throw new InvalidOperationException("Only pending requests can be rejected.");
 
+            // Check if this is a tutor replacement request
+            bool isTutorReplacement = request.Reason?.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) == true;
+            
             request.Status = "rejected";
             request.StaffId = staffId;
             request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.Reason = reason;
             await _rescheduleRepo.UpdateAsync(request);
 
-            // Send notification and email to parent
-            var parent = await _userRepo.GetByIdAsync(request.ParentId);
-            var childName = request.Contract?.Child?.FullName ?? "your child";
+        
 
-            // Create notification
-            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            // Send notification and email to parent (only for normal reschedule, not for tutor replacement)
+            if (!isTutorReplacement)
             {
-                UserId = request.ParentId,
-                ContractId = request.ContractId,
-                BookingId = request.BookingId,
-                Title = "Reschedule Request Rejected",
-                Message = $"Your reschedule request for {childName}'s session has been rejected. Reason: {reason}. The original session remains unchanged.",
-                NotificationType = "Reschedule"
-            });
+                var parent = await _userRepo.GetByIdAsync(request.ParentId);
+                var childName = request.Contract?.Child?.FullName ?? "your child";
 
-            // Send email
-            if (parent != null && !string.IsNullOrEmpty(parent.Email))
-            {
-                try
+                // Create notification
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
                 {
-                    await _emailService.SendRescheduleRejectedAsync(
-                        parent.Email,
-                        parent.FullName ?? "Parent",
-                        childName,
-                        request.Booking.SessionDate.ToString("dd/MM/yyyy"),
-                        $"{TimeOnly.FromDateTime(request.Booking.StartTime):HH:mm} - {TimeOnly.FromDateTime(request.Booking.EndTime):HH:mm}",
-                        reason
-                    );
-                }
-                catch
+                    UserId = request.ParentId,
+                    ContractId = request.ContractId,
+                    BookingId = request.BookingId,
+                    Title = "Reschedule Request Rejected",
+                    Message = $"Your reschedule request for {childName}'s session has been rejected. Reason: {reason}. The original session remains unchanged.",
+                    NotificationType = "Reschedule"
+                });
+
+                // Send email
+                if (parent != null && !string.IsNullOrEmpty(parent.Email))
                 {
-                    // Log but don't fail the request if email fails
+                    try
+                    {
+                        await _emailService.SendRescheduleRejectedAsync(
+                            parent.Email,
+                            parent.FullName ?? "Parent",
+                            childName,
+                            request.Booking.SessionDate.ToString("dd/MM/yyyy"),
+                            $"{TimeOnly.FromDateTime(request.Booking.StartTime):HH:mm} - {TimeOnly.FromDateTime(request.Booking.EndTime):HH:mm}",
+                            reason
+                        );
+                    }
+                    catch
+                    {
+                        // Log but don't fail the request if email fails
+                    }
                 }
             }
 
@@ -542,23 +588,45 @@ namespace MathBridgeSystem.Application.Services
         }
         public async Task<object> CreateTutorReplacementRequestAsync(Guid bookingId, Guid tutorId, string reason)
         {
+            // Retrieve the session (lesson) by its booking ID
             var session = await _sessionRepo.GetByIdAsync(bookingId)
                 ?? throw new KeyNotFoundException("No lesson found.");
 
+            // Only the tutor assigned to this session can submit a replacement request
             if (session.TutorId != tutorId)
                 throw new UnauthorizedAccessException("You can only submit requests for your own lessons.");
 
+            // Replacement requests are only allowed for future sessions (starting tomorrow or later)
             if (session.SessionDate <= DateOnly.FromDateTime(DateTime.Today))
                 throw new InvalidOperationException("Replacements are only permitted for appointments starting tomorrow.");
 
+            // The session must still be in "scheduled" status
             if (session.Status != "scheduled")
                 throw new InvalidOperationException("The lesson has been canceled or completed.");
 
-            // Không gửi trùng
-            var hasPending = await _rescheduleRepo.HasPendingRequestForBookingAsync(bookingId);
-            if (hasPending)
-                throw new InvalidOperationException("There are pending requests for this lesson.");
+            // ANTI-SPAM: Check if there is already a [CHANGE TUTOR] request for this session
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+            var existingRequest = allRequests
+                .Where(r => r.BookingId == bookingId &&
+                            r.Reason != null &&
+                            r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
 
+            // Block submission if there is an existing request that is pending or approved
+            // Allow resubmission only if the previous request was rejected
+            if (existingRequest != null &&
+                (existingRequest.Status == "pending" || existingRequest.Status == "approved"))
+            {
+                string statusDescription = existingRequest.Status == "pending"
+                    ? "is pending staff review"
+                    : "has already been approved";
+
+                throw new InvalidOperationException(
+                    $"This lesson already has a tutor replacement request that {statusDescription}. " +
+                    $"Please wait for staff to process it.");
+            }
+
+            // Create the new replacement request
             var rescheduleRequest = new RescheduleRequest
             {
                 RequestId = Guid.NewGuid(),
@@ -568,20 +636,23 @@ namespace MathBridgeSystem.Application.Services
                 RequestedDate = session.SessionDate,
                 StartTime = TimeOnly.FromDateTime(session.StartTime),
                 EndTime = TimeOnly.FromDateTime(session.EndTime),
-                Reason = $"[CHANGE TUTOR] {reason}",
+                Reason = $"[CHANGE TUTOR] {reason ?? "Tutor is unavailable for this session"}",
                 Status = "pending",
                 RequestedTutorId = session.TutorId,
                 CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
+            // Save the request to database
             await _rescheduleRepo.AddAsync(rescheduleRequest);
+
+            // Return success response
             return new
             {
                 requestId = rescheduleRequest.RequestId,
                 bookingId,
                 sessionDate = session.SessionDate,
-                originalTutor = session.Tutor.FullName,
-                message = "The request to replace the tutor has been successfully submitted. Please wait for staff to process it."
+                originalTutor = session.Tutor?.FullName ?? "Unknown Tutor",
+                message = "Tutor replacement request submitted successfully. Staff will process it as soon as possible."
             };
         }
         public async Task<RescheduleResponseDto> CreateMakeUpSessionRequestAsync(Guid parentId, CreateRescheduleRequestDto dto)
@@ -670,6 +741,25 @@ namespace MathBridgeSystem.Application.Services
                 Status = "pending",
                 Message = "Make-up session request submitted successfully. Staff will arrange the new session soon. (This does not count against your reschedule attempts.)"
             };
+        }
+        // Lấy tất cả yêu cầu thay tutor liên quan đến tutorId (là tutor gốc hoặc tutor được yêu cầu thay thế)
+ 
+        public async Task<IEnumerable<RescheduleRequestDto>> GetByTutorIdAsync(Guid tutorId)
+        {
+            var allRequests = await _rescheduleRepo.GetAllAsync();
+
+            var changeTutorRequests = allRequests
+                .Where(r =>
+                    r.Reason != null &&
+                    r.Reason.Contains("[CHANGE TUTOR]", StringComparison.OrdinalIgnoreCase) && 
+                    (
+                        // Tutor là tutor gốc (gửi request báo bận)
+                        r.Booking.TutorId == tutorId //||
+                        // Hoặc tutor được yêu cầu thay thế
+                       // r.RequestedTutorId == tutorId
+                    ))
+                .OrderByDescending(r => r.CreatedDate);
+            return changeTutorRequests.Select(MapToDto);
         }
     }
 }

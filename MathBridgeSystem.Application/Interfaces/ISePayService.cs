@@ -9,7 +9,14 @@ namespace MathBridgeSystem.Application.Interfaces
     /// </summary>
     public interface ISePayService
     {
-        public Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userId);
+        /// <summary>
+        /// Create direct contract payment request with QR code
+        /// </summary>
+        /// <param name="contractId">Contract ID</param>
+        /// <param name="userId">User ID</param>
+        /// <param name="amount">Payment amount</param>
+        /// <returns>Payment response with QR code information</returns>
+        Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userId, decimal amount);
         /// <summary>
         /// Create a payment request and generate QR code for bank transfer
         /// </summary>
@@ -61,5 +68,15 @@ namespace MathBridgeSystem.Application.Interfaces
         /// <param name="signature">Webhook signature</param>
         /// <returns>True if signature is valid</returns>
         bool ValidateWebhookSignature(string payload, string? signature);
+
+
+        /// <summary>
+        /// Get SePay transactions for a user by their contracts (where user is the parent)
+        /// </summary>
+        /// <param name="userId">User ID (Parent)</param>
+        /// <param name="pageNumber">Page number for pagination</param>
+        /// <param name="pageSize">Page size for pagination</param>
+        /// <returns>Paginated list of SePay transactions with contract info</returns>
+        Task<SepayTransactionsByUserResponseDto> GetTransactionsByUserContractsAsync(Guid userId);
     }
 }

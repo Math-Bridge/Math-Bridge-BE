@@ -1,5 +1,4 @@
-﻿﻿// MathBridgeSystem.Api.Controllers/RescheduleController.cs
-using MathBridgeSystem.Application.DTOs;
+﻿using MathBridgeSystem.Application.DTOs;
 using MathBridgeSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -226,6 +225,35 @@ namespace MathBridgeSystem.Api.Controllers
             {
                 var result = await _rescheduleService.CreateMakeUpSessionRequestAsync(parentId, dto);
                 return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+        /// <summary>
+        /// Get all [CHANGE TUTOR] reschedule requests related to a tutor
+        /// - Cases where tutor reported unavailable (original tutor)
+        /// - Cases where tutor was selected as replacement (RequestedTutorId)
+        /// Only CHANGE TUTOR requests are returned
+        /// Tutor can only see their own, staff/admin can see anyone's
+        /// </summary>
+        [HttpGet("by-tutor/{tutorId}")]
+        [Authorize(Roles = "tutor,staff,admin")]
+        public async Task<IActionResult> GetByTutorId(Guid tutorId)
+        {
+            var currentUserId = GetUserId();
+            var role = User.IsInRole("staff") || User.IsInRole("admin") ? "staff" : "tutor";
+
+            if (role == "tutor" && currentUserId != tutorId)
+            {
+                return Forbid("You can only view your own tutor replacement requests.");
+            }
+
+            try
+            {
+                var requests = await _rescheduleService.GetByTutorIdAsync(tutorId);
+                return Ok(requests);
             }
             catch (Exception ex)
             {

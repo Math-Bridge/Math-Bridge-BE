@@ -77,11 +77,11 @@ public class SePayController : ControllerBase
     /// Create direct contract payment request with QR code
     /// </summary>
     /// <param name="contractId">Contract ID</param>
-    /// <param name="packageId">Payment package ID</param>
+    /// <param name="amount">Payment amount</param>
     /// <returns>Payment response with QR code information</returns>
     [HttpPost("create-contract-payment")]
     [Authorize]
-    public async Task<ActionResult<SePayPaymentResponseDto>> CreateContractPayment([FromQuery] Guid contractId)
+    public async Task<ActionResult<SePayPaymentResponseDto>> CreateContractPayment([FromQuery] Guid contractId, [FromQuery] decimal amount)
     {
         try
         {
@@ -93,26 +93,31 @@ public class SePayController : ControllerBase
             }
 
             // Validate request parameters
-            if (contractId == Guid.Empty )
+            if (contractId == Guid.Empty)
             {
                 return BadRequest(new { message = "Contract ID is required" });
             }
 
-            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId);
+            if (amount <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+
+            var result = await _sePayService.CreateContractDirectPaymentAsync(contractId, userId, amount);
 
             if (!result.Success)
             {
                 return BadRequest(new { message = result.Message });
             }
 
-            _logger.LogInformation("Direct contract payment created successfully for contract {ContractId}, user {UserId}", 
-                contractId, userId);
+            _logger.LogInformation("Direct contract payment created successfully for contract {ContractId}, user {UserId}, amount {Amount}", 
+                contractId, userId, amount);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}", contractId);
+            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}, amount {Amount}", contractId, amount);
             return StatusCode(500, new { message = "An error occurred while creating contract payment request" });
         }
     }
@@ -262,5 +267,47 @@ public class SePayController : ControllerBase
             timestamp = DateTime.UtcNow.ToLocalTime(),
             version = "1.0.0"
         });
+    }
+
+
+    /// <summary>
+    /// Get all SePay transactions for the current user through their contracts
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <returns>Paginated list of SePay transactions</returns>
+    /// <summary>
+    /// Get all SePay transactions for the current user through their contracts
+    /// </summary>
+    /// <returns>List of SePay transactions</returns>
+    [HttpGet("transactions/my-contracts")]
+    [Authorize]
+    public async Task<ActionResult<SepayTransactionsByUserResponseDto>> GetMyContractTransactions()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid user authentication" });
+            }
+
+            var result = await _sePayService.GetTransactionsByUserContractsAsync(userId);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            _logger.LogInformation("Retrieved {Count} SePay transactions for user {UserId}", 
+                result.Transactions.Count, userId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting SePay transactions for user");
+            return StatusCode(500, new { message = "An error occurred while retrieving transactions" });
+        }
     }
 }

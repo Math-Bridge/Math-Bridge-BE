@@ -390,6 +390,36 @@ namespace MathBridgeSystem.Application.Services
             }
 
             return "Verification link has been resent to your email. Please check and click to complete registration.";
-        }
-    }
-}
+                    }
+
+                    public async Task<LoginResponse> RefreshTokenAsync(Guid userId)
+                    {
+                        var user = await _userRepository.GetByIdAsync(userId);
+                        if (user == null)
+                        {
+                            Console.WriteLine($"RefreshTokenAsync: User not found for userId: {userId}");
+                            throw new Exception("User not found");
+                        }
+
+                        if (user.Status == "banned")
+                        {
+                            Console.WriteLine($"RefreshTokenAsync: Account banned for userId: {userId}");
+                            throw new Exception("Account is banned");
+                        }
+
+                        user.LastActive = DateTime.UtcNow.ToLocalTime();
+                        await _userRepository.UpdateAsync(user);
+
+                        var token = _tokenService.GenerateJwtToken(user.UserId, user.Role.RoleName);
+                        Console.WriteLine($"RefreshTokenAsync: New JWT token generated for user: {user.UserId}");
+
+                        return new LoginResponse
+                        {
+                            Token = token,
+                            UserId = user.UserId,
+                            Role = user.Role.RoleName,
+                            RoleId = user.Role.RoleId
+                        };
+                    }
+                }
+            }

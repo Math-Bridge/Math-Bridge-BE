@@ -376,27 +376,40 @@ public class SePayService : ISePayService
         }
     }
 
-    public async Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userid)
+    public async Task<SePayPaymentResponseDto> CreateContractDirectPaymentAsync(Guid contractId, Guid userid, decimal amount)
     {
         try
         {
-            
+            // Validate amount
+            if (amount <= 0)
+            {
+                _logger.LogWarning("Invalid amount {Amount} for contract payment {ContractId}", amount, contractId);
+                return new SePayPaymentResponseDto
+                {
+                    Success = false,
+                    Message = "Amount must be greater than 0"
+                };
+            }
 
             // Validate contract exists and user is owner
             var contract = await _contractRepository.GetByIdAsync(contractId);
             
             if (contract == null)
             {
+                _logger.LogWarning("Contract not found: {ContractId}", contractId);
                 return new SePayPaymentResponseDto
                 {
                     Success = false,
                     Message = "Contract not found"
                 };
             }
-            _logger.LogInformation("Creating direct contract payment for contract {ContractId}, user {UserId}, package {PackageId}", 
-                contractId, contract.ParentId, contract.PackageId);
+
+            _logger.LogInformation("Creating direct contract payment for contract {ContractId}, user {UserId}, amount {Amount}", 
+                contractId, contract.ParentId, amount);
+
             if (contract.ParentId != userid)
             {
+                _logger.LogWarning("User {UserId} is not authorized for contract {ContractId}", userid, contractId);
                 return new SePayPaymentResponseDto
                 {
                     Success = false,
@@ -404,19 +417,9 @@ public class SePayService : ISePayService
                 };
             }
 
-            // Get payment package and validate price
-            var package = await _packageRepository.GetByIdAsync(contract.PackageId);
-            if (package == null)
-            {
-                return new SePayPaymentResponseDto
-                {
-                    Success = false,
-                    Message = "Payment package not found"
-                };
-            }
-
             contract.Status = "unpaid";
             await _contractRepository.UpdateAsync(contract);
+
             // Generate order reference
             var orderReference = $"{_orderReferencePrefix}{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
 
@@ -426,7 +429,7 @@ public class SePayService : ISePayService
                 SepayTransactionId = Guid.NewGuid(),
                 ContractId = contractId,
                 OrderReference = orderReference,
-                TransferAmount = package.Price,
+                TransferAmount = amount,
                 TransferType = "in",
                 Code = orderReference,
                 Content = orderReference + "-Contract Payment",
@@ -437,10 +440,10 @@ public class SePayService : ISePayService
             await _sePayRepository.AddAsync(sePayTransaction);
 
             // Generate QR code for payment
-            var qrCodeUrl = GenerateQrCodeUrl(package.Price, orderReference);
+            var qrCodeUrl = GenerateQrCodeUrl(amount, orderReference);
 
-            _logger.LogInformation("Created direct contract payment transaction {SepayTransactionId} for contract {ContractId}", 
-                sePayTransaction.SepayTransactionId, contractId);
+            _logger.LogInformation("Created direct contract payment transaction {SepayTransactionId} for contract {ContractId}, amount {Amount}", 
+                sePayTransaction.SepayTransactionId, contractId, amount);
 
             return new SePayPaymentResponseDto
             {
@@ -448,14 +451,14 @@ public class SePayService : ISePayService
                 Message = "Contract payment request created successfully",
                 QrCodeUrl = qrCodeUrl,
                 OrderReference = orderReference,
-                Amount = package.Price,
+                Amount = amount,
                 BankInfo = $"{_accountName} - {_accountNumber} - {_bankCode}",
                 TransferContent = orderReference
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}", contractId);
+            _logger.LogError(ex, "Error creating direct contract payment for contract {ContractId}, amount {Amount}", contractId, amount);
             return new SePayPaymentResponseDto
             {
                 Success = false,
@@ -646,5 +649,52 @@ public class SePayService : ISePayService
         // For now, return true (implement proper validation if SePay provides signature mechanism)
         _logger.LogWarning("Webhook signature validation not implemented - accepting all webhooks");
         return true;
+    }
+
+
+    /// <inheritdoc />
+    public async Task<SepayTransactionsByUserResponseDto> GetTransactionsByUserContractsAsync(Guid userId)
+    {
+        try
+        {
+            var transactions = await _sePayRepository.GetByParentIdThroughContractsAsync(userId);
+
+            var transactionDtos = transactions.Select(t => new SepayTransactionItemDto
+            {
+                SepayTransactionId = t.SepayTransactionId,
+                ContractId = t.ContractId,
+                Gateway = t.Gateway,
+                TransactionDate = t.TransactionDate,
+                AccountNumber = t.AccountNumber,
+                TransferType = t.TransferType,
+                TransferAmount = t.TransferAmount,
+                Code = t.Code,
+                Content = t.Content,
+                ReferenceNumber = t.ReferenceNumber,
+                Description = t.Description,
+                OrderReference = t.OrderReference,
+                CreatedAt = t.CreatedAt,
+                ChildName = t.Contract?.Child?.FullName,
+                PackageName = t.Contract?.Package?.PackageName,
+                ContractStatus = t.Contract?.Status
+            }).ToList();
+
+            return new SepayTransactionsByUserResponseDto
+            {
+                Success = true,
+                Message = $"Found {transactionDtos.Count} transaction(s)",
+                Transactions = transactionDtos
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting SePay transactions for user {UserId}", userId);
+            return new SepayTransactionsByUserResponseDto
+            {
+                Success = false,
+                Message = "An error occurred while retrieving transactions",
+                Transactions = new List<SepayTransactionItemDto>()
+            };
+        }
     }
 }

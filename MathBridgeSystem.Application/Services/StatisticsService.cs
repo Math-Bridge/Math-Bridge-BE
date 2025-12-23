@@ -292,7 +292,7 @@ namespace MathBridgeSystem.Application.Services
             foreach (var tutor in tutors)
             {
                 var sessions = await _sessionRepository.GetByTutorIdAsync(tutor.UserId);
-                var completedSessions = sessions.Count(s => s.Status == "Completed");
+                var completedSessions = sessions.Count(s => s.Status == "completed");
 
                 tutorSessionCounts.Add(new TutorSessionCountDto
                 {

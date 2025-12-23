@@ -68,7 +68,7 @@ namespace MathBridgeSystem.Application.Services
                 BankAccountNumber = requestDto.BankAccountNumber,
                 BankHolderName = requestDto.BankHolderName,
                 Status = "Pending",
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToLocalTime()
             };
 
             _context.WithdrawalRequests.Add(request);
@@ -132,14 +132,14 @@ namespace MathBridgeSystem.Application.Services
                 Amount = -request.Amount,
                 TransactionType = "Withdrawal",
                 Description = $"Withdrawal to {request.BankName} - {request.BankAccountNumber}",
-                TransactionDate = DateTime.UtcNow,
+                TransactionDate = DateTime.UtcNow.ToLocalTime(),
                 Status = "completed",
                 PaymentMethod = "Bank Transfer"
             };
 
             request.Parent.WalletBalance -= request.Amount;
             request.Status = "Processed";
-            request.ProcessedDate = DateTime.UtcNow;
+            request.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             request.StaffId = staffId;
 
             _context.WalletTransactions.Add(transaction);
@@ -157,7 +157,7 @@ namespace MathBridgeSystem.Application.Services
                     request.Amount,
                     request.BankName,
                     request.BankAccountNumber,
-                    request.ProcessedDate ?? DateTime.UtcNow);
+                    request.ProcessedDate ?? DateTime.UtcNow.ToLocalTime());
             }
             catch
             {
