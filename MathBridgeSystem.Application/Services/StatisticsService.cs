@@ -409,6 +409,35 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<WithdrawalStatisticsDto> GetWithdrawalStatisticsAsync()
+        {
+            var allTransactions = await _walletTransactionRepository.GetAllAsync();
+            var withdrawalTransactions = allTransactions
+                .Where(t => t.TransactionType.Equals("withdrawal", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var transactionDtos = withdrawalTransactions.Select(t => new WithdrawalTransactionDto
+            {
+                TransactionId = t.TransactionId,
+                ParentId = t.ParentId,
+                ParentName = t.Parent?.FullName,
+                Amount = t.Amount,
+                Status = t.Status,
+                TransactionDate = t.TransactionDate,
+                Description = t.Description
+            }).ToList();
+
+            return new WithdrawalStatisticsDto
+            {
+                TotalWithdrawalAmount = withdrawalTransactions.Sum(t => t.Amount),
+                TotalWithdrawalCount = withdrawalTransactions.Count,
+                PendingWithdrawalCount = withdrawalTransactions.Count(t => t.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase)),
+                CompletedWithdrawalCount = withdrawalTransactions.Count(t => t.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase)),
+                RejectedWithdrawalCount = withdrawalTransactions.Count(t => t.Status.Equals("Rejected", StringComparison.OrdinalIgnoreCase)),
+                Transactions = transactionDtos
+            };
+        }
+
         #endregion
     }
 }
