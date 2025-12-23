@@ -580,7 +580,7 @@ public class SePayService : ISePayService
                         parent.Email,
                         parent.FullName,
                         sePayTransaction.OrderReference ?? "",
-                        sePayTransaction.TransferAmount.ToString("C"),
+                        sePayTransaction.TransferAmount.ToString("C", CultureInfo.GetCultureInfo("vi-VN")),
                         webhookData.TransactionDate.ToString("yyyy-MM-dd"),
                         $"https://mathbridge.com/contracts/{contractId}"
                     );
