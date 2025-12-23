@@ -247,7 +247,7 @@ namespace MathBridgeSystem.Application.Services
                 }
                 else if (!amount.Contains("VND"))
                 {
-                    formattedAmount = "{amount} VND";
+                    formattedAmount = $"{amount} VND";
                 }
 
                 var subject = $"Invoice {invoiceNumber} - MathBridge";
