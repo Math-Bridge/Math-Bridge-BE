@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IContractRepository> _contractRepositoryMock;
         private readonly Mock<IPackageRepository> _packageRepositoryMock;
         private readonly Mock<ISePayRepository> _sePayRepositoryMock;
+        private readonly Mock<IWithdrawalRequestRepository> _withdrawalRequestRepositoryMock;
         private readonly StatisticsService _service;
 
         public StatisticsServiceTests()
@@ -29,6 +30,7 @@ namespace MathBridgeSystem.Tests.Services
             _contractRepositoryMock = new Mock<IContractRepository>();
             _packageRepositoryMock = new Mock<IPackageRepository>();
             _sePayRepositoryMock = new Mock<ISePayRepository>();
+            _withdrawalRequestRepositoryMock = new Mock<IWithdrawalRequestRepository>();
 
             _service = new StatisticsService(
                 _userRepositoryMock.Object,
@@ -37,7 +39,8 @@ namespace MathBridgeSystem.Tests.Services
                 _walletTransactionRepositoryMock.Object,
                 _contractRepositoryMock.Object,
                 _packageRepositoryMock.Object,
-                _sePayRepositoryMock.Object
+                _sePayRepositoryMock.Object,
+                _withdrawalRequestRepositoryMock.Object
             );
         }
 
@@ -141,7 +144,8 @@ namespace MathBridgeSystem.Tests.Services
                 _walletTransactionRepositoryMock.Object,
                 _contractRepositoryMock.Object,
                 _packageRepositoryMock.Object,
-                _sePayRepositoryMock.Object
+                _sePayRepositoryMock.Object,
+                _withdrawalRequestRepositoryMock.Object
             );
 
             action.Should().Throw<ArgumentNullException>();

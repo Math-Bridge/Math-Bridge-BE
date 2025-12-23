@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Tests.Services
         private readonly Mock<IContractRepository> _contractRepo;
         private readonly Mock<IPackageRepository> _packageRepo;
         private readonly Mock<ISePayRepository> _sepayRepo;
+        private readonly Mock<IWithdrawalRequestRepository> _withdrawalRepo;
         private readonly StatisticsService _service;
 
         public StatisticsServiceComprehensiveTests()
@@ -29,7 +30,8 @@ namespace MathBridgeSystem.Tests.Services
             _contractRepo = new Mock<IContractRepository>();
             _packageRepo = new Mock<IPackageRepository>();
             _sepayRepo = new Mock<ISePayRepository>();
-            _service = new StatisticsService(_userRepo.Object, _sessionRepo.Object, _feedbackRepo.Object, _walletRepo.Object, _contractRepo.Object, _packageRepo.Object, _sepayRepo.Object);
+            _withdrawalRepo = new Mock<IWithdrawalRequestRepository>();
+            _service = new StatisticsService(_userRepo.Object, _sessionRepo.Object, _feedbackRepo.Object, _walletRepo.Object, _contractRepo.Object, _packageRepo.Object, _sepayRepo.Object, _withdrawalRepo.Object);
         }
 
         [Fact]
