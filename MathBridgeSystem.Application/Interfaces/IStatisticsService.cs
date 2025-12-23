@@ -21,6 +21,8 @@ namespace MathBridgeSystem.Application.Interfaces
         // Tutor Statistics
         Task<TutorStatisticsDto> GetTutorStatisticsAsync();
         Task<TopRatedTutorsListDto> GetTopRatedTutorsAsync(int limit = 10);
+
+        Task<WorstRatedTutorsListDto> GetWorstRatedTutorsAsync(int limit = 10);
         Task<MostActiveTutorsListDto> GetMostActiveTutorsAsync(int limit = 10);
 
         // Financial Statistics

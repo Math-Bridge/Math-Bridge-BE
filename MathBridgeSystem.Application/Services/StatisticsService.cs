@@ -284,6 +284,38 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<WorstRatedTutorsListDto> GetWorstRatedTutorsAsync(int limit = 10)
+        {
+            var tutors = await _userRepository.GetTutorsAsync();
+            var allFinalFeedbacks = await _finalFeedbackRepository.GetAllAsync();
+
+            var tutorRatings = tutors
+                .Select(t => new
+                {
+                    Tutor = t,
+                    Feedbacks = allFinalFeedbacks.Where(f => f.UserId == t.UserId).ToList()
+                })
+                .Where(tr => tr.Feedbacks.Count > 0)
+                .Select(tr => new WorstRatedTutorDto
+                {
+                    TutorId = tr.Tutor.UserId,
+                    TutorName = tr.Tutor.FullName,
+                    Email = tr.Tutor.Email,
+                    AverageRating = Math.Round((decimal)tr.Feedbacks.Average(f => f.OverallSatisfactionRating), 2),
+                    FeedbackCount = tr.Feedbacks.Count
+                })
+                .OrderBy(t => t.AverageRating)
+                .ThenByDescending(t => t.FeedbackCount)
+                .Take(limit)
+                .ToList();
+
+            return new WorstRatedTutorsListDto
+            {
+                Tutors = tutorRatings,
+                TotalTutors = tutorRatings.Count
+            };
+        }
+
         public async Task<MostActiveTutorsListDto> GetMostActiveTutorsAsync(int limit = 10)
         {
             var tutors = await _userRepository.GetTutorsAsync();

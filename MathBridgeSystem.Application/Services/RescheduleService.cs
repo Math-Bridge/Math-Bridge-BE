@@ -578,6 +578,39 @@ namespace MathBridgeSystem.Application.Services
             rescheduleRequest.ProcessedDate = DateTime.UtcNow.ToLocalTime();
             await _rescheduleRepo.UpdateAsync(rescheduleRequest);
 
+            // Send notification and email
+            var parent = await _userRepo.GetByIdAsync(contract.ParentId);
+            var childName = contract.Child?.FullName ?? "your child";
+
+            // Create notification
+            await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+            {
+                UserId = contract.ParentId,
+                ContractId = contract.ContractId,
+                BookingId = sessionId,
+                Title = "Session Cancelled & Refunded",
+                Message = $"The session on {session.SessionDate:dd/MM/yyyy} has been cancelled. A refund of {refundAmount:N0} VND has been added to your wallet.",
+                NotificationType = "Refund"
+            });
+
+            // Send email
+            if (parent != null && !string.IsNullOrEmpty(parent.Email))
+            {
+                try
+                {
+                    await _emailService.SendRefundConfirmationAsync(
+                        parent.Email,
+                        childName,
+                        $"{refundAmount:N0} VND",
+                        DateTime.UtcNow.ToLocalTime().ToString("dd/MM/yyyy")
+                    );
+                }
+                catch
+                {
+                    // Log but don't fail the request if email fails
+                }
+            }
+
             return new RescheduleResponseDto
             {
                 RequestId = sessionId,
