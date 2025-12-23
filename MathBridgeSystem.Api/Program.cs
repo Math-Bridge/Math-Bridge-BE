@@ -89,6 +89,7 @@
     builder.Services.AddScoped<IUnitRepository, UnitRepository>();
     builder.Services.AddScoped<IReportRepository, ReportRepository>();
     builder.Services.AddScoped<IMathConceptRepository, MathConceptRepository>();
+    builder.Services.AddScoped<IWithdrawalRequestRepository, WithdrawalRequestRepository>();
 
 
 
