@@ -10,5 +10,7 @@ namespace MathBridgeSystem.Domain.Interfaces
         Task<WalletTransaction> UpdateAsync(WalletTransaction transaction);
         Task<WalletTransaction?> GetByIdAsync(Guid transactionId);
         Task<bool> ExistsAsync(Guid transactionId);
+
+        Task<List<WalletTransaction>> GetAllAsync();
     }
 }

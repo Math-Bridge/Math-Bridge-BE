@@ -204,8 +204,8 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "admin,staff,parent")]
         public async Task<IActionResult> GetTopRatedTutors([FromQuery] int limit = 10)
         {
-            if (limit < 1 || limit > 100)
-                return BadRequest(new { error = "Limit must be between 1 and 100." });
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { error = "Limit must be between 1 and 1000." });
 
             try
             {
@@ -227,8 +227,8 @@ namespace MathBridgeSystem.Api.Controllers
         [Authorize(Roles = "admin,staff")]
         public async Task<IActionResult> GetMostActiveTutors([FromQuery] int limit = 10)
         {
-            if (limit < 1 || limit > 100)
-                return BadRequest(new { error = "Limit must be between 1 and 100." });
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { error = "Limit must be between 1 and 1000." });
 
             try
             {
@@ -240,7 +240,23 @@ namespace MathBridgeSystem.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while retrieving most active tutors." });
             }
         }
+        [HttpGet("tutors/worst-rated")]
+        [Authorize(Roles = "admin,staff,parent")]
+        public async Task<IActionResult> GetWorstRatedTutors([FromQuery] int limit = 10)
+        {
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { error = "Limit must be between 1 and 1000." });
 
+            try
+            {
+                var tutors = await _statisticsService.GetWorstRatedTutorsAsync(limit);
+                return Ok(tutors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving worst-rated tutors." });
+            }
+        }
         #endregion
 
         #region Financial Statistics
@@ -287,6 +303,25 @@ namespace MathBridgeSystem.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "An error occurred while retrieving revenue trends." });
+            }
+        }
+
+        /// <summary>
+        /// Get withdrawal statistics
+        /// </summary>
+        /// <returns>Withdrawal statistics including total amount, counts by status, and list of transactions</returns>
+        [HttpGet("financial/withdrawals")]
+        [Authorize(Roles = "admin,staff")]
+        public async Task<IActionResult> GetWithdrawalStatistics()
+        {
+            try
+            {
+                var stats = await _statisticsService.GetWithdrawalStatisticsAsync();
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while retrieving withdrawal statistics." });
             }
         }
 

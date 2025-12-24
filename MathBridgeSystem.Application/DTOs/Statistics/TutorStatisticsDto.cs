@@ -35,6 +35,21 @@ namespace MathBridgeSystem.Application.DTOs.Statistics
         public int TotalTutors { get; set; }
     }
 
+    public class WorstRatedTutorDto
+    {
+        public Guid TutorId { get; set; }
+        public string TutorName { get; set; } = null!;
+        public decimal AverageRating { get; set; }
+        public int FeedbackCount { get; set; }
+        public string Email { get; set; } = null!;
+    }
+
+    public class WorstRatedTutorsListDto
+    {
+        public List<WorstRatedTutorDto> Tutors { get; set; } = new List<WorstRatedTutorDto>();
+        public int TotalTutors { get; set; }
+    }
+
     public class MostActiveTutorsListDto
     {
         public List<TutorSessionCountDto> Tutors { get; set; } = new List<TutorSessionCountDto>();

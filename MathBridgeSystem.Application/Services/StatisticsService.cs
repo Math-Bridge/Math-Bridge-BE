@@ -18,6 +18,7 @@ namespace MathBridgeSystem.Application.Services
         private readonly IContractRepository _contractRepository;
         private readonly IPackageRepository _packageRepository;
         private readonly ISePayRepository _sePayRepository;
+        private readonly IWithdrawalRequestRepository _withdrawalRequestRepository;
 
         public StatisticsService(
             IUserRepository userRepository,
@@ -26,15 +27,20 @@ namespace MathBridgeSystem.Application.Services
             IWalletTransactionRepository walletTransactionRepository,
             IContractRepository contractRepository,
             IPackageRepository packageRepository,
-            ISePayRepository sePayRepository)
+            ISePayRepository sePayRepository,
+            IWithdrawalRequestRepository withdrawalRequestRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
-            _finalFeedbackRepository = finalFeedbackRepository ?? throw new ArgumentNullException(nameof(finalFeedbackRepository));
-            _walletTransactionRepository = walletTransactionRepository ?? throw new ArgumentNullException(nameof(walletTransactionRepository));
+            _finalFeedbackRepository = finalFeedbackRepository ??
+                                       throw new ArgumentNullException(nameof(finalFeedbackRepository));
+            _walletTransactionRepository = walletTransactionRepository ??
+                                           throw new ArgumentNullException(nameof(walletTransactionRepository));
             _contractRepository = contractRepository ?? throw new ArgumentNullException(nameof(contractRepository));
             _packageRepository = packageRepository ?? throw new ArgumentNullException(nameof(packageRepository));
             _sePayRepository = sePayRepository ?? throw new ArgumentNullException(nameof(sePayRepository));
+            _withdrawalRequestRepository = withdrawalRequestRepository ??
+                                           throw new ArgumentNullException(nameof(withdrawalRequestRepository));
         }
 
         #region User Statistics
@@ -66,7 +72,8 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        public async Task<UserRegistrationTrendStatisticsDto> GetUserRegistrationTrendsAsync(DateTime startDate, DateTime endDate)
+        public async Task<UserRegistrationTrendStatisticsDto> GetUserRegistrationTrendsAsync(DateTime startDate,
+            DateTime endDate)
         {
             var allUsers = await _userRepository.GetAllAsync();
 
@@ -163,10 +170,15 @@ namespace MathBridgeSystem.Application.Services
                 new DateTime(2000, 1, 1),
                 DateTime.UtcNow.ToLocalTime().AddYears(10));
 
-            var completedCount = allSessions.Count(s => s.Status.Equals("completed",StringComparison.OrdinalIgnoreCase));
-            var cancelledCount = allSessions.Count(s => s.Status.Equals("cancelled",StringComparison.OrdinalIgnoreCase));
-            var upcomingCount = allSessions.Count(s => s.Status.Equals("Scheduled",StringComparison.OrdinalIgnoreCase) && s.StartTime > DateTime.UtcNow.ToLocalTime());
-            var rescheduledCount = allSessions.Count(s => s.Status.Equals("Rescheduled",StringComparison.OrdinalIgnoreCase));
+            var completedCount =
+                allSessions.Count(s => s.Status.Equals("completed", StringComparison.OrdinalIgnoreCase));
+            var cancelledCount =
+                allSessions.Count(s => s.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase));
+            var upcomingCount = allSessions.Count(s =>
+                s.Status.Equals("Scheduled", StringComparison.OrdinalIgnoreCase) &&
+                s.StartTime > DateTime.UtcNow.ToLocalTime());
+            var rescheduledCount =
+                allSessions.Count(s => s.Status.Equals("Rescheduled", StringComparison.OrdinalIgnoreCase));
 
             var completionRate = allSessions.Count > 0
                 ? Math.Round((decimal)completedCount / allSessions.Count * 100, 2)
@@ -284,6 +296,38 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
+        public async Task<WorstRatedTutorsListDto> GetWorstRatedTutorsAsync(int limit = 10)
+        {
+            var tutors = await _userRepository.GetTutorsAsync();
+            var allFinalFeedbacks = await _finalFeedbackRepository.GetAllAsync();
+
+            var tutorRatings = tutors
+                .Select(t => new
+                {
+                    Tutor = t,
+                    Feedbacks = allFinalFeedbacks.Where(f => f.UserId == t.UserId).ToList()
+                })
+                .Where(tr => tr.Feedbacks.Count > 0)
+                .Select(tr => new WorstRatedTutorDto
+                {
+                    TutorId = tr.Tutor.UserId,
+                    TutorName = tr.Tutor.FullName,
+                    Email = tr.Tutor.Email,
+                    AverageRating = Math.Round((decimal)tr.Feedbacks.Average(f => f.OverallSatisfactionRating), 2),
+                    FeedbackCount = tr.Feedbacks.Count
+                })
+                .OrderBy(t => t.AverageRating)
+                .ThenByDescending(t => t.FeedbackCount)
+                .Take(limit)
+                .ToList();
+
+            return new WorstRatedTutorsListDto
+            {
+                Tutors = tutorRatings,
+                TotalTutors = tutorRatings.Count
+            };
+        }
+
         public async Task<MostActiveTutorsListDto> GetMostActiveTutorsAsync(int limit = 10)
         {
             var tutors = await _userRepository.GetTutorsAsync();
@@ -319,8 +363,7 @@ namespace MathBridgeSystem.Application.Services
         }
 
         #endregion
-
-        #region Financial Statistics
+        
 
         public async Task<RevenueStatisticsDto> GetRevenueStatisticsAsync()
         {
@@ -377,7 +420,67 @@ namespace MathBridgeSystem.Application.Services
             };
         }
 
-        #endregion
+        public async Task<WithdrawalStatisticsDto> GetWithdrawalStatisticsAsync()
+        {
+            try
+            {
+                var allTransactions = await _walletTransactionRepository.GetAllAsync();
+                var allWithdrawalRequests = await _withdrawalRequestRepository.GetAllAsync();
+
+                var validWithdrawalTransactions = new List<WalletTransaction>();
+
+                var withdrawalTransactions = allTransactions
+                    .Where(t => t.TransactionType.Equals("withdrawal", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var transaction in withdrawalTransactions)
+                {
+                    var matchingRequest = allWithdrawalRequests.FirstOrDefault(wr =>
+                        wr.ParentId == transaction.ParentId &&
+                        wr.Amount == transaction.Amount &&
+                        string.Equals(wr.Status, "Processed", StringComparison.OrdinalIgnoreCase) &&
+                        wr.ProcessedDate.HasValue &&
+                        Math.Abs((transaction.TransactionDate - wr.ProcessedDate.Value).TotalMinutes) <= 1
+                    );
+
+                    if (matchingRequest != null)
+                    {
+                        validWithdrawalTransactions.Add(transaction);
+                    }
+                }
+
+                var transactionDtos = validWithdrawalTransactions.Select(t => new WithdrawalTransactionDto
+                {
+                    TransactionId = t.TransactionId,
+                    ParentId = t.ParentId,
+                    ParentName = t.Parent?.FullName,
+                    Amount = t.Amount,
+                    Status = t.Status,
+                    TransactionDate = t.TransactionDate,
+                    Description = t.Description
+                }).ToList();
+
+                var pendingCount = allWithdrawalRequests.Count(r =>
+                    string.Equals(r.Status, "Pending", StringComparison.OrdinalIgnoreCase));
+                var rejectedCount = allWithdrawalRequests.Count(r =>
+                    string.Equals(r.Status, "Rejected", StringComparison.OrdinalIgnoreCase));
+                var processedCount = allWithdrawalRequests.Count(r =>
+                    string.Equals(r.Status, "Processed", StringComparison.OrdinalIgnoreCase));
+
+                return new WithdrawalStatisticsDto
+                {
+                    TotalWithdrawalAmount = validWithdrawalTransactions.Sum(t => t.Amount),
+                    TotalWithdrawalCount = validWithdrawalTransactions.Count,
+                    PendingWithdrawalCount = pendingCount,
+                    CompletedWithdrawalCount = processedCount,
+                    RejectedWithdrawalCount = rejectedCount,
+                    Transactions = transactionDtos
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving withdrawal statistics: {ex.Message}", ex);
+            }
+        }
     }
 }
-

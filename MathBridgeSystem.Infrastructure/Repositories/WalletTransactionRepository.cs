@@ -56,5 +56,13 @@ namespace MathBridgeSystem.Infrastructure.Repositories
             return await _context.WalletTransactions
                 .AnyAsync(wt => wt.TransactionId == transactionId);
         }
+
+        public async Task<List<WalletTransaction>> GetAllAsync()
+        {
+            return await _context.WalletTransactions
+                .Include(wt => wt.Parent)
+                .OrderByDescending(wt => wt.TransactionDate)
+                .ToListAsync();
+        }
     }
 }
