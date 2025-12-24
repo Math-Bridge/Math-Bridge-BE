@@ -65,7 +65,7 @@ namespace MathBridgeSystem.Application.Services
             _cache.Set($"email_{request.Email}", oobCode, cacheEntryOptions);
 
             // Generate verification link with oobCode (sửa để đúng route API)
-            var verificationLink = $"https://web.vibe88.tech/verify-email?oobCode={oobCode}";
+            var verificationLink = $"https://math-bridge.com/verify-email?oobCode={oobCode}";
 
             try
             {
@@ -278,7 +278,7 @@ namespace MathBridgeSystem.Application.Services
             };
             _cache.Set(oobCode, cachedRequest, cacheEntryOptions);
 
-            var resetLink = $"https://web.vibe88.tech/verify-reset?oobCode={oobCode}";
+            var resetLink = $"https://math-bridge.com/verify-reset?oobCode={oobCode}";
 
             try
             {

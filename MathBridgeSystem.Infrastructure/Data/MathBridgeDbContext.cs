@@ -75,7 +75,7 @@ public partial class MathBridgeDbContext : DbContext
         {
             // This fallback is only used for design-time operations like migrations
             // At runtime, the connection string from appsettings.json is used via DI in Program.cs
-            optionsBuilder.UseSqlServer("Server=sql.vibe88.tech;Database=mathbridge2;User Id=sa;Password=Phineas160404;MultipleActiveResultSets=true;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer("Server=sql.vibe88.tech;Database=mathbridge;User Id=sa;Password=Phineas160404;MultipleActiveResultSets=true;TrustServerCertificate=True");
         }
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
