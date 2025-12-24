@@ -594,12 +594,13 @@ public class SePayService : ISePayService
                 // Create in-app notification for contract payment
                 try
                 {
+                    var vietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");
                     await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
                     {
                         UserId = contract.ParentId,
                         ContractId = contractId,
                         Title = "Contract Payment Successful",
-                        Message = $"Payment of {sePayTransaction.TransferAmount:C} for contract has been received. Your contract is now pending approval. Order Reference: {sePayTransaction.OrderReference}",
+                        Message = $"Payment of {sePayTransaction.TransferAmount.ToString("C", vietnameseCulture)} for contract has been received. Your contract is now pending approval. Order Reference: {sePayTransaction.OrderReference}",
                         NotificationType = "ContractPayment"
                     });
                     _logger.LogInformation("Contract payment notification created for user {UserId}, contract {ContractId}", contract.ParentId, contractId);
